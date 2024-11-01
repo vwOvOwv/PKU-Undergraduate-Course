@@ -1,0 +1,9 @@
+services:
+  netlab-lab0:
+    image: code.lcpu.dev/2100013211/ns3:3.38
+    container_name: netlab-lab0
+    volumes:
+      - ./netlab-lab0:/home/student/workspace/code    
+    ports:
+      - 20729:22
+    tty: true
