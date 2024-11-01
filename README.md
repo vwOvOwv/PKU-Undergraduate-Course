@@ -8,13 +8,13 @@
 
 请**不要**将课程资源用于商业用途。
 ## 下载
-如果需要下载特定课程的文件夹，请使用 https://yehonal.github.io/DownGit/#/home 。
+如果需要下载特定课程的文件夹，请使用[GitHub Repo. Directory Downloader](https://yehonal.github.io/DownGit/#/home)。
 ## 联系方式
 
-我的邮箱：2100012289@stu.pku.edu.cn。
+我的邮箱：lpy512120@stu.pku.edu.cn。
 
 如果你有任何问题或者想要获取课程课件等信息，请在讨论区留言或通过邮箱联系我:)  
 
 如果你想为本仓库贡献一份力量，也请邮箱联系🥳
 
-### 感谢你的访问，希望能够帮助你在北大的生活更加轻松愉快！
+### 感谢你的访问，希望能够帮助你在PKU的生活更加轻松愉快！
