@@ -1,3 +1,0 @@
-/home/student/workspace/code/2024-lab0-introduction-vwOvOwv/build/CMakeFiles/hellonetwork.dir
-/home/student/workspace/code/2024-lab0-introduction-vwOvOwv/build/CMakeFiles/edit_cache.dir
-/home/student/workspace/code/2024-lab0-introduction-vwOvOwv/build/CMakeFiles/rebuild_cache.dir
