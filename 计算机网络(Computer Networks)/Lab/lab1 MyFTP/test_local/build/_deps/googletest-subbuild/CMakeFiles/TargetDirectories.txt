@@ -1,0 +1,3 @@
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/CMakeFiles/googletest-populate.dir
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/CMakeFiles/edit_cache.dir
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/CMakeFiles/rebuild_cache.dir

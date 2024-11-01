@@ -1,0 +1,14 @@
+# Target labels
+ googletest-populate
+# Source files and their labels
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/CMakeFiles/googletest-populate
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/CMakeFiles/googletest-populate.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/CMakeFiles/googletest-populate-complete.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-build.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-configure.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-download.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-install.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-mkdir.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-patch.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-test.rule
+/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-update.rule

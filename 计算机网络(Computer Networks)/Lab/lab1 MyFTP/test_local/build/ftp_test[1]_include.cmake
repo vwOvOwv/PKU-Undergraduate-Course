@@ -1,0 +1,5 @@
+if(EXISTS "/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/ftp_test[1]_tests.cmake")
+  include("/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/test_local/build/ftp_test[1]_tests.cmake")
+else()
+  add_test(ftp_test_NOT_BUILT ftp_test_NOT_BUILT)
+endif()

@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/ftp_test.dir/test.cpp.o -o ftp_test  lib/libgtest_main.a lib/libgtest.a 
