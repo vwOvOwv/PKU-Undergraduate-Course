@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/ftp_client.dir/src/ftp_client.cpp.o CMakeFiles/ftp_client.dir/src/ftp_client_funcs.cpp.o CMakeFiles/ftp_client.dir/src/ftp_client_utils.cpp.o -o ftp_client 

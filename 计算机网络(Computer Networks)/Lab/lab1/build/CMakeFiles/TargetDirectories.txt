@@ -1,4 +1,0 @@
-/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/build/CMakeFiles/ftp_server.dir
-/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/build/CMakeFiles/ftp_client.dir
-/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/build/CMakeFiles/edit_cache.dir
-/home/student/workspace/code/2024-lab1-myftp-vwOvOwv-1/build/CMakeFiles/rebuild_cache.dir
