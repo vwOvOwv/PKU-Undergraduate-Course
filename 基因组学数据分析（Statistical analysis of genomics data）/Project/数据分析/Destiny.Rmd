@@ -1,0 +1,99 @@
+```{r}
+library(Matrix)
+library(Seurat)
+library(ggplot2)
+library(viridis)
+library(RColorBrewer)
+```
+
+```{r}
+getwd()
+setwd("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/基因组学数据分析（Statistical analysis of genomics data）/Project/GSE107451_DGRP-551_w1118_WholeBrain_57k_0d_1d_3d_6d_9d_15d_30d_50d_10X_DGEM_MEX.mtx.tsv")
+```
+
+```{r}
+data_dir <- "./"
+sc_data <- Read10X(data.dir = data_dir)
+```
+
+```{r}
+seurat_obj <- CreateSeuratObject(counts = sc_data, project = "SingleCellProject")
+```
+
+```{r}
+metadata <- read.table("./GSE107451_DGRP-551_w1118_WholeBrain_57k_Metadata.tsv", sep = "\t", header = TRUE)
+metadata
+```
+
+```{r}
+rownames(metadata) <- Cells(seurat_obj)
+seurat_obj <- AddMetaData(seurat_obj, metadata)
+```
+
+```{r}
+brain_a <- subset(seurat_obj, subset = Genotype == "DGRP-551")
+brain_b <- subset(seurat_obj, subset = Genotype == "w1118")
+```
+
+```{r}
+avg_expression_a <- rowMeans(brain_a@assays$RNA@layers$counts)
+
+avg_expression_b <- rowMeans(brain_b@assays$RNA@layers$counts)
+
+genes_a <- rownames(brain_a)[avg_expression_a > 0.001]
+genes_b <- rownames(brain_b)[avg_expression_b > 0.001]
+
+common_genes <- union(genes_a, genes_b)
+
+seurat_obj <- subset(seurat_obj, features = common_genes)
+```
+
+```{r}
+seurat_list <- SplitObject(seurat_obj, split.by = "res.2")
+```
+
+```{r}
+calculate_cpm <- function(seurat_obj) {
+  raw_counts <- seurat_obj@assays$RNA@layers$counts
+
+  total_counts_per_cell <- colSums(raw_counts)
+
+  cpm_matrix <- t(t(raw_counts) / total_counts_per_cell) * 1e6
+  
+  # cpm_matrix <- log1p(cpm_matrix)
+  
+  seurat_obj@assays$RNA@layers$counts <- as.sparse(cpm_matrix)
+  
+  return(seurat_obj)
+}
+```
+
+```{r}
+seurat_list <- lapply(seurat_list, calculate_cpm)
+```
+
+```{r}
+library(destiny)
+```
+
+```{r}
+calculate_dcs <- function(seurat_obj) {
+  data <- t(as.matrix(seurat_obj@assays$RNA@layers$counts))
+  dm <- DiffusionMap(data)
+  
+  dcs <- as.data.frame(dm@eigenvectors[, 1:20])
+  colnames(dcs) <- paste0("DC", 1:20)
+  
+  seurat_obj <- AddMetaData(seurat_obj, metadata = dcs)
+  
+  return(seurat_obj)
+}
+```
+
+```{r}
+seurat_list <- lapply(seurat_list, calculate_dcs)
+```
+
+```{r}
+saveRDS(seurat_list, "seurat_list_with_CPM.rds")
+```

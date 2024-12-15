@@ -1,0 +1,123 @@
+# Prepare data
+
+```{r}
+getwd()
+setwd("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/基因组学数据分析（Statistical analysis of genomics data）/Project/GSE107451_DGRP-551_w1118_WholeBrain_57k_0d_1d_3d_6d_9d_15d_30d_50d_10X_DGEM_MEX.mtx.tsv")
+```
+
+```{r}
+results <- read.csv("./results.csv")
+age_prediction <- read.csv("./predict_age.csv")
+```
+
+```{r}
+target_clusters <- c(87, 39, 10, 8, 27, 45, 60, 22, 48, 28, 12, 53, 31, 70, 42, 36, 66, 61, 86)
+```
+
+```{r}
+results = subset(results, results$cluster %in% target_clusters)
+print(results)
+```
+
+```{r}
+library(dplyr)
+results_sorted <- results %>%
+  mutate(cluster = factor(cluster, levels = target_clusters)) %>%
+  arrange(cluster)
+results_sorted
+```
+
+# Figure 6D
+
+```{r}
+# 加载必要的包
+library(ggplot2)
+library(patchwork)
+
+# 确保数据框的索引是正确的
+rownames(results_sorted) <- NULL
+results_sorted$Index <- rownames(results_sorted)
+results_sorted$Index <- as.numeric(results_sorted$Index)
+results_sorted$Index <- factor(results_sorted$Index, levels = order(results_sorted$Index, decreasing = TRUE))
+
+# 子图 1: acc
+p1 <- ggplot(results_sorted, aes(x = Index, y = acc, fill = acc)) +
+  geom_col(width = 0.85) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 1), expand = c(0,0)) +  # 限制 y 坐标范围
+  scale_fill_gradientn(colors = c("#def3bc", "#c9eebe","#62dcc9","#00bcd1", "#0099c9", "#002f75")) +
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(), # 去掉网格线
+    axis.text.y = element_blank(), # 去掉 y 轴的文本（可选）
+    legend.position = "none" # 移除图例
+  )
+
+# 子图 2: DC.age
+p2 <- ggplot(results_sorted, aes(x = Index, y = DC.age, fill = DC.age)) +
+  geom_col(width = 0.85) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 1), expand = c(0,0)) +  # 限制 y 坐标范围
+  scale_fill_gradientn(colors = c("#def3bc", "#c9eebe","#62dcc9", "#00bcd1", "#0099c9", "#002f75")) +
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.y = element_blank(),
+    legend.position = "none"
+  )
+
+# 子图 3: declining.R.2
+p3 <- ggplot(results_sorted, aes(x = Index, y = declining.R.2, fill = declining.R.2)) +
+  geom_col(width = 0.85) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 1), expand = c(0,0)) +  # 限制 y 
+  scale_fill_gradientn(colors = c("#def3bc", "#c9eebe","#62dcc9","#00bcd1", "#0099c9", "#002f75")) +
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(), # 去掉网格线
+    axis.text.y = element_blank(), # 去掉 y 轴的文本（可选）
+    legend.position = "none" # 移除图例
+  )
+
+# 子图 4: mean.nUMI
+p4 <- ggplot(results_sorted, aes(x = Index, y = mean.nUMI, fill = mean.nUMI)) +
+  geom_col(width = 0.85) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 10000), breaks = c(0, 10000), expand = c(0,0)) +  # 限制 y 坐标范围
+  scale_fill_gradientn(colors = c("#def3bc", "#c9eebe", "#62dcc9","#00bcd1", "#0099c9", "#002f75")) +
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(), # 去掉网格线
+    axis.text.y = element_blank(), # 去掉 y 轴的文本（可选）
+    legend.position = "none" # 移除图例
+  )
+
+# 子图 5: AUC
+p5 <- ggplot(results_sorted, aes(x = Index, y = AUC, fill = AUC)) +
+  geom_col(width = 0.85) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 0.5), breaks = c(0, 0.5), expand = c(0,0)) +  # 限制 y 坐标范围
+  scale_fill_gradientn(colors = c("#def3bc", "#c9eebe","#62dcc9","#00bcd1", "#0099c9", "#002f75")) +
+  labs(title = "", x = "", y = "") +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(), # 去掉网格线
+    axis.text.y = element_blank(), # 去掉 y 轴的文本（可选）
+    legend.position = "none" # 移除图例
+  )
+
+# 合并图表并设置正确的列数和布局
+combined_plot <- (p1 | p2 | p3 | p4 | p5) +
+  plot_layout(ncol = 5, widths = c(1, 1.5, 1, 0.5, 0.5))
+
+
+# 调整输出大小并保存为正方形
+ggsave("combined_plot.png", combined_plot, width = 10, height = 10)
+
+# 显示图表
+print(combined_plot)
+```

@@ -1,0 +1,62 @@
+```{r}
+getwd()
+setwd("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/基因组学数据分析（Statistical analysis of genomics data）/Project/GSE107451_DGRP-551_w1118_WholeBrain_57k_0d_1d_3d_6d_9d_15d_30d_50d_10X_DGEM_MEX.mtx.tsv")
+DC <- readRDS("./seurat_list_with_CPM_log1p.rds")
+```
+
+```{r}
+target_clusters <- as.character(0:86)
+```
+
+```{r}
+# 创建一个空数据框存储结果
+results <- data.frame(
+    Cluster = character(),
+    MaxCorrelation = numeric(),
+    MaxDC = character(),
+    stringsAsFactors = FALSE
+)
+
+for (cluster in target_clusters) {
+    print(paste("Processing cluster:", cluster))
+    
+    # 初始化最大值和对应的DC
+    maximum <- -99999
+    max_dc <- NULL
+    
+    # 获取当前 cluster 的所有 DC 数据列和 Age 列
+    age_data <- DC[[cluster]]@meta.data$Age
+    for (dc_num in 1:20) {
+        # 动态访问列名
+        dc_data <- DC[[cluster]]@meta.data[[paste0("DC", dc_num)]]
+        
+        # 计算相关性
+        cor_value <- cor(age_data, dc_data)
+        
+        # 更新最大值和对应的 DC
+        if (cor_value > maximum) {
+            maximum <- cor_value
+            max_dc <- paste0("DC", dc_num)
+        }
+    }
+    
+    # 保存结果到数据框
+    results <- rbind(
+        results,
+        data.frame(
+            Cluster = cluster,
+            MaxCorrelation = maximum,
+            MaxDC = max_dc,
+            stringsAsFactors = FALSE
+        )
+    )
+}
+
+# 打印最终结果
+print(results)
+
+# 保存结果到 CSV 文件
+write.csv(results, file = "../cluster_max_correlation_results.csv", row.names = FALSE)
+
+print("Results saved to cluster_max_correlation_results.csv")
+```

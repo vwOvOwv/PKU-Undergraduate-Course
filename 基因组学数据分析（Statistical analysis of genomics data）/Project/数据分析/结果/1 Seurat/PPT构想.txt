@@ -1,0 +1,6 @@
+P1 图1A（论文原图）vs metadata作图 指出两者是一样的
+P2 图1A （tsne（annotation，negbinom））vs图1A（tsne（seurat clusters,negbinom)), 指出降维具有随机性，以及在降维时两图的相似性
+P3 图1B 图1C 图1D VS 原图 1B,1C,1D。这里可以选择图1C和1D先讲，1C重点在于两种基因表达位置具有相关性和原图一样。1D在于分类纯度很高
+P4 图1B VS 原图 1B，并附有 tsne(seurat clusters,negbinom),指出两种细胞均被归为了52类，说明52类依然可以再分
+P5 cluster52再分类tsne图及SerT，Tdc2表达图，说明52类可以根据这两种基因再次分类
+P6 cluster52分为52a 52b 52c后再分类图，以及仅有52类填色的图，vs annotation图，指出再聚类方法可以有效地帮我们再识别重要的子聚类。

@@ -1,0 +1,163 @@
+```{r}
+library(Seurat)
+```
+
+```{r}
+getwd()
+setwd("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/基因组学数据分析（Statistical analysis of genomics data）/Project/GSE107451_DGRP-551_w1118_WholeBrain_57k_0d_1d_3d_6d_9d_15d_30d_50d_10X_DGEM_MEX.mtx.tsv")
+```
+
+```{r}
+data_dir <- "./"
+sc_data <- Read10X(data.dir = data_dir)
+seurat_obj <- CreateSeuratObject(counts = sc_data, project = "SingleCellProject")
+metadata <- read.table("./GSE107451_DGRP-551_w1118_WholeBrain_57k_Metadata.tsv", sep = "\t", header = TRUE)
+rownames(metadata) <- Cells(seurat_obj)
+seurat_obj <- AddMetaData(seurat_obj, metadata)
+```
+
+```{r}
+brain_a <- subset(seurat_obj, subset = Genotype == "DGRP-551")
+brain_b <- subset(seurat_obj, subset = Genotype == "w1118")
+avg_expression_a <- rowMeans(brain_a@assays$RNA@layers$counts)
+avg_expression_b <- rowMeans(brain_b@assays$RNA@layers$counts)
+genes_a <- rownames(brain_a)[avg_expression_a > 0.001]
+genes_b <- rownames(brain_b)[avg_expression_b > 0.001]
+common_genes <- union(genes_a, genes_b)
+seurat_obj <- subset(seurat_obj, features = common_genes)
+```
+
+```{r}
+head(common_genes)
+```
+
+```{r}
+seurat_obj
+```
+
+```{r}
+print(which(rownames(seurat_obj) == 'Hsromega'))
+print(which(rownames(seurat_obj) == 'mt:lrRNA'))
+print(which(rownames(seurat_obj) == 'TM4SF'))
+print(which(rownames(seurat_obj) == 'MRE16'))
+print(which(rownames(seurat_obj) == 'sta'))
+print(which(rownames(seurat_obj) == 'mt:CoIII'))
+print(which(rownames(seurat_obj) == 'ncRNA:CR34335'))
+```
+
+```{r}
+Hsromega_age <- FetchData(seurat_obj, vars = c("Hsromega", "Age"))
+mtlrRNA_age <- FetchData(seurat_obj, vars = c("mt:lrRNA", "Age"))
+TM4SF_age <- FetchData(seurat_obj, vars = c("TM4SF", "Age"))
+MRE16_age <- FetchData(seurat_obj, vars = c("MRE16", "Age"))
+sta_age <- FetchData(seurat_obj, vars = c("sta", "Age"))
+mtCoIII_age <- FetchData(seurat_obj, vars = c("mt:CoIII", "Age"))
+```
+
+```{r}
+print(which(rownames(brain_a) == 'lncRNA:CR34335'))
+print(which(rownames(brain_b) == 'lncRNA:CR34335'))
+```
+
+```{r}
+library(ggplot2)
+hsr <- ggplot(Hsromega_age, aes(x = as.factor(Age), y = Hsromega, fill = as.factor(Age))) +
+  stat_boxplot(geom="errorbar", width=0.4, size=0.5) +
+  geom_boxplot(outlier.shape = NA, fatten = 1, width = 0.85) +
+  scale_fill_manual(values = c("#ffe600", "#97de36", "#00cf89", "#00b099", "#0093a1", "#0071a0","#5a4793", "#650b68")) +
+  coord_cartesian(ylim = c(0,70)) + 
+  theme_minimal() +
+  labs(x = "Age", y = "Hsromega Expression") +
+  theme(
+    panel.grid = element_blank(),
+    # axis.text.y = element_blank(),
+    legend.position = "none"
+  )
+ggsave("Hsromega.png", hsr, width = 10, height = 5)
+hsr
+```
+
+```{r}
+mre <- ggplot(MRE16_age, aes(x = as.factor(Age), y = MRE16, fill = as.factor(Age))) +
+  stat_boxplot(geom="errorbar", width=0.4, size=0.5) +
+  geom_boxplot(outlier.shape = NA, fatten = 1, width = 0.85) +
+  scale_fill_manual(values = c("#ffe600", "#97de36", "#00cf89", "#00b099", "#0093a1", "#0071a0","#5a4793", "#650b68")) +
+  coord_cartesian(ylim = c(0,130)) + 
+  theme_minimal() +
+  labs(x = "Age", y = "MRE16 Expression") +
+  theme(
+    panel.grid = element_blank(),
+    # axis.text.y = element_blank(),
+    legend.position = "none"
+  )
+ggsave("MRE16.png", mre, width = 10, height = 5)
+mre
+```
+
+```{r}
+sta_plot <- ggplot(sta_age, aes(x = as.factor(Age), y = sta, fill = as.factor(Age))) +
+  stat_boxplot(geom="errorbar", width=0.4, size=0.5) +
+  geom_boxplot(outlier.shape = NA, fatten = 1, width = 0.85) +
+  scale_fill_manual(values = c("#ffe600", "#97de36", "#00cf89", "#00b099", "#0093a1", "#0071a0","#5a4793", "#650b68")) +
+  coord_cartesian(ylim = c(0,10)) + 
+  theme_minimal() +
+  labs(x = "Age", y = "sta Expression") +
+  theme(
+    panel.grid = element_blank(),
+    # axis.text.y = element_blank(),
+    legend.position = "none"
+  )
+ggsave("sta.png", sta_plot, width = 10, height = 5)
+sta_plot
+```
+
+```{r}
+tm4sf_plot <- ggplot(TM4SF_age, aes(x = as.factor(Age), y = TM4SF, fill = as.factor(Age))) +
+  stat_boxplot(geom="errorbar", width=0.4, size=0.5) +
+  geom_boxplot(outlier.shape = NA, fatten = 1, width = 0.85) +
+  scale_fill_manual(values = c("#ffe600", "#97de36", "#00cf89", "#00b099", "#0093a1", "#0071a0","#5a4793", "#650b68")) +
+  coord_cartesian(ylim = c(0,20)) + 
+  theme_minimal() +
+  labs(x = "Age", y = "TM4SF Expression") +
+  theme(
+    panel.grid = element_blank(),
+    # axis.text.y = element_blank(),
+    legend.position = "none"
+  )
+ggsave("TM4SF.png", tm4sf_plot, width = 10, height = 5)
+tm4sf_plot
+```
+
+```{r}
+mtcoIII_plot <- ggplot(mtCoIII_age, aes(x = as.factor(Age), y = mtCoIII_age$`mt:CoIII`, fill = as.factor(Age))) +
+  stat_boxplot(geom="errorbar", width=0.4, size=0.5) +
+  geom_boxplot(outlier.shape = NA, fatten = 1, width = 0.85) +
+  scale_fill_manual(values = c("#ffe600", "#97de36", "#00cf89", "#00b099", "#0093a1", "#0071a0","#5a4793", "#650b68")) +
+  coord_cartesian(ylim = c(0,50)) + 
+  theme_minimal() +
+  labs(x = "Age", y = "mtCoIII Expression") +
+  theme(
+    panel.grid = element_blank(),
+    # axis.text.y = element_blank(),
+    legend.position = "none"
+  )
+ggsave("mtcoIII.png", mtcoIII_plot, width = 10, height = 5)
+mtcoIII_plot
+```
+
+```{r}
+mtlrRNA_plot <- ggplot(mtlrRNA_age, aes(x = as.factor(Age), y = `mt:lrRNA`, fill = as.factor(Age))) +
+  stat_boxplot(geom="errorbar", width=0.4, size=0.5) +
+  geom_boxplot(outlier.shape = NA, fatten = 1, width = 0.85) +
+  scale_fill_manual(values = c("#ffe600", "#97de36", "#00cf89", "#00b099", "#0093a1", "#0071a0","#5a4793", "#650b68")) +
+  coord_cartesian(ylim = c(0,100)) + 
+  theme_minimal() +
+  labs(x = "Age", y = "mtlrRNA Expression") +
+  theme(
+    panel.grid = element_blank(),
+    # axis.text.y = element_blank(),
+    legend.position = "none"
+  )
+ggsave("mtlrRNA.png", mtlrRNA_plot, width = 10, height = 5)
+mtlrRNA_plot
+```

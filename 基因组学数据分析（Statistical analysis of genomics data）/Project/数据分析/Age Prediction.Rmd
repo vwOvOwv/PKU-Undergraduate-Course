@@ -1,0 +1,148 @@
+```{r}
+getwd()
+setwd("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/基因组学数据分析（Statistical analysis of genomics data）/Project/GSE107451_DGRP-551_w1118_WholeBrain_57k_0d_1d_3d_6d_9d_15d_30d_50d_10X_DGEM_MEX.mtx.tsv")
+```
+
+```{r}
+predict_age <- read.csv("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/基因组学数据分析（Statistical analysis of genomics data）/Project/数据分析/predict_age.csv")
+```
+
+```{r}
+age_plot <- ggplot() +
+  # 第一组小提琴
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 0),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#ffe600",
+    width = 0.6,
+    linewidth = 0.3
+  ) +
+  geom_boxplot(
+    data = subset(predict_age, Actual.Age == 0),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  # 第二组小提琴
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 1),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#97de36",
+    width = 0.8,
+    linewidth = 0.3
+  ) +
+   geom_boxplot(
+    data = subset(predict_age, Actual.Age == 1),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 3),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#00cf89",
+    width = 0.8,
+    linewidth = 0.3
+  ) +
+  geom_boxplot(
+    data = subset(predict_age, Actual.Age == 3),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 6),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#00b099",
+    width = 0.8,
+    linewidth = 0.3
+  ) +
+  geom_boxplot(
+    data = subset(predict_age, Actual.Age == 6),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 9),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#0093a1",
+    width = 0.6,
+    linewidth = 0.3
+  ) +
+  geom_boxplot(
+    data = subset(predict_age, Actual.Age == 9),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 15),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#0071a0",
+    width = 0.6,
+    linewidth = 0.3
+  ) +
+  geom_boxplot(
+    data = subset(predict_age, Actual.Age == 15),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 30),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#5a4793",
+    width = 0.15,
+    linewidth = 0.3
+  ) +
+  geom_boxplot(
+    data = subset(predict_age, Actual.Age == 30),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  geom_violin(
+    data = subset(predict_age, Actual.Age == 50),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#650b68",
+    width = 0.2,
+    linewidth = 0.3
+  ) +
+  geom_boxplot(
+    data = subset(predict_age, Actual.Age == 50),
+    aes(x = factor(Actual.Age), y = Predicted.Age),
+    fill = "#4e4e4e",
+    width = 0.01,
+    outlier.shape = NA,
+    linewidth = 0.05
+  ) +
+  coord_cartesian(ylim = c(0,40)) +
+  labs(
+    x = "Age (days)",
+    y = "Random forest predicted Age"
+  ) + 
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(), # 去掉网格线
+    # axis.text.y = element_blank(), # 去掉 y 轴的文本（可选）
+    legend.position = "none" # 移除图例
+  )
+
+ggsave("age plot.png", age_plot, width = 5, height = 5)
+age_plot
+```

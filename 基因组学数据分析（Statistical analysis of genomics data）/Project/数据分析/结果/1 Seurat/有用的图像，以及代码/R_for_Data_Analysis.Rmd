@@ -1,0 +1,131 @@
+---
+title: "降维"
+author: "LYU"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+library(Seurat)
+
+```
+数据读入
+```{r}
+brain <- CreateSeuratObject(counts = brain.data, meta.data = metadata)
+brain_a <- subset(brain, subset = Genotype == "DGRP-551")
+brain_b <- subset(brain, subset = Genotype == "w1118")
+
+avg_expression_a <- Matrix::rowMeans(GetAssayData(brain_a, layer = "counts"))
+names(avg_expression_a) <- rownames(GetAssayData(brain_a, layer = "counts"))
+selected_genes_a <- names(avg_expression_a[avg_expression_a > 0.001])
+
+avg_expression_b <- Matrix::rowMeans(GetAssayData(brain_b, layer = "counts"))
+names(avg_expression_b) <- rownames(GetAssayData(brain_b, layer = "counts"))
+selected_genes_b <- names(avg_expression_b[avg_expression_b > 0.001])
+
+common_genes <- union(selected_genes_a, selected_genes_b)
+brain_filtered <- subset(brain, features = common_genes)
+
+# 假设 Seurat 对象是 seurat_obj
+expr_matrix <- GetAssayData(brain_filtered, assay = "RNA", slot = "counts")
+```
+
+
+```{r}
+VlnPlot(brain_filtered, features = c("nGene", "nUMI", "percent.mito"), ncol = 3)
+```
+筛选过的细胞已经相当不错了。
+
+```{r}
+brain_filtered <- NormalizeData(brain_filtered, normalization.method = "LogNormalize", scale.factor = 10000)
+```
+```{r}
+dim(brain_filtered)
+brain_filtered <- FindVariableFeatures(brain_filtered, selection.method = "vst", nfeatures = 973)
+```
+```{r}
+brain_filtered <- ScaleData(brain_filtered, vars.to.regress = c("nUMI", "percent.mito"), model.use = "linear")
+
+brain_filtered <- RunPCA(brain_filtered, features = VariableFeatures(object = brain_filtered), npcs = 100)
+
+ElbowPlot(brain_filtered)
+
+DimPlot(brain_filtered, reduction = "pca", group.by = "ident")
+
+names(brain_filtered@meta.data)
+pcs_to_use <- 1:82
+brain_filtered <- FindNeighbors(brain_filtered, dims = pcs_to_use)
+brain_filtered <- FindClusters(brain_filtered, resolution = 2)
+
+cluster_markers<-read.csv("D:/cluster_markers.csv")
+```
+
+```{r}
+library(dplyr)
+library(EnhancedVolcano)
+library(viridis)
+library(RColorBrewer)
+
+colors = colorRampPalette(brewer.pal(9, "Set1"))(89)
+
+ data_clean<- cluster_markers %>%
+  filter(!is.na(p_val) & !is.na(avg_log2FC))
+significant_genes <- data_clean %>%
+  filter(p_val_adj < 1e-10 & abs(avg_log2FC) > 1)
+clusters <- unique(data_clean$cluster)
+```
+```{r}
+
+```
+
+
+```{r}
+#for (cluster in clusters) {
+  #cluster_data <- data_clean %>%
+    #filter(cluster == cluster)
+  
+  # 创建每个簇的火山图
+  #volcano=EnhancedVolcano(significant_genes,
+                   lab = significant_genes$gene,
+                   x = 'avg_log2FC',
+                   y = 'p_val_adj',
+                   pCutoff = 0.05,
+                   FCcutoff = 1,
+                   title = paste('Volcano Plot for Cluster', cluster))
+  print(volcano)
+}
+```
+
+
+```{r}
+DimPlot(brain, reduction = "pca", group.by = "ident")
+brain[["pca"]]@stdev 
+
+pca_variance <- brain[["pca"]]@stdev^2 / sum(brain[["pca"]]@stdev^2)  # 计算每个主成分的方差占比
+pca_variance #83是主成分标准差1.00的分界
+
+speci <- significant_genes %>% filter(gene=="dati")
+
+```
+
+
+```{r}
+library(tibble)
+
+top_genes <- significant_genes$gene
+gene_matrix <- data_clean %>%
+  filter(gene %in% top_genes) %>%
+  select(gene, cluster, logFC) %>%
+  spread(cluster, logFC) %>%
+  column_to_rownames('gene')
+
+pheatmap(gene_matrix,
+         scale = 'row',  # 行归一化
+         clustering_distance_rows = "euclidean",
+         clustering_distance_cols = "euclidean",
+         clustering_method = "complete",
+         show_rownames = TRUE,
+         show_colnames = TRUE,
+         main = 'Heatmap of Top Significant Genes')
+
+```
+
