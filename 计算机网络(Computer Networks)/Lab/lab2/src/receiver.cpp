@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 
     /* --- Stage 2: Receive Packets Based on Mode --- */
     if (params.mode == 0) {   // GBN (Go-Back-N)
-        /* --- Stage 3.1: Go-Back-N Packet Reception --- */
+        /* --- Stage 2.1: Go-Back-N Packet Reception --- */
         int num_packets = 0;
         while (true) {
             int nevents = epoll_wait(epfd, events, MAX_EVENT, 5000); // 5 seconds timeout
@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
         LOG_DEBUG("Total packets received: %d\n", num_packets);
     }
     else {   // SR (Selective Repeat)
-        /* --- Stage 3.2: Selective Repeat Packet Reception --- */
+        /* --- Stage 2.2: Selective Repeat Packet Reception --- */
         int recv_base = 0;
         int num_packets = 0;
         int window_size = params.window_size;
@@ -309,7 +309,7 @@ int main(int argc, char **argv) {
 
     LOG_DEBUG("Receiver: Exiting...\n");
 
-    /* --- Stage 6: Cleanup Resources --- */
+    /* --- Stage 1: Cleanup Resources --- */
     close(epfd);
     close(socket_fd);
     fclose(fp);

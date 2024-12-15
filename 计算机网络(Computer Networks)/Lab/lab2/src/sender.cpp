@@ -340,13 +340,13 @@ int main(int argc, char **argv) {
     /* ======== Termination Phase ======= */
     /* ================================== */
 
-    /* --- Stage 4: Send FIN to Receiver --- */
+    /* --- Stage 1: Send FIN to Receiver --- */
     // Send FIN packet to terminate connection
     pack_header(&msg_send.header, final_seq_num, 0, RTP_FIN);
     to_receiver(&msg_send.header, sizeof(rtp_header_t));
     LOG_MSG("Sent FIN to receiver.\n");
 
-    /* --- Stage 5: Wait for FINACK from Receiver --- */
+    /* --- Stage 2: Wait for FINACK from Receiver --- */
     retrans = 0;
     while (true) {
         // Wait for events with a timeout of 100 milliseconds
@@ -382,7 +382,7 @@ int main(int argc, char **argv) {
 
     LOG_DEBUG("Sender: Exiting...\n");
 
-    /* --- Stage 6: Cleanup Resources --- */
+    /* --- Stage 3: Cleanup Resources --- */
     close(epfd);
     close(socket_fd);
     // Note: The file has already been closed after packet preparation.
