@@ -1,0 +1,34 @@
+# Visual Studio Specific
+.vs/
+*.sln
+*.db
+*.opendb
+*.vcproj
+*.filters
+*.vcxproj
+Debug/
+Release/
+x64/
+.vscode/
+
+# CMake Specific
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+# Atom editor specific
+.clang_complete
+
+# Python
+*.pyc
+temp_build/
+
+# Library output
+libsimplessd.a
+libmcpat.a

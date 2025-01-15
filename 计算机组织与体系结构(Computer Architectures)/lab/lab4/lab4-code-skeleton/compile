@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cmake -DDEBUG_BUILD=off .
+make -j16
+mv simplessd-standalone simexe-r
+cmake -DDEBUG_BUILD=on .
+make -j16
+mv simplessd-standalone simexe-d
+

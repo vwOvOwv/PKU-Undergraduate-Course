@@ -1,0 +1,38 @@
+# CMake Temporary Files
+CMakeFiles/
+*.cmake
+CMakeCache.txt
+
+# SimpleSSD output
+libsimplessd.a
+libmcpat.a
+simplessd-standalone
+
+# Visual Studio Specific
+.vs/
+Debug/
+Release/
+Win32/
+MinSizeRel/
+RelWithDebInfo/
+SimpleSSD-Standalone.dir
+*.sdf
+*.db
+*.opendb
+*.filters
+*.vcxproj
+*.vcproj
+*.sln
+
+# Make Specific
+Makefile
+*.o
+*.s
+
+# Atom Specific
+.clang_complete
+compile_flags.txt
+
+# VSCode Specific
+.vscode/
+*.code-workspace
