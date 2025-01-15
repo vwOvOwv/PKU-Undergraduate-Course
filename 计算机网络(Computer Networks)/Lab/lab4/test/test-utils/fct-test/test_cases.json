@@ -1,0 +1,22 @@
+[
+    {
+        "flow_size_0": 20000,
+        "flow_size_1": 30000
+    },
+    {
+        "flow_size_0": 800000,
+        "flow_size_1": 700000
+    },
+    {
+        "flow_size_0": 1200000,
+        "flow_size_1": 1000000
+    },
+    {
+        "flow_size_0": 1800000,
+        "flow_size_1": 2000000
+    },
+    {
+        "flow_size_0": 2000000,
+        "flow_size_1": 2500000
+    }
+]
