@@ -1,0 +1,3 @@
+[submodule "simplessd"]
+	path = simplessd
+	url = git@github.com:simplessd/simplessd

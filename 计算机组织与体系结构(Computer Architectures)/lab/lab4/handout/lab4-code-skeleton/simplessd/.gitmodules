@@ -1,0 +1,3 @@
+[submodule "lib/mcpat"]
+	path = lib/mcpat
+	url = git@github.com:simplessd/mcpat

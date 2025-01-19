@@ -1,0 +1,11 @@
+#!/bin/bash
+
+traces=("case" "exchange" "homes" "ikki")
+ssds=("base" "fast")
+
+for t in ${traces[@]}; do
+for s in ${ssds[@]}; do
+    echo "Plotting $t $s"
+    python3 plot.py --file output/$t/$s/latency
+done
+done
