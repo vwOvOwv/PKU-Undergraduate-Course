@@ -12,6 +12,6 @@ Please do **NOT** use these resources for commercial purposes.
 ## Contact Information
 If you have any questions or would like to obtain the slides (you should prove that you're a PKU student) and further information, please leave messages in the discussion area or contact me via email :)  
 
-My email: 2100012289@stu.pku.edu.cn  
+My email: lpy512120@stu.pku.edu.cn  
 
 ### Thank you for visiting (and for the stars 🌟). I hope this repo will make your life at PKU easier.  
