@@ -1,0 +1,28 @@
+#
+# trace31.txt - Robustness: job continued by outside your shell
+#
+
+/bin/echo -e tsh\076 ./mycont 10
+NEXT
+./mycont 10
+WAIT
+
+# Stop and check the job state
+SIGTSTP
+NEXT
+
+/bin/echo -e tsh\076 jobs
+NEXT
+jobs
+NEXT
+
+# Now continue it, but not through fg/bg in shell
+SIGNAL # inform the child to continue its parent
+
+/bin/echo -e tsh\076 jobs
+NEXT
+jobs
+NEXT
+
+quit
+

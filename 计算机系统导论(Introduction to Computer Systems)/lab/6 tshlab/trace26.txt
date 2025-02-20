@@ -1,0 +1,9 @@
+#
+# trace26.txt - kill (builtin_cmd)
+#
+
+kill %1
+NEXT
+
+quit
+

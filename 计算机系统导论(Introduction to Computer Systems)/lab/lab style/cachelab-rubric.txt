@@ -1,0 +1,54 @@
+CacheLab Grading (v3)
+
+Here is the procedure to use when grading:
+
+1. Use Autolab's code annotation feature to directly annotate the
+   student's csim.c and trans.c files. (Visit cachelab->grade submissions
+   and click on the little arrow next to the students email address).
+
+2. For each deduction, use the drop-down box to make an explicit point
+   deduction in the code and to associate it with a problem (either
+   "Style" or "CorrectnessDeductions"). You can also provide other
+   feedback in the code without making any point deductions.
+
+3. Style grading for csim.c only. CorrectnessDeductions for csim.c
+   (memory leaks) and trans.c (12 local variable rule)
+
+4. When you have finished annotating a code file, click the "Reload"
+   button at the top of the code file to scrape your comments and
+   provide a summary of the point deductions at the top.
+
+5. Enter the grade in the "Style" problem on the grade sheet, and in
+   its feedback box, remind the students to view the details in the
+   annotated code (this is important because sometimes students don't
+   look in the annotated code). Don't forget to explicitly "save" the
+   contents of the feedback box.
+
+****************************************
+Style deductions (saturate at -7 points)
+****************************************
+* Missing or non-descriptive program header comment: -2 pts
+* Missing or non-descriptive function header comments: -1 pt each,
+  saturate at -2 pts
+* Inconsistent indentation: -2 pts
+* Lines greatly exceeding 80 chars (egregious only): -1 pt each, saturate at -2 pts
+* Poor error checking: -1
+* Any other egregious readability issue(s): -2 pts
+
+**********************
+CorrectnessDeductions
+**********************
+* Violating 12 local variable rule: -5 pts. 
+  We're only looking for really egregious violations here, so you
+  don't need to be too strict.
+
+* Memory leak(s): -2 pts
+
+
+
+
+
+
+
+
+

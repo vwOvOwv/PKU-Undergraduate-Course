@@ -1,0 +1,15 @@
+#
+# trace27.txt - kill (builtin_cmd)
+#
+
+./myterm2 &
+NEXT
+WAIT
+SIGNAL
+
+kill %1
+WAIT
+SIGNAL
+
+quit
+

@@ -1,0 +1,62 @@
+********************
+Proxylab Rubric (v8)
+********************
+
+*********************************
+Style deductions (saturate at 10)
+*********************************
+* Missing or non-descriptive program header comment: -2 pts
+* Missing or non-descriptive function header comments: -1 pt each,
+  saturate at -2 pts
+* Inconsistent indentation -1 pt each, saturate at -2
+* Lines *greatly* exceeding 80 chars: -1 pt each, saturate at -2 pts
+* Poor use of white space anywhere: -1 total
+* Magic number(s) anywhere: -1 total
+* Dead code (commented out rather than ifdef'd): -1 total
+* Poor modularity: -2 total
+* Not checking syscall return values:  -1 pt each, saturate at -3
+* Any other egregious readability issue(s): -2 pts
+
+******************
+RealPages (20 pts)       
+******************
+* Proxy: Compile and run the student proxy on a shark machine. 
+* Browser: Use the latest version of Firefox, TURN OFF CACHING
+* Pages to check: Fetch exactly the following four pages:
+
+http://www.cs.cmu.edu/~213
+http://csapp.cs.cmu.edu
+http://www.pku.edu.cn
+http://dean.pku.edu.cn/pkudean/index.html
+ 
+* Do all grading in proxylab/grading handy using the ./runHandinProxy.sh script.
+* If a page loads correctly: 5 pts, no partial credit
+* For each page, hit refresh to check for caching issues (see below).  
+
+**********************
+CorrectnessDeductions 
+**********************
+* One or more RealPages doesn't refresh: -5 
+* Race condition or incorrect synchronization that was not caught by
+  the autograder: -5
+* No synchronization at all: -10 (don't double count for race)
+* Cache doesn't approximate LRU: -5
+* Cache eviction doesn't work: -5
+* Memory leak or descriptor leak: -3
+* Proxy terminates on syscall error: -5
+* Proxy doesn't handle SIGPIPE signals: -3
+* Synchronization doesn't allow for multiple concurrent readers: -5
+
+To avoid double penalties, for each case (concurrency or cache),
+saturate your deductions at min(10, driver points). For example, if a
+student received 0 cache points, don't deduct anything. If they
+received 15 cache points, deduct up to 10 points for cache errors.
+
+*************
+Special cases
+*************
+* If the driver fails on Autolab and passes on shark machines, then
+  award the shark machine points
+
+* If the student made a reasonable attempt and the code compiles, then
+  20 pts partial credit. 

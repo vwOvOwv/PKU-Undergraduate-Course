@@ -1,0 +1,68 @@
+                            | #刘沛雨
+                            | #2100012289
+                            | 
+                            | # Init        
+0x000:                      |     .pos 0
+0x000: 30f40002000000000000 |     irmovq stack,%rsp
+0x00a: 804800000000000000   |     call main
+0x013: 00                   |     halt
+                            | 
+                            | # Array
+0x018:                      |     .align 8
+0x018:                      | array:
+0x018: ca0b000000000000     |     .quad 0xbca
+0x020: ba0c000000000000     |     .quad 0xcba
+0x028: cb0a000000000000     |     .quad 0xacb
+0x030: ab0c000000000000     |     .quad 0xcab
+0x038: bc0a000000000000     |     .quad 0xabc
+0x040: ac0b000000000000     |     .quad 0xbac
+                            | 
+                            | # Main
+0x048:                      | main:
+0x048: 30f71800000000000000 |     irmovq  array,%rdi
+0x052: 30f60600000000000000 |     irmovq  $0x6,%rsi
+0x05c: 806600000000000000   |     call bubble_sort
+0x065: 90                   |     ret
+                            | 
+                            | # Process
+0x066:                      | bubble_sort:
+0x066: 30f00000000000000000 |     irmovq  $0,%rax
+0x070: 2073                 |     rrmovq  %rdi,%rbx   #data
+0x072: 2061                 |     rrmovq  %rsi,%rcx   #count
+0x074: 30f20100000000000000 |     irmovq  $0x1,%rdx
+0x07e: 6121                 |     subq    %rdx,%rcx
+0x080: 6011                 |     addq    %rcx,%rcx
+0x082: 6011                 |     addq    %rcx,%rcx
+0x084: 6011                 |     addq    %rcx,%rcx
+0x086: 6013                 |     addq    %rcx,%rbx   #last
+0x088: 70f600000000000000   |     jmp     test1
+0x091:                      | loop1:
+0x091: 2072                 |     rrmovq  %rdi,%rdx   #i
+0x093: 70dd00000000000000   |     jmp     test2
+0x09c:                      | loop2:
+0x09c: 50120800000000000000 |     mrmovq  0x8(%rdx),%rcx  #*(i+1)
+0x0a6: 50020000000000000000 |     mrmovq  (%rdx),%rax #*i
+0x0b0: 2008                 |     rrmovq  %rax,%r8
+0x0b2: 6110                 |     subq    %rcx,%rax   #*i - *(i+1)
+0x0b4: 71d100000000000000   |     jle     done
+0x0bd: 40820800000000000000 |     rmmovq  %r8,0x8(%rdx)
+0x0c7: 40120000000000000000 |     rmmovq  %rcx,(%rdx)
+0x0d1:                      | done:
+0x0d1: 30f10800000000000000 |     irmovq  $0x8,%rcx
+0x0db: 6012                 |     addq    %rcx,%rdx
+0x0dd:                      | test2:
+0x0dd: 2031                 |     rrmovq  %rbx,%rcx   #last
+0x0df: 6121                 |     subq    %rdx,%rcx   #last-i
+0x0e1: 769c00000000000000   |     jg      loop2
+0x0ea: 30f10800000000000000 |     irmovq  $0x8,%rcx
+0x0f4: 6113                 |     subq    %rcx,%rbx
+0x0f6:                      | test1:
+0x0f6: 2032                 |     rrmovq  %rbx,%rdx   #last
+0x0f8: 6172                 |     subq    %rdi,%rdx   #last-data
+0x0fa: 769100000000000000   |     jg      loop1
+0x103: 90                   |     ret
+                            | 
+                            | 
+                            | # Stack
+0x200:                      |     .pos 0x200
+0x200:                      | stack:

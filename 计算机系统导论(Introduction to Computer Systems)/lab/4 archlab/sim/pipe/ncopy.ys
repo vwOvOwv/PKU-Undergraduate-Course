@@ -1,0 +1,184 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+# 刘沛雨 2100012289
+# Describe how and why you modified the baseline code.
+# 思路：十路循环展开+分治进行余数处理
+# 十路循环展开中通过将src数组中的数依次读入不同寄存器，保证不发生数据冒险，使流水线持续运行
+# 余数处理是程序优化的主要部分，循环结束后len可以取0-9,通过类似二分查找的方式确定len的值
+# 在此思路的基础上，通过设置合适的“二分查找点”和指令排列顺序，尽可能多地减少指令数量
+# 除此之外，还通过将mrmovq和rmmovq分开和重新排列指令计算逻辑的方式避免加载-使用冒险，但这样似乎限制了二分查找点的选取（以3作为一个查找点会很方便）
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	iaddq $-10,%rdx
+	jl endHandler
+Loop1:
+	mrmovq (%rdi),%rcx
+	mrmovq 8(%rdi),%r8
+	mrmovq 16(%rdi),%r9
+	mrmovq 24(%rdi),%r10
+	mrmovq 32(%rdi),%r11
+	mrmovq 40(%rdi),%r12
+	mrmovq 48(%rdi),%r13
+	mrmovq 56(%rdi),%r14
+	mrmovq 64(%rdi),%rbx
+	mrmovq 72(%rdi),%rbp
+	rmmovq %rcx,(%rsi)
+	rmmovq %r8,8(%rsi)
+	rmmovq %r9,16(%rsi)
+	rmmovq %r10,24(%rsi)
+	rmmovq %r11,32(%rsi)
+	rmmovq %r12,40(%rsi)
+	rmmovq %r13,48(%rsi)
+	rmmovq %r14,56(%rsi)
+	rmmovq %rbx,64(%rsi)
+	rmmovq %rbp,72(%rsi)
+	andq %rcx,%rcx
+	jle Npos0
+	iaddq $1,%rax
+Npos0:
+	andq %r8,%r8
+	jle Npos1
+	iaddq $1,%rax
+Npos1:
+	andq %r9,%r9
+	jle Npos2
+	iaddq $1,%rax
+Npos2:
+	andq %r10,%r10
+	jle Npos3
+	iaddq $1,%rax
+Npos3:
+	andq %r11,%r11
+	jle Npos4
+	iaddq $1,%rax
+Npos4:
+	andq %r12,%r12
+	jle Npos5
+	iaddq $1,%rax
+Npos5:
+	andq %r13,%r13
+	jle Npos6
+	iaddq $1,%rax
+Npos6:
+	andq %r14,%r14
+	jle Npos7
+	iaddq $1,%rax
+Npos7:
+	andq %rbx,%rbx
+	jle Npos8
+	iaddq $1,%rax
+Npos8:
+	andq %rbp,%rbp
+	jle Npos9
+	iaddq $1,%rax
+Npos9:
+	iaddq $80,%rdi
+	iaddq $80,%rsi
+	iaddq $-10,%rdx
+	jge Loop1
+
+endHandler:
+	mrmovq (%rdi),%rcx
+	iaddq $7,%rdx
+	jge endHandler3_9
+endHandler0_2:
+	iaddq $2,%rdx
+	jl Done
+	rmmovq %rcx,(%rsi)
+	je endHandler1
+	jmp endHandler2
+endHandler4_6:
+	iaddq $2,%rdx
+	jl endHandler4
+	je endHandler5
+	jmp endHandler6
+endHandler3_9:
+	rmmovq %rcx,(%rsi)
+	je endHandler3
+endHandler4_9:
+	iaddq $-4,%rdx
+	jl endHandler4_6
+	je endHandler7
+endHandler8_9:
+	iaddq $-2,%rdx
+	jl endHandler8
+endHandler9:
+    andq %rcx,%rcx
+	mrmovq 64(%rdi),%rcx
+    jle Npos10
+	iaddq $1,%rax
+Npos10:
+    rmmovq %rcx,64(%rsi)
+endHandler8:
+    andq %rcx,%rcx
+	mrmovq 56(%rdi),%rcx
+	jle Npos11
+	iaddq $1,%rax
+Npos11:
+    rmmovq %rcx,56(%rsi)
+endHandler7:
+    andq %rcx,%rcx
+	mrmovq 48(%rdi),%rcx
+    jle Npos12
+	iaddq $1,%rax
+Npos12:
+	rmmovq %rcx,48(%rsi)
+endHandler6:
+	andq %rcx,%rcx
+	mrmovq 40(%rdi),%rcx
+	jle Npos13
+	iaddq $1,%rax
+Npos13:
+    rmmovq %rcx,40(%rsi)
+endHandler5:
+	andq %rcx,%rcx
+	mrmovq 32(%rdi),%rcx
+	jle Npos14
+	iaddq $1,%rax
+Npos14:
+    rmmovq %rcx,32(%rsi)
+endHandler4:
+	andq %rcx,%rcx
+	mrmovq 24(%rdi),%rcx
+	jle Npos15
+	iaddq $1,%rax
+Npos15:
+    rmmovq %rcx,24(%rsi)
+endHandler3:
+	andq %rcx,%rcx
+	mrmovq 16(%rdi),%rcx
+	jle Npos16
+	iaddq $1,%rax
+Npos16:
+    rmmovq %rcx,16(%rsi)
+endHandler2:
+	andq %rcx,%rcx
+	mrmovq 8(%rdi),%rcx
+	jle Npos17
+	iaddq $1,%rax
+Npos17:
+    rmmovq %rcx,8(%rsi)
+endHandler1:
+	andq %rcx,%rcx
+	jle Done
+	iaddq $1,%rax
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

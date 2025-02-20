@@ -1,0 +1,32 @@
+Using default tracefiles in ./traces/
+Measuring performance with a cycle counter.
+Processor clock rate ~= 2000.0 MHz
+.......................
+Results for mm malloc:
+  valid  util   ops    secs     Kops  trace
+   yes    86%  100000  0.008328 12007 ./traces/alaska.rep
+ * yes    99%    4805  0.000847  5670 ./traces/amptjp.rep
+ * yes    82%    4162  0.000323 12868 ./traces/bash.rep
+ * yes    65%   57716  0.004817 11981 ./traces/boat.rep
+ * yes    78%  100000  0.007102 14081 ./traces/boat-plus.rep
+ u yes    73%      --        --    -- ./traces/binary2-bal.rep
+ * yes   100%    5032  0.000766  6568 ./traces/cccp.rep
+ * yes   100%    5848  0.000819  7140 ./traces/cccp-bal.rep
+ * yes    76%   11991  0.000992 12088 ./traces/chrome.rep
+ * yes   100%   20000  0.001675 11941 ./traces/coalesce-big.rep
+   yes    80%   14400  0.000722 19937 ./traces/coalescing-bal.rep
+   yes   100%      15  0.000004  3707 ./traces/corners.rep
+ * yes   100%    5683  0.001188  4782 ./traces/cp-decl.rep
+ u yes    71%      --        --    -- ./traces/exhaust.rep
+ * yes    99%    5380  0.001202  4474 ./traces/expr-bal.rep
+ * yes    83%   99544  0.009184 10839 ./traces/firefox-reddit2.rep
+ * yes    97%   55092  0.004480 12299 ./traces/freeciv.rep
+   yes    68%      10  0.000005  1845 ./traces/malloc.rep
+   yes    56%      17  0.000005  3260 ./traces/malloc-free.rep
+ p yes     --    1494  0.000167  8959 ./traces/perl.rep
+ * yes    93%    4800  0.001228  3908 ./traces/random.rep
+ * yes    92%    4800  0.001252  3834 ./traces/random2.rep
+   yes    32%   14401  0.116515   124 ./traces/realloc.rep
+16 15     88%  386347  0.036043 10719
+
+Perf index = 54 (util) & 27 (thru) = 81/100
