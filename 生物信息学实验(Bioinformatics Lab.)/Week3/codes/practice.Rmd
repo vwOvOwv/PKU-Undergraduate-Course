@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ## Step0. 安装所需包并载入
@@ -10,10 +12,7 @@ output: html_notebook
 ```{r}
 # install.packages("BiocManager")
 # BiocManager::install("DESeq2")
-# install.packages("tidyverse")
-```
-
-```{r}
+install.packages("tidyverse")
 library(DESeq2, tidyverse)
 ```
 
@@ -22,16 +21,13 @@ library(DESeq2, tidyverse)
 ### 从TCGA 网站下载表达量数据并解压缩
 
 ```{r}
-path <- "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验 (Bioinformatics Lab.)/Week3/codes/data/TCGA-LIHC.star_counts.tsv"
+path <- "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week3/data/TCGA-LIHC.star_counts.tsv"
 ```
 
 ### 将表达量数据读入R，数据框命名为raw （计1分）
 
 ```{r}
 raw <- read.csv(path, sep = "\t")
-```
-
-```{r}
 head(raw)
 ```
 
@@ -39,7 +35,7 @@ head(raw)
 
 ```{r}
 rownames(raw) <- raw[, 1]
-raw <- raw[, -1] # 给这句代码撰写注释，计1分：去除raw中的第一列，并赋值给raw（in-place）
+raw <- raw[, -1] # 给这句代码撰写注释，计1分：去除raw中的第一列
 raw <- as.matrix(raw)
 cts <- floor(2**raw-1)
 ```
@@ -51,6 +47,7 @@ condition <- ifelse(substr(colnames(raw),14,14)=='0','tumor','normal')
 # 给这句代码撰写注释，计1分：判断raw每一列的列名的第14个字符是否为‘0’，如果是，则将condition中的对应位置修改为'tumor'，如果不是，则修改为'normal'
 coldata <- as.data.frame(condition,colnames(raw))
 coldata$condition <- factor(coldata$condition)
+head(coldata)
 ```
 
 ## Step2. 构建*DESeqDataSet*（计1分）
@@ -102,12 +99,8 @@ resOrdered <- res[order(res$pvalue),]
 
 ### 练习：选取某个基因作图展示表达量变化（计1分）
 
-```{r, fig.width=10, fig.height=7}
-plotCounts(dds, gene = which.min(res$pvalue), intgroup = "condition")
-```
-
 ```{r}
-res$pvalue[]
+plotCounts(dds, gene = which.min(res$padj), intgroup = "condition")
 ```
 
 ### 火山图
@@ -118,11 +111,8 @@ library(EnhancedVolcano)
 ```
 
 ```{r, fig.width=20, fig.height=20}
-# TODO:改label
 EnhancedVolcano(res,
     lab = rownames(res),
     x = 'log2FoldChange',
     y = 'pvalue',)
 ```
-
-## Step7. 外部数据集验证
