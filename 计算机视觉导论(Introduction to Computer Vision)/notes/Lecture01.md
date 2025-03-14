@@ -124,7 +124,7 @@ $$R=\frac{TP}{TP+FN}$$
 > 
 > $TP+FP$ equals to the total number of positive *predictions*, while $TP+FN$ equals to the total number of positive *labels* (that should be predicted).
 >
-> Under the context of edge prediction, high $P$ means most detected edges are real edges, but there is possibility that many real edges are not found (low $R$). On the other hand, high $R$ means most real edges are detected, but there is possibility that many false edges are also detected as edges.
+> Under the context of edge prediction, high $P$ means most detected edges are real edges, but there is possibility that many real edges are not found (low $R$). On the other hand, high $R$ means most real edges are detected, but there is possibility that many regions that are not edges are also detected as edges (low $P$).
 
 Other metrics: localization, response constraint.
 
