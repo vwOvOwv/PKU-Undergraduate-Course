@@ -131,3 +131,11 @@ Other metrics: localization, response constraint.
 ### Methods and Problems
 
 According to the definition of edge, it's natural to use gradient (vector) and its magnitude to detect edges. However, gradients are sensitive to noise, so low-pass filters are needed to denoise.
+
+Here we use Gaussian filter, whose Fourier transform is also Gaussian (thus a low-pass filter).
+
+$$g=\frac{1}{\sqrt{2\pi}\sigma}exp\left({-\frac{x^2}{2\sigma^2}}\right), \mathcal{F}(g)=exp\left({-\frac{\sigma^2 \omega^2}2}\right)$$
+
+In implementation, we can directly calculate use the derivative of $g$ and then conduct convolution, due to the derivative theorem.
+
+![alt text](./assets/lec01/image5.png)
