@@ -1,0 +1,355 @@
+# Differential Expression Analysis
+
+```{r}
+library(DESeq2, tidyverse)
+```
+
+## Prepare data
+
+### Load and transform data
+
+```{r}
+path <- "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/data/TCGA-BRCA.star_counts.tsv"
+```
+
+```{r}
+raw <- read.csv(path, sep = "\t")
+head(raw)
+```
+
+```{r}
+rownames(raw) <- raw[, 1]
+raw <- raw[, -1] # remove first column
+raw <- as.matrix(raw)
+cts <- floor(2**raw-1)
+```
+
+```{r}
+condition <- ifelse(substr(colnames(raw),14,14)=='0','tumor','normal') 
+coldata <- as.data.frame(condition,colnames(raw))
+coldata$condition <- factor(coldata$condition)
+coldata
+```
+
+### Construct DESeqDataSet
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = cts,
+                              colData = coldata,
+                              design = ~ condition)
+dds
+```
+
+### Pre-filter
+
+```{r}
+keep <- rowSums(counts(dds)) >= 120
+dds <- dds[keep, ]
+dds
+```
+
+## DEG
+
+```{r}
+dds <- DESeq(dds)
+res <- results(dds, contrast = c("condition", "tumor", "normal"), alpha = 0.05)
+res
+```
+
+```{r}
+summary(res)
+```
+
+```{r}
+res1 <- data.frame(res)
+res1
+```
+
+```{r}
+library(dplyr)
+res2 <- mutate(res1, expDiff = case_when(
+  log2FoldChange > 0 & padj < 0.05 ~ "up",
+  log2FoldChange < 0 & padj < 0.05 ~"down",
+  TRUE ~ "no_change"
+))
+res2
+```
+
+```{r}
+table(res2$expDiff) 
+```
+
+```{r}
+write.csv(res2, file = "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/diff_expr_res.csv")
+```
+
+## GO analysis
+
+```{r}
+res2$ENSGID <- substr(row.names(res2), 1, 15)
+```
+
+```{r}
+# BiocManager::install("org.Hs.eg.db")
+# BiocManager::install("clusterProfiler")
+# BiocManager::install("stringr")
+```
+
+```{r}
+library(org.Hs.eg.db)
+library(clusterProfiler)
+library(stringr)
+library(ggplot2)
+```
+
+```{r}
+gene_names <- mapIds(org.Hs.eg.db, keys = res2$ENSGID, column = "SYMBOL", 
+                    keytype = "ENSEMBL", multiVals = "first")
+res2$geneName <- gene_names
+upgenes <- res2[res2$expDiff == "up", ]
+downgenes <- res2[res2$expDiff == "down", ]
+```
+
+```{r}
+up_go_res <- enrichGO(upgenes$geneName, org.Hs.eg.db, keyType = "SYMBOL",
+                       ont = "BP", pvalueCutoff = 0.05, pAdjustMethod = "BH",
+                       qvalueCutoff = 0.2, minGSSize = 10, maxGSSize = 500,
+                       readable = FALSE, pool = FALSE)
+down_go_res <- enrichGO(downgenes$geneName, org.Hs.eg.db, keyType = "SYMBOL",
+                       ont = "BP", pvalueCutoff = 0.05, pAdjustMethod = "BH",
+                       qvalueCutoff = 0.2, minGSSize = 10, maxGSSize = 500,
+                       readable = FALSE, pool = FALSE)
+```
+
+```{r}
+up_go_res2 <- mutate(up_go_res@result,
+                      GeneRatio_a = as.numeric(str_extract(GeneRatio, "\\d+")),
+                      BgRatio_a = as.numeric(str_extract(BgRatio, "\\d+")),
+                      RichFactor = GeneRatio_a / BgRatio_a)
+down_go_res2 <- mutate(down_go_res@result,
+                      GeneRatio_a = as.numeric(str_extract(GeneRatio, "\\d+")),
+                      BgRatio_a = as.numeric(str_extract(BgRatio, "\\d+")),
+                      RichFactor = GeneRatio_a / BgRatio_a)
+```
+
+```{r}
+write.csv(up_go_res2, file = "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/upGOres.csv")
+write.csv(down_go_res2, file = "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/downGOres.csv")
+```
+
+## KEGG analysis
+
+```{r}
+up_entrez_id <- bitr(upgenes$geneName, fromType = "SYMBOL", 
+                  toType = "ENTREZID", OrgDb = "org.Hs.eg.db")
+up_entrez_id <- up_entrez_id[,2]
+down_entrez_id <- bitr(downgenes$geneName, fromType = "SYMBOL", 
+                  toType = "ENTREZID", OrgDb = "org.Hs.eg.db")
+down_entrez_id <- down_entrez_id[,2]
+```
+
+```{r}
+up_kegg_res <- enrichKEGG(up_entrez_id, organism = 'hsa',
+                    pvalueCutoff = 0.05,pAdjustMethod = 'BH',qvalueCutoff = 0.2,
+                    minGSSize=10,maxGSSize=500,use_internal_data=F)
+down_kegg_res <- enrichKEGG(down_entrez_id, organism = 'hsa',
+                    pvalueCutoff = 0.05,pAdjustMethod = 'BH',qvalueCutoff = 0.2,
+                    minGSSize=10,maxGSSize=500,use_internal_data=F)
+```
+
+```{r}
+up_kegg_res <- setReadable(up_kegg_res, 'org.Hs.eg.db','ENTREZID')
+down_kegg_res <- setReadable(down_kegg_res, 'org.Hs.eg.db','ENTREZID')
+up_kegg_res <- mutate(up_kegg_res@result,
+                      GeneRatio_a = as.numeric(str_extract(GeneRatio, "\\d+")),
+                      BgRatio_a = as.numeric(str_extract(BgRatio, "\\d+")),
+                      RichFactor = GeneRatio_a / BgRatio_a)
+down_kegg_res <- mutate(down_kegg_res@result,
+                      GeneRatio_a = as.numeric(str_extract(GeneRatio, "\\d+")),
+                      BgRatio_a = as.numeric(str_extract(BgRatio, "\\d+")),
+                      RichFactor = GeneRatio_a / BgRatio_a)
+```
+
+```{r}
+write.csv(up_kegg_res, file = "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/upKEGGres.csv")
+write.csv(down_kegg_res, file = "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/downKEGGres.csv")
+```
+
+## Visualization
+
+```{r}
+# BiocManager::install("pheatmap")
+```
+
+```{r}
+library(ggrepel)
+library(pheatmap)
+```
+
+### DEG
+
+```{r}
+top_upgenes <- head(upgenes[order(upgenes$padj, decreasing = FALSE), ], 20)
+top_downgenes <- head(downgenes[order(downgenes$padj, decreasing = FALSE), ], 20)
+res2$sign <- NA
+res2$sign[which(rownames(res2) %in% c(rownames(top_downgenes), rownames(top_upgenes)) )]<-res2$geneName[which(rownames(res2) %in% c(rownames(top_downgenes), rownames(top_upgenes)))]
+```
+
+```{r}
+log2FC_cutoff = 1
+padj_cutoff = 0.05
+visualized_genes <- res2
+visualized_genes <- mutate(res2, expDiff = case_when(
+  log2FoldChange > log2FC_cutoff & padj < 0.05 ~ "up",
+  log2FoldChange < -log2FC_cutoff & padj < 0.05 ~"down",
+  TRUE ~ "no_change"
+))
+visualized_genes
+```
+
+```{r, fig.width=10, fig.height=10}
+ggplot(data = visualized_genes, aes(x = log2FoldChange, y = -log10(padj), color = expDiff)) +
+  geom_point(alpha=0.4, size = 2) +
+  theme_classic()+
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  labs(x="log2FoldChange",y="-log10(padj)")+
+  scale_color_manual(name = "", values=c( "#ff4757","#546de5","#d2dae2"), limits = c("up", "down", "no_change")) +
+  geom_vline(xintercept = c(-log2FC_cutoff, log2FC_cutoff),lty=4,col="grey",lwd=0.8) +
+  geom_hline(yintercept = -log10(padj_cutoff), lty=4, col="grey", lwd=0.8) +
+  geom_label_repel(aes(label=sign), fontface="bold.italic", color="grey50", box.padding=unit(1, "lines"), point.padding=unit(0.5, "lines"), segment.colour = "grey50", max.overlaps = getOption("ggrepel.max.overlaps", default = 30),) +
+  ylim(NA, 300)
+
+ggsave("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/volcano.pdf", width = 10, height = 10) 
+```
+
+```{r}
+library(pheatmap)
+visualized_gene_row_index <- c(top_upgenes$geneName, top_downgenes$geneName)
+rownames(cts) <- mapIds(org.Hs.eg.db, keys = substr(rownames(cts), 1, 15), column = "SYMBOL", keytype = "ENSEMBL", multiVals = "first")
+visualized_raw_data <- cts[intersect(rownames(cts), visualized_gene_row_index),]
+visualized_raw_data <- visualized_raw_data[, order(coldata$condition)]
+```
+
+```{r}
+p <- pheatmap(visualized_raw_data,
+              annotation_col = coldata,
+              color = colorRampPalette(c("blue","white","red"))(10),
+              cluster_cols = F,
+              show_rownames = T,
+              show_colnames = F,
+              cluster_rows = T,
+              scale = "row",
+              fontsize = 6,
+              fontsize_row = 6,
+              fontsize_col = 6,
+              border = FALSE,
+              main = "")
+```
+
+```{r}
+save_pheatmap_pdf <- function(x, filename, width=12, height=10) {
+  stopifnot(!missing(x))
+  stopifnot(!missing(filename))
+  pdf(filename, width=width, height=height)
+  grid::grid.newpage()
+  grid::grid.draw(x$gtable)
+  dev.off()
+}
+save_pheatmap_pdf(p, "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/heatmap.pdf")
+```
+
+### GO
+
+```{r}
+up_go_res2$group <- 1
+down_go_res2$group <- -1
+
+up_go_res2$Description<-sub("(.)", "\\U\\1",up_go_res2$Description, perl=TRUE)
+down_go_res2$Description<-sub("(.)", "\\U\\1",down_go_res2$Description, perl=TRUE)
+visualized_up_go_res <- up_go_res2[order(up_go_res2$p.adjust), ]
+visualized_up_go_res <- visualized_up_go_res[1: 20, ]
+visualized_down_go_res <- down_go_res2[order(down_go_res2$p.adjust), ]
+visualized_down_go_res <- visualized_down_go_res[1: 20, ]
+visualized_go_data <- rbind(visualized_up_go_res, visualized_down_go_res)
+visualized_go_data$RichFactor <- visualized_go_data$RichFactor * visualized_go_data$group
+visualized_go_data$group[which(visualized_go_data$group > 0)] = 'up'
+visualized_go_data$group[which(visualized_go_data$group < 0)] = 'down'
+visualized_go_data
+```
+
+```{r, fig.width=10, fig.height=10}
+ggplot(visualized_go_data, aes(reorder(Description, RichFactor), 
+                               RichFactor, fill = factor(group))) +
+  geom_col() +
+  theme_bw() +
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.border = element_blank(),
+        legend.title = element_blank(),
+        axis.text = element_text(color="black", size=10),
+        axis.line.x = element_line(color='black'),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        legend.position = 'right') +
+  coord_flip() +
+  geom_text(data = visualized_go_data[which(visualized_go_data$RichFactor>0),],
+            aes(x=Description, y=-0.01, label=Description),
+            hjust=1, size=4) +
+  geom_text(data = visualized_go_data[which(visualized_go_data$RichFactor<0),],
+            aes(x=Description, y=0.01, label=Description),
+            hjust=0, size=4)+
+  scale_fill_manual(values = c("#fb6a4a","#3182bd"), breaks = c("up", "down"))+
+  scale_x_discrete(expand = expansion(mult = c(0,0))) +
+  ylim(-0.8, 0.8) +
+  labs(x='', y='RichFactor') +
+  theme(legend.text = element_text(size = 10),
+        axis.title.x = element_text(size = 10))
+ggsave("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/go.pdf", width = 10, height = 10)
+```
+
+### KEGG
+
+```{r}
+up_kegg_res$group <- 1
+down_kegg_res$group <- -1
+
+visualized_up_kegg_res <- up_kegg_res[order(up_kegg_res$p.adjust), ]
+visualized_up_kegg_res <- visualized_up_kegg_res[1: 20, ]
+visualized_down_kegg_res <- down_kegg_res[order(down_kegg_res$p.adjust), ]
+visualized_down_kegg_res <- visualized_down_kegg_res[1: 20, ]
+visualized_kegg_data <- rbind(visualized_up_kegg_res, visualized_down_kegg_res)
+visualized_kegg_data$RichFactor <- visualized_kegg_data$RichFactor * visualized_kegg_data$group
+visualized_kegg_data$group[which(visualized_kegg_data$group > 0)] = 'up'
+visualized_kegg_data$group[which(visualized_kegg_data$group < 0)] = 'down'
+visualized_kegg_data
+```
+
+```{r, fig.width=10, fig.height=10}
+ggplot(visualized_kegg_data, aes(reorder(Description, RichFactor), 
+                               RichFactor, fill = factor(group))) +
+  geom_col() +
+  theme_bw() +
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.border = element_blank(),
+        legend.title = element_blank(),
+        axis.text = element_text(color="black", size=10),
+        axis.line.x = element_line(color='black'),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        legend.position = 'right') +
+  coord_flip() +
+  geom_text(data = visualized_kegg_data[which(visualized_kegg_data$RichFactor>0),],
+            aes(x=Description, y=-0.01, label=Description),
+            hjust=1, size=4) +
+  geom_text(data = visualized_kegg_data[which(visualized_kegg_data$RichFactor<0),],
+            aes(x=Description, y=0.01, label=Description),
+            hjust=0, size=4)+
+  scale_fill_manual(values = c("#fb6a4a","#3182bd"), breaks = c("up", "down"))+
+  scale_x_discrete(expand = expansion(mult = c(0,0))) +
+  ylim(-1, 1) +
+  labs(x='', y='RichFactor') +
+  theme(legend.text = element_text(size = 10),
+        axis.title.x = element_text(size = 10))
+ggsave("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week8/results/kegg.pdf", width = 10, height = 10)
+```
