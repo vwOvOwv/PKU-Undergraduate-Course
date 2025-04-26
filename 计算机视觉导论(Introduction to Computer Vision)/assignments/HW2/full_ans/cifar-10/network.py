@@ -5,7 +5,7 @@ class ConvNet(nn.Module):
     def __init__(self, num_class=10):
         super(ConvNet, self).__init__()
         self.num_class = num_class
-        self.arch = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']    # VGG16_bn
+        self.arch = [64, 'M', 128, 'M', 256, 'M']    # VGG5_bn
         self.conv_config = {'kernel_size': 3, 'stride': 1, 'padding': 1, 
                             'dilation': 1, 'groups': 1, 'padding_mode': 'zeros', 
                             'bias': True}
@@ -33,10 +33,6 @@ class ConvNet(nn.Module):
                    nn.Flatten()]
 
         layers += [nn.Linear(self.arch[-2] * 4 * 4, 4096)]
-        layers += [nn.BatchNorm1d(num_features=4096)]   # add extra BN to stablize training
-        layers += [nn.ReLU()]
-
-        layers += [nn.Linear(4096, 4096)]
         layers += [nn.BatchNorm1d(num_features=4096)]   # add extra BN to stablize training
         layers += [nn.ReLU()]
 

@@ -22,6 +22,7 @@ def bn_forward_train(x, gamma, beta):
     # Implement forward 
     #----------------TODO------------------
 
+    # calculate across the batch dim to get feature mean&var
     mean = np.mean(x, axis=0)
     var = np.var(x, axis=0)
     x_hat = (x - mean) / (np.sqrt(var) + eps)
@@ -45,8 +46,8 @@ def bn_backward(dout, cache):
 
 # This function may help you to check your code
 def print_info(x):
-    print('mean:', np.mean(x,axis=0))
-    print('var:',np.var(x,axis=0))
+    print('mean:', np.mean(x, axis=0))
+    print('var:', np.var(x, axis=0))
     print('------------------')
     return 
 

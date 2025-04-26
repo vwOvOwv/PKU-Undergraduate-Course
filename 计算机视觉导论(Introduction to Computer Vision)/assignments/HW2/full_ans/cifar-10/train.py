@@ -14,13 +14,8 @@ def MyCELoss(pred, gt):
     # Implement CE loss here
     # ----------TODO------------
     softmax_pred = torch.exp(pred) / torch.exp(pred).sum(dim=1, keepdim=True)
-    gt_one_hot = torch.nn.functional.one_hot(gt, 10).float()
-    # print(gt)
-    # print(softmax_pred)
-    # print(gt_one_hot)
-    loss = -(torch.sum(gt_one_hot * torch.log(softmax_pred), dim=1)).mean()
-    # print("loss:", loss.item())
-    # print("right answer:", torch.nn.functional.cross_entropy(pred, gt_one_hot).item())
+    gt_one_hot = torch.nn.functional.one_hot(gt, 10).float()    # convert each label to an one-hot vector
+    loss = -(torch.sum(gt_one_hot * torch.log(softmax_pred), dim=1)).mean() # CELoss (mode: mean)
     return loss 
 
 
