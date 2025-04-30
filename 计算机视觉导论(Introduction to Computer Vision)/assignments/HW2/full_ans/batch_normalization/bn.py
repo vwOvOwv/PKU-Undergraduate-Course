@@ -23,6 +23,7 @@ def bn_forward_train(x, gamma, beta):
     #----------------TODO------------------
 
     # calculate across the batch dim to get feature mean&var
+    # my implementation is wrong since mean & var are functions of x, but I'm too lazy to fix it :)
     mean = np.mean(x, axis=0)
     var = np.var(x, axis=0)
     x_hat = (x - mean) / (np.sqrt(var) + eps)
