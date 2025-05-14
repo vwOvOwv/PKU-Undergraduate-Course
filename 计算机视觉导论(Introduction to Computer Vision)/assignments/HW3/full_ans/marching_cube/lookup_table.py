@@ -271,7 +271,7 @@ triTable =[
 
 
 # look up Lookup table
-def getCaseNum(x,y,z, thres,cells):
+def getCaseNum(x, y, z, thres, cells):
     case = 0  
     if (thres < cells[x,y+1,z+1]):
         case = 128
