@@ -136,7 +136,7 @@ class MultiShapeDataset(torch.utils.data.Dataset):
         self.size = size
 
 
-    def _draw_one_shape_on_mask(self,  mask, shape_id):
+    def _draw_one_shape_on_mask(self, mask, shape_id):
         buffer = 20
         y = random.randint(buffer, self.h - buffer - 1)
         x = random.randint(buffer, self.w - buffer - 1)
