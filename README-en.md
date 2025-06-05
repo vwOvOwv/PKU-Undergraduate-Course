@@ -3,7 +3,7 @@
 This repo contains courses on Computer Science and Life Sciences (see another branch).
 
 ## Download
-If you want to download a specific folder of an individual course, please go to https://yehonal.github.io/DownGit/#/home.
+If you want to download a specific folder of an individual course, please go to [https://download-directory.github.io](GitHub Folder Downloader).
 
 ## Note
 Due to copyright issues and personal information protection, most slides and group assignments are **NOT included** in the repo.  
