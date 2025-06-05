@@ -8,7 +8,7 @@
 
 请**不要**将课程资源用于商业用途。
 ## 下载
-如果需要下载特定课程的文件夹，请使用[GitHub Repo. Directory Downloader](https://yehonal.github.io/DownGit/#/home)。
+如果需要下载特定课程的文件夹，请使用[GitHub Folder Downloader](https://download-directory.github.io)。
 ## 联系方式
 
 我的邮箱：lpy512120@stu.pku.edu.cn。
