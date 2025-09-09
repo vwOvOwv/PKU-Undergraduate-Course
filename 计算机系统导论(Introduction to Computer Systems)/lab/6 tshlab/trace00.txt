@@ -1,3 +1,0 @@
-#
-# trace00.txt - Properly terminate on EOF.
-#
