@@ -22,7 +22,7 @@ double alpha = 0.01;
 bool alpha_decay = false;
 double eps = 0.3;
 bool train = true;
-unordered_map< pair<int, int>, double, PairHasher> value_tab;
+unordered_map<pair<int, int>, double, PairHasher> value_tab;
 
 class TicTacToePolicyBase{
     public:
