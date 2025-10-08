@@ -229,10 +229,10 @@ int main(){
                         for (int ret_2 = 0; ret_2 <= JackCarRental::MAX_CAR_2 + 1; ++ret_2) {
                             int next_car_1 = min(car_1_evening + ret_1, JackCarRental::MAX_CAR_1);
                             int next_car_2 = min(car_2_evening + ret_2, JackCarRental::MAX_CAR_2);
-                            double prob = ret_1_prob_tab[ret_1] * ret_2_prob_tab[ret_2];
+                            double prob_return = ret_1_prob_tab[ret_1] * ret_2_prob_tab[ret_2];
                             int next_action = policy[next_car_1][next_car_2];
                             double next_value = value_tab[next_car_1][next_car_2][next_action + JackCarRental::MOVE_LIMIT];
-                            expected_next_value += prob * next_value;
+                            expected_next_value += prob_return * next_value;
                         }
                     }
                     expected_next_value_tab[car_1_evening][car_2_evening] = expected_next_value;
@@ -268,8 +268,8 @@ int main(){
                                 // }
                                 double reward = total_income - total_move_cost;
                                 double prob_request = req_1_prob_tab[req_1] * req_2_prob_tab[req_2];
-                                double future_value = expected_next_value_tab[car_1_evening][car_2_evening];
-                                expected_value += prob_request * (reward + gamma * future_value);
+                                double next_value = expected_next_value_tab[car_1_evening][car_2_evening];
+                                expected_value += prob_request * (reward + gamma * next_value);
                             }
                         }
                         new_value_tab[car_1][car_2][action + JackCarRental::MOVE_LIMIT] = expected_value;
