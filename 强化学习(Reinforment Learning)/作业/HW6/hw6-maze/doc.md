@@ -84,40 +84,44 @@ vv#>>>>>^
 
 ### Dyna-Q+
 ```txt
-episode_step: 12008
-episode_step: 188
-episode_step: 54
-episode_step: 39
-episode_step: 51
-episode_step: 24
-episode_step: 19
-episode_step: 18
-episode_step: 17
-episode_step: 19
-episode_step: 14
-episode_step: 16
-episode_step: 17
-episode_step: 24
-episode_step: 24
+episode_step: 9478
+episode_step: 63
+episode_step: 62
+episode_step: 33
+episode_step: 56
+episode_step: 67
+episode_step: 43
+episode_step: 21
+episode_step: 26
 episode_step: 21
 episode_step: 16
-episode_step: 14
-episode_step: 14
+episode_step: 20
 episode_step: 17
+episode_step: 22
+episode_step: 16
+episode_step: 18
 episode_step: 14
+episode_step: 16
 episode_step: 14
 episode_step: 14
 episode_step: 16
-episode_step: 15
+episode_step: 14
+episode_step: 20
+episode_step: 14
+episode_step: 18
 DynaQ+ (n_step = 5, k = 1e-5):
->>>>vvv#G
-vv#vvvv#^
->v#vvvv#^
+v>>vv<v#G
+vv#>v>v#^
+>v#vvv<#^
 >v#>>>>>^
->>>>^#^>^
-^^^^^>^^<
+>>>>^#^^^
+>^^^^>^^^
 ```
+
+可以看到，Dyna-Q和Dyna-Q+均能在50个episode内收敛，而Dyna-Q+在早期的收敛速度更快一些，因为Dyna-Q+通过对未被访问的状态-动作对增加奖励鼓励探索，从而可以更快地发现更优的路径。
 
 ## 根据Blocking Maze和Shortcut Maze对比Dyna-Q和Dyna-Q+
 
-Dyna-Q+
+在Blocking Maze中，在环境未发生变化前，Dyna-Q+因为鼓励探索更快地找到了更优的路径，因此cumulative reward升高得更快；在环境发生变化后，因为原先的最优路径不复存在，因此两种算法均可以发现这种变化并调整策略。Dyna-Q+能够更快地发现环境的变化并调整策略，因此cumulative reward也更快地恢复增加；而Dyna-Q在环境变化后需要更多的时间来重新学习最优策略。
+
+在Shortcut Maze中，在环境未发生变化前，两种算法差距不大，因为Dyna-Q+只是在早期收敛速度更快一些，收敛后两者表现相似甚至Dyna-Q的cumulative reward上升得更加稳定一点，因为Dyna-Q+在收敛后仍然鼓励探索，可能会导致一些不必要的探索行为。在环境发生变化后，Dyna-Q+因为探索能够发现环境的变化并调整策略，而Dyna-Q在这种情况下无法发现环境的变化，因为原先的最优路径仍然存在，因此环境变化后Dyna-Q+的cumulative reward增加得更快，而Dyna-Q的cumulative reward仍然以原来的速度增加。

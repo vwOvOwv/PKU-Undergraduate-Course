@@ -279,8 +279,9 @@ class MazePolicyDynaQPlus : public MazePolicyBase{
         void learn(int iter=10000, int verbose_freq=1){
             bool done;
             int action, next_action;
-            double reward;
+            double real_reward, total_reward;
             int episode_step;
+            int global_step = 0;
             MazeEnv::State state, next_state;
             MazeEnv::StepResult step_result;
 
@@ -288,23 +289,23 @@ class MazePolicyDynaQPlus : public MazePolicyBase{
                 state = env.reset();
                 done = false;
                 episode_step = 0;
-                memset(state_action_time_record, 0, env.max_x * env.max_y * 4 * sizeof(int));
                 while (not done){
                     action = epsilon_greedy(state);
                     step_result = env.step(action);
                     next_state = step_result.next_state;
-                    reward = step_result.reward;
+                    real_reward = step_result.reward;
                     done = step_result.done;
                     ++episode_step;
-                    reward += k * sqrt(episode_step - state_action_time_record[locate(state, action)]);
+                    ++global_step;
+                    total_reward = real_reward + k * sqrt(global_step - state_action_time_record[locate(state, action)]);
 
                     next_action = (*this)(next_state);
                     q[locate(state, action)] += alpha * (gamma * q[locate(
                         next_state, next_action)] + \
-                         reward - q[locate(state, action)]);
+                         total_reward - q[locate(state, action)]);
 
-                    state_action_time_record[locate(state, action)] = episode_step;
-                    model[locate(state, action)] = make_pair(next_state, reward);
+                    state_action_time_record[locate(state, action)] = global_step;
+                    model[locate(state, action)] = make_pair(next_state, real_reward);
                     if(find(visited_state_action.begin(), visited_state_action.end(), 
                     make_pair(state, action)) == visited_state_action.end())
                         visited_state_action.push_back(make_pair(state, action));
@@ -320,10 +321,11 @@ class MazePolicyDynaQPlus : public MazePolicyBase{
                         model[locate(random_state, random_action)];
                         
                         MazeEnv::State next_state = next_state_reward.first;
-                        double reward = next_state_reward.second + \
-                            k * sqrt(episode_step + 1 - state_action_time_record[locate(next_state, next_action)]);
+                        double real_reward = next_state_reward.second;
+                        double total_reward = real_reward + \
+                            k * sqrt(global_step - state_action_time_record[locate(random_state, random_action)]);
                         q[locate(random_state, random_action)] += \
-                        alpha * (reward + gamma * q[locate(next_state, (*this)(next_state))] - q[locate(random_state, random_action)]);
+                        alpha * (total_reward + gamma * q[locate(next_state, (*this)(next_state))] - q[locate(random_state, random_action)]);
                     }
                     state = next_state;
                 }
