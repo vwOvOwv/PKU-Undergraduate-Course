@@ -1,0 +1,1 @@
+SHA1(hello.txt) = "cff49558490752a37d2bfd812f593462089ea927"

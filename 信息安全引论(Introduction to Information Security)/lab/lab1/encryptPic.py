@@ -6,8 +6,8 @@ key = Random.new().read(AES.block_size)
 iv = Random.new().read(AES.block_size)
 
 
-mode = AES.MODE_CBC
-# mode = AES.MODE_ECB
+# mode = AES.MODE_CBC
+mode = AES.MODE_ECB
 
 
 def Encrypt():

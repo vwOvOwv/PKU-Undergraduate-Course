@@ -1,0 +1,1 @@
+HMAC(SHA1, R5t8Yu1i9O0p4A2s6D8f, hello.txt) = "cc1a687c129f21673dd3cd95a6b9e4f2597acdfb"

@@ -85,6 +85,6 @@ if __name__ == '__main__':
     elif mode == "2" and work == "2":
         output_data = EncryptDataCBC(aes_key, aes_iv).decrypt(text_data)
 
-    output_file = open("output.txt", "w", encoding='utf-8')
+    output_file = open("1.4-CBC-encrypted.txt", "w", encoding='utf-8')
     output_file.write(output_data)
     output_file.close()
