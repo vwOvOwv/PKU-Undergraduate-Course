@@ -1,0 +1,37 @@
+// SysY 中的 `putch` 函数的声明.
+decl @putch(i32)
+
+// 一个用来输出字符串 (其实是整数数组) 的函数.
+// 函数会扫描输入的数组, 将数组中的整数视作 ASCII 码, 并作为字符输出到屏幕上,
+// 遇到 0 时停止扫描.
+fun @putstr(@arr: *i32) {
+%entry:
+  jump %loop_entry(@arr)
+
+// Koopa IR 采用基本块参数代替 SSA 形式中的 Phi 函数.
+// 当然这部分内容并不在实践要求的必选内容之中, 你无需过分关注.
+%loop_entry(%ptr: *i32):
+  %cur = load %ptr
+  br %cur, %loop_body, %end
+
+%loop_body:
+  call @putch(%cur)
+  %next = getptr %ptr, 1
+  jump %loop_entry(%next)
+
+%end:
+  ret
+}
+
+// 字符串 "Hello, world!\n\0".
+global @str = alloc [i32, 15], {
+  72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33, 10, 0
+}
+
+// `main` 函数, 程序的入口.
+fun @main(): i32 {
+%entry:
+  %str = getelemptr @str, 0
+  call @putstr(%str)
+  ret 0
+}
