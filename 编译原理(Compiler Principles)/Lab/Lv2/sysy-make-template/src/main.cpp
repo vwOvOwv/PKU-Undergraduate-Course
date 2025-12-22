@@ -45,7 +45,7 @@ int main(int argc, const char *argv[]) {
 	auto program_ir = generate_ir(ast);
 	if (string(mode) == "-riscv") {
 		RiscvGenerator generator(program_ir.get(), std::cout);
-		generator.Generate();
+		generator.generate();
 	}
 	else{
 		program_ir->dump();
