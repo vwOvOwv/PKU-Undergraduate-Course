@@ -1,0 +1,42 @@
+exp_name: 'SCORER+CBR'
+gpu_id: [0]
+logger:
+    display_id: 9908
+model:
+    transformer_encoder:
+        input_dim: 4096
+        feat_dim: 1026
+        emb_dim: 512
+        att_dim: 512
+        att_head: 8
+        att_layer: 2
+        dim: 128
+    transformer_decoder:
+        input_dim: 2052
+        word_dim: 300
+        att_dim: 512
+        att_head: 8
+        att_layer: 2
+        vocab_size: 76
+        seq_length: 24
+        share_wd_cls_weight: False
+        label_smoothing: 0.0
+
+data:
+    dataset: 'rcc_dataset_transformer'
+    vocab_json: './data/transformer_vocab.json'
+    h5_label_file: './data/transformer_labels.h5'
+    type_mapping_json: './data/type_mapping.json'
+    default_feature_dir: './data/features'
+    semantic_feature_dir: './data/sc_features'
+    nonsemantic_feature_dir: './data/nsc_features'
+    train:
+        batch_size: 128
+train:
+    max_iter: 10000
+    snapshot_interval: 1000
+    grad_clip: -1.0
+    optim:
+        type: 'adam'
+        lr: 0.0002
+        weight_decay: 0.0
