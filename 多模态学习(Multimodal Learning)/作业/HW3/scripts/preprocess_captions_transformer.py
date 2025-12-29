@@ -11,13 +11,13 @@ from collections import defaultdict
 from utils.preprocess import tokenize, encode, build_vocab
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_captions_json', default='./data/change_captions.json')
-parser.add_argument('--input_neg_captions_json', default = './data/no_change_captions.json')
-parser.add_argument('--input_image_dir', default = './data/images')
+parser.add_argument('--input_captions_json', default='/home/data10T/lpy/clevr-change-dataset/change_captions.json')
+parser.add_argument('--input_neg_captions_json', default = '/home/data10T/lpy/clevr-change-dataset/no_change_captions.json')
+parser.add_argument('--input_image_dir', default = '/home/data10T/lpy/clevr-change-dataset/images')
 parser.add_argument('--input_vocab_json', default='')
-parser.add_argument('--split_json', default = './data/splits.json')
-parser.add_argument('--output_vocab_json', default='./data/transformer_vocab.json')
-parser.add_argument('--output_h5',default='./data/transformer_labels.h5')
+parser.add_argument('--split_json', default = '/home/data10T/lpy/clevr-change-dataset/splits.json')
+parser.add_argument('--output_vocab_json', default='/home/data10T/lpy/clevr-change-dataset/transformer_vocab.json')
+parser.add_argument('--output_h5',default='/home/data10T/lpy/clevr-change-dataset/transformer_labels.h5')
 
 parser.add_argument('--word_count_threshold', default=1, type=int)
 parser.add_argument('--allow_unk', default=0, type=int)

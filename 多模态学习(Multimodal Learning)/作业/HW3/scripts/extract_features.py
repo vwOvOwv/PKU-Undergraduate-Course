@@ -8,7 +8,7 @@ import cv2
 
 import torch
 import torchvision
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_image_dir', required=True)

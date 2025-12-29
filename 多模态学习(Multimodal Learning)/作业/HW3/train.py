@@ -21,7 +21,7 @@ from utils.utils import AverageMeter, accuracy, set_mode, save_checkpoint, \
                         EntropyLoss, LabelSmoothingLoss, CrossEn
 
 from utils.vis_utils import visualize_att
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Load config
 parser = argparse.ArgumentParser()
@@ -44,7 +44,7 @@ device = torch.device("cuda" if use_cuda else "cpu")
 
 # Experiment configuration
 exp_dir = cfg.exp_dir
-exp_name = cfg.exp_name
+exp_name = time.strftime("%Y%m%d_%H%M%S")
 if not os.path.exists(exp_dir):
     os.makedirs(exp_dir)
 

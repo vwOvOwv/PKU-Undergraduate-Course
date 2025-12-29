@@ -1,4 +1,4 @@
-exp_name: 'exp'
+exp_dir: '/home/data10T/lpy/mml-hw3'
 gpu_id: [0]
 logger:
     display_id: 9908
@@ -24,12 +24,12 @@ model:
 
 data:
     dataset: 'rcc_dataset_transformer'
-    vocab_json: './data/transformer_vocab.json'
-    h5_label_file: './data/transformer_labels.h5'
-    type_mapping_json: './data/type_mapping.json'
-    default_feature_dir: './data/features'
-    semantic_feature_dir: './data/sc_features'
-    nonsemantic_feature_dir: './data/nsc_features'
+    vocab_json: '/home/data10T/lpy/clevr-change-dataset/transformer_vocab.json'
+    h5_label_file: '/home/data10T/lpy/clevr-change-dataset/transformer_labels.h5'
+    type_mapping_json: '/home/data10T/lpy/clevr-change-dataset/type_mapping.json'
+    default_feature_dir: '/home/data10T/lpy/clevr-change-dataset/features'
+    semantic_feature_dir: '/home/data10T/lpy/clevr-change-dataset/sc_features'
+    nonsemantic_feature_dir: '/home/data10T/lpy/clevr-change-dataset/nsc_features'
     train:
         batch_size: 128
 train:

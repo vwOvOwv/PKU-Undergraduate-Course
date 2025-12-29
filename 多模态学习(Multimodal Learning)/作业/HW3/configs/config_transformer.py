@@ -3,6 +3,7 @@ import copy
 import yaml
 import numpy as np
 from utils.attr_dict import AttrDict
+import time
 
 __C = AttrDict()
 cfg = __C
@@ -10,7 +11,7 @@ cfg = __C
 # --------------------------------------------------------------------------- #
 # general options
 # --------------------------------------------------------------------------- #
-__C.exp_dir = './experiments'
+__C.exp_dir = '/home/data10T/lpy/mml-hw3'
 __C.exp_name = ''
 __C.gpu_id= [0]
 
@@ -107,19 +108,19 @@ __C.data = AttrDict()
 
 __C.data.dataset = 'rcc_dataset'
 __C.data.num_workers = 8
-__C.data.default_feature_dir = './data/features'
-__C.data.semantic_feature_dir = './data/sc_features'
-__C.data.nonsemantic_feature_dir = './data/nsc_features'
-__C.data.default_img_dir = './data/images'
-__C.data.semantic_img_dir = './data/sc_images'
-__C.data.nonsemantic_img_dir = './data/nsc_images'
-__C.data.vocab_json = './data/vocab.json'
-__C.data.dep_vocab_json = './data/dep_vocab.json'
-__C.data.change2neg_json = './data/change2neg_changes.json'
-__C.data.splits_json = './data/splits_subset.json'
-__C.data.h5_label_file = './data/labels.h5'
-__C.data.h5_ref_label_file = './data/ref_labels.h5'
-__C.data.type_mapping_json = './data/type_mapping_v2.json'
+__C.data.default_feature_dir = '/home/data10T/lpy/clevr-change-dataset/features'
+__C.data.semantic_feature_dir = '/home/data10T/lpy/clevr-change-dataset/sc_features'
+__C.data.nonsemantic_feature_dir = '/home/data10T/lpy/clevr-change-dataset/nsc_features'
+__C.data.default_img_dir = '/home/data10T/lpy/clevr-change-dataset/images'
+__C.data.semantic_img_dir = '/home/data10T/lpy/clevr-change-dataset/sc_images'
+__C.data.nonsemantic_img_dir = '/home/data10T/lpy/clevr-change-dataset/nsc_images'
+__C.data.vocab_json = '/home/data10T/lpy/clevr-change-dataset/vocab.json'
+__C.data.dep_vocab_json = '/home/data10T/lpy/clevr-change-dataset/dep_vocab.json'
+__C.data.change2neg_json = '/home/data10T/lpy/clevr-change-dataset/change2neg_changes.json'
+__C.data.splits_json = '/home/data10T/lpy/clevr-change-dataset/splits_subset.json'
+__C.data.h5_label_file = '/home/data10T/lpy/clevr-change-dataset/labels.h5'
+__C.data.h5_ref_label_file = '/home/data10T/lpy/clevr-change-dataset/ref_labels.h5'
+__C.data.type_mapping_json = '/home/data10T/lpy/clevr-change-dataset/type_mapping_v2.json'
 
 __C.data.train = AttrDict()
 __C.data.train.batch_size = 128

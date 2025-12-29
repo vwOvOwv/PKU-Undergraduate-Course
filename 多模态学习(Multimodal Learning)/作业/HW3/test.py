@@ -7,6 +7,8 @@ import torch
 torch.backends.cudnn.enabled  = True
 import torch.nn as nn
 import torch.nn.functional as F
+import cv2
+import matplotlib.pyplot as plt
 
 from configs.config_transformer import cfg, merge_cfg_from_file
 from datasets.datasets import create_dataset
@@ -41,7 +43,7 @@ device = torch.device("cuda" if use_cuda else "cpu")
 
 # Experiment configuration
 exp_dir = cfg.exp_dir
-exp_name = cfg.exp_name
+exp_name = "20251223_031922"
 
 output_dir = os.path.join(exp_dir, exp_name)
 
@@ -129,6 +131,41 @@ with torch.no_grad():
             sent_pos = gen_sents_pos[j]
             sent_neg = gen_sents_neg[j]
             image_id = d_img_paths[j].split('_')[-1]
+
+            if args.visualize:
+                path_before = d_img_paths[j]
+                path_after = sc_img_paths[j]
+                img_bef = cv2.imread(path_before)
+                img_aft = cv2.imread(path_after)
+                
+                if img_bef is None or img_aft is None:
+                    print(f"Warning: Could not read image {path_before} or {path_after}")
+                    continue
+
+                img_bef = cv2.cvtColor(img_bef, cv2.COLOR_BGR2RGB)
+                img_aft = cv2.cvtColor(img_aft, cv2.COLOR_BGR2RGB)
+
+                fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+                
+                axes[0].imshow(img_bef)
+                axes[0].set_title("Before", fontsize=14)
+                axes[0].axis('off')
+                
+                axes[1].imshow(img_aft)
+                axes[1].set_title("After (Changed)", fontsize=14)
+                axes[1].axis('off')
+
+                caption_text = "Change description: " + sent_pos
+                
+                plt.suptitle(caption_text, fontsize=16, y=0.2)
+
+                vis_filename = f"vis_{image_id}"
+                vis_save_path = os.path.join(visualize_save_dir, vis_filename)
+                plt.savefig(vis_save_path, bbox_inches='tight', dpi=300)
+                plt.close(fig)
+                
+                # if j == 0:
+                #     print(f"Saved visualization to {vis_save_path}")
             result_sents_pos[image_id] = sent_pos
             result_sents_neg[image_id + '_n'] = sent_neg
             image_num = image_id.split('.')[0]

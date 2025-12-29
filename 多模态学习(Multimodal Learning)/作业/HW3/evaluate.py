@@ -11,9 +11,9 @@ from utils.eval_utils import score_generation, \
     coco_gen_format_save
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--results_dir', default='./experiments/exp/test_output/captions')
-parser.add_argument('--anno', default= './data/total_change_captions_reformat_subset.json')
-parser.add_argument('--type_file', default='./data/type_mapping.json')
+parser.add_argument('--results_dir', default='/home/data10T/lpy/mml-hw3/20251223_031922/test_output/captions')
+parser.add_argument('--anno', default= '/home/data10T/lpy/clevr-change-dataset/total_change_captions_reformat_subset.json')
+parser.add_argument('--type_file', default='/home/data10T/lpy/clevr-change-dataset/type_mapping.json')
 args = parser.parse_args()
 
 results = os.listdir(args.results_dir)
