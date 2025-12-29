@@ -4,8 +4,7 @@
 信息学中的概率统计(Probability Theory and Statistics)/课件
 计算机视觉导论(Introduction to Computer Vision)/slides
 神经网络的计算基础(Neuroscience and Computing Fundamentals for Neural Networks)/课件
-.DS_Store
-*/.DS_Store
+*.DS_Store
 生物信息学实验(Bioinformatics Lab.)/Week2/slides
 遗传学(Genetics)/
 数字逻辑设计(Design of Digital Logic)/课件
@@ -62,3 +61,7 @@ NeuroAI-从脑科学到类脑智能(NeuroAI-From Brain Science to Brain-Inspired
 编译原理(Compiler Principles)/Lab/Lv1/sysy-make-template/build
 编译原理(Compiler Principles)/Lab/Lv2/sysy-make-template/build
 编译原理(Compiler Principles)/Lab/Lv2/sysy-make-template/debug
+多模态学习(Multimodal Learning)/作业/HW3/utils/__pycache__
+多模态学习(Multimodal Learning)/作业/HW3/datasets/__pycache__
+多模态学习(Multimodal Learning)/作业/HW3/handin/visualizations
+多模态学习(Multimodal Learning)/作业/HW3/visualizations
