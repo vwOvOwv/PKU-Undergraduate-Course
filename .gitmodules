@@ -4,3 +4,6 @@
 [submodule "强化学习(Reinforment Learning)/作业/Project/code"]
 	path = 强化学习(Reinforment Learning)/作业/Project/code
 	url = https://github.com/vwOvOwv/Reinforcement-Learning-2025-Fall-Project
+[submodule "NeuroAI-从脑科学到类脑智能(NeuroAI-From Brain Science to Brain-Inspired Intelligence)/作业/project/code"]
+	path = NeuroAI-从脑科学到类脑智能(NeuroAI-From Brain Science to Brain-Inspired Intelligence)/作业/project/code
+	url = https://github.com/vwOvOwv/NeuroAI-2025-Fall-Project
