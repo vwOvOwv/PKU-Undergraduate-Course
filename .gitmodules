@@ -1,3 +1,6 @@
 [submodule "多模态学习(Multimodal Learning)/作业/Project/reproduction"]
 	path = 多模态学习(Multimodal Learning)/作业/Project/reproduction
 	url = https://github.com/vwOvOwv/Multimodal-Learning-2025-Fall-Project
+[submodule "强化学习(Reinforment Learning)/作业/Project/code"]
+	path = 强化学习(Reinforment Learning)/作业/Project/code
+	url = https://github.com/vwOvOwv/Reinforcement-Learning-2025-Fall-Project
