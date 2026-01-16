@@ -40,12 +40,13 @@ using namespace std;
 
 // lexer 返回的所有 token 种类的声明
 // 注意 IDENT 和 INT_CONST 会返回 token 的值, 分别对应 str_val 和 int_val
-%token INT RETURN
+%token INT RETURN 
 %token <str_val> IDENT
 %token <int_val> INT_CONST
+%token EQ NE LE GE AND OR
 
 // 非终结符的类型定义
-%type <ast_val> FuncDef FuncType Block Stmt Exp UnaryExp PrimaryExp UnaryOp
+%type <ast_val> FuncDef FuncType Block Stmt Exp UnaryExp PrimaryExp UnaryOp MulExp AddExp LOrExp LAndExp EqExp RelExp
 %type <int_val> Number
 
 %%
@@ -57,9 +58,9 @@ using namespace std;
 // $1 指代规则里第一个符号的返回值, 也就是 FuncDef 的返回值
 CompUnit
   : FuncDef {
-    auto comp_unit_ast = make_unique<CompUnitAST>();
-    comp_unit_ast->func_def_ast = std::unique_ptr<FuncDefAST>(static_cast<FuncDefAST*>($1));
-    ast = std::move(comp_unit_ast);
+	auto comp_unit_ast = make_unique<CompUnitAST>();
+	comp_unit_ast->func_def_ast = std::unique_ptr<FuncDefAST>(static_cast<FuncDefAST*>($1));
+	ast = std::move(comp_unit_ast);
   }
   ;
 
@@ -75,97 +76,236 @@ CompUnit
 // 这种写法会省下很多内存管理的负担
 FuncDef
   : FuncType IDENT '(' ')' Block {
-    // $1      $2   $3 $4   $5
-    auto ast = new FuncDefAST();
-    ast->func_type_ast = unique_ptr<FuncTypeAST>(static_cast<FuncTypeAST*>($1));
-    ast->func_name = *unique_ptr<string>($2);
-    ast->block_ast = unique_ptr<BlockAST>(static_cast<BlockAST*>($5));
-    $$ = ast;
+	// $1      $2   $3 $4   $5
+	auto ast = new FuncDefAST();
+	ast->func_type_ast = unique_ptr<FuncTypeAST>(static_cast<FuncTypeAST*>($1));
+	ast->func_name = *unique_ptr<string>($2);
+	ast->block_ast = unique_ptr<BlockAST>(static_cast<BlockAST*>($5));
+	$$ = ast;
   }
   ;
 
 // 同上, 不再解释
 FuncType
   : INT {
-    auto ast = new FuncTypeAST();
-    ast->type = "int";
-    $$ = ast;
+	auto ast = new FuncTypeAST();
+	ast->type = "int";
+	$$ = ast;
   }
   ;
 
 Block
   : '{' Stmt '}' {
-    auto ast = new BlockAST();
-    ast->stmt_ast = unique_ptr<StmtAST>(static_cast<StmtAST*>($2));
-    $$ = ast;
+	auto ast = new BlockAST();
+	ast->stmt_ast = unique_ptr<StmtAST>(static_cast<StmtAST*>($2));
+	$$ = ast;
   }
   ;
 
 Stmt
   : RETURN Exp ';' {
-    auto ast = new StmtAST();
-    ast->exp_ast = unique_ptr<ExpAST>(static_cast<ExpAST*>($2));
-    $$ = ast;
+	auto ast = new StmtAST();
+	ast->exp_ast = unique_ptr<ExpAST>(static_cast<ExpAST*>($2));
+	$$ = ast;
   }
   ;
 
 Exp
-  : UnaryExp {
+  : LOrExp {
     auto ast = new ExpAST();
-    ast->unary_exp_ast = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($1));
+    ast->lor_exp_ast = unique_ptr<LOrExpAST>(static_cast<LOrExpAST*>($1));
     $$ = ast;
   }
   ;
 
 UnaryExp
   : PrimaryExp {
-    auto ast = new UnaryExpAST();
-    ast->primary_exp_ast = unique_ptr<PrimaryExpAST>(static_cast<PrimaryExpAST*>($1));
-    $$ = ast;
+	auto ast = new UnaryExpAST();
+	ast->primary_exp_ast = unique_ptr<PrimaryExpAST>(static_cast<PrimaryExpAST*>($1));
+	$$ = ast;
   }
   | UnaryOp UnaryExp {
-    auto ast = new UnaryExpAST();
-    ast->unary_op_ast = unique_ptr<UnaryOpAST>(static_cast<UnaryOpAST*>($1));
-    ast->unary_exp_ast = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($2));
-    $$ = ast;
+	auto ast = new UnaryExpAST();
+	ast->unary_op_ast = unique_ptr<UnaryOpAST>(static_cast<UnaryOpAST*>($1));
+	ast->unary_exp_ast = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($2));
+	$$ = ast;
   }
   ;
 
 PrimaryExp
   : '(' Exp ')' {
-    auto ast = new PrimaryExpAST();
-    ast->exp_ast = unique_ptr<ExpAST>(static_cast<ExpAST*>($2));
-    $$ = ast;
+	auto ast = new PrimaryExpAST();
+	ast->exp_ast = unique_ptr<ExpAST>(static_cast<ExpAST*>($2));
+	$$ = ast;
   }
   | Number {
-    auto ast = new PrimaryExpAST();
-    ast->number_ast = make_unique<NumberAST>();
-    ast->number_ast->number = $1;
-    $$ = ast;
+	auto ast = new PrimaryExpAST();
+	ast->number_ast = make_unique<NumberAST>();
+	ast->number_ast->number = $1;
+	$$ = ast;
   }
   ;
 
 UnaryOp
   : '+' {
-    auto ast = new UnaryOpAST();
-    ast->op = "+";
-    $$ = ast;
+	auto ast = new UnaryOpAST();
+	ast->op = "+";
+	$$ = ast;
   }
   | '-' {
-    auto ast = new UnaryOpAST();
-    ast->op = "-";
-    $$ = ast;
+	auto ast = new UnaryOpAST();
+	ast->op = "-";
+	$$ = ast;
   }
   | '!' {
-    auto ast = new UnaryOpAST();
-    ast->op = "!";
-    $$ = ast;
+	auto ast = new UnaryOpAST();
+	ast->op = "!";
+	$$ = ast;
   }
   ;
 
 Number
   : INT_CONST {
-    $$ = $1;
+	$$ = $1;
+  }
+  ;
+
+MulExp
+  : UnaryExp {
+    auto ast = new MulExpAST();
+    ast->unary_exp_ast = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($1));
+    $$ = ast;
+  }
+  | MulExp '*' UnaryExp {
+    auto ast = new MulExpAST();
+    ast->left_ast = unique_ptr<MulExpAST>(static_cast<MulExpAST*>($1));
+    ast->op = "*"; // 直接赋值，不要去读 $2
+    ast->right_ast = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($3)); // 注意这里是 $3
+    $$ = ast;
+  }
+  | MulExp '/' UnaryExp {
+    auto ast = new MulExpAST();
+    ast->left_ast = unique_ptr<MulExpAST>(static_cast<MulExpAST*>($1));
+    ast->op = "/";
+    ast->right_ast = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($3));
+    $$ = ast;
+  }
+  | MulExp '%' UnaryExp {
+    auto ast = new MulExpAST();
+    ast->left_ast = unique_ptr<MulExpAST>(static_cast<MulExpAST*>($1));
+    ast->op = "%";
+    ast->right_ast = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($3));
+    $$ = ast;
+  }
+  ;
+
+AddExp
+  : MulExp {
+    auto ast = new AddExpAST();
+    ast->mul_exp_ast = unique_ptr<MulExpAST>(static_cast<MulExpAST*>($1));
+    $$ = ast;
+  }
+  | AddExp '+' MulExp {
+    auto ast = new AddExpAST();
+    ast->left_ast = unique_ptr<AddExpAST>(static_cast<AddExpAST*>($1));
+    ast->op = "+";
+    ast->right_ast = unique_ptr<MulExpAST>(static_cast<MulExpAST*>($3));
+    $$ = ast;
+  }
+  | AddExp '-' MulExp {
+    auto ast = new AddExpAST();
+    ast->left_ast = unique_ptr<AddExpAST>(static_cast<AddExpAST*>($1));
+    ast->op = "-";
+    ast->right_ast = unique_ptr<MulExpAST>(static_cast<MulExpAST*>($3));
+    $$ = ast;
+  }
+  ;
+
+LOrExp
+  : LAndExp {
+    auto ast = new LOrExpAST();
+    ast->land_exp_ast = unique_ptr<LAndExpAST>(static_cast<LAndExpAST*>($1));
+    $$ = ast;
+  }
+  | LOrExp OR LAndExp {
+    auto ast = new LOrExpAST();
+    ast->left_ast = unique_ptr<LOrExpAST>(static_cast<LOrExpAST*>($1));
+    ast->op = "||";
+    ast->right_ast = unique_ptr<LAndExpAST>(static_cast<LAndExpAST*>($3));
+    $$ = ast;
+  }
+  ;
+
+LAndExp
+  : EqExp {
+    auto ast = new LAndExpAST();
+    ast->eq_exp_ast = unique_ptr<EqExpAST>(static_cast<EqExpAST*>($1));
+    $$ = ast;
+  }
+  | LAndExp AND EqExp {
+    auto ast = new LAndExpAST();
+    ast->left_ast = unique_ptr<LAndExpAST>(static_cast<LAndExpAST*>($1));
+    ast->op = "&&";
+    ast->right_ast = unique_ptr<EqExpAST>(static_cast<EqExpAST*>($3));
+    $$ = ast;
+  }
+  ;
+
+EqExp
+  : RelExp {
+    auto ast = new EqExpAST();
+    ast->rel_exp_ast = unique_ptr<RelExpAST>(static_cast<RelExpAST*>($1));
+    $$ = ast;
+  }
+  | EqExp EQ RelExp {
+    auto ast = new EqExpAST();
+    ast->left_ast = unique_ptr<EqExpAST>(static_cast<EqExpAST*>($1));
+    ast->op = "==";
+    ast->right_ast = unique_ptr<RelExpAST>(static_cast<RelExpAST*>($3));
+    $$ = ast;
+  }
+  | EqExp NE RelExp {
+    auto ast = new EqExpAST();
+    ast->left_ast = unique_ptr<EqExpAST>(static_cast<EqExpAST*>($1));
+    ast->op = "!=";
+    ast->right_ast = unique_ptr<RelExpAST>(static_cast<RelExpAST*>($3));
+    $$ = ast;
+  }
+  ;
+
+RelExp
+  : AddExp {
+    auto ast = new RelExpAST();
+    ast->add_exp_ast = unique_ptr<AddExpAST>(static_cast<AddExpAST*>($1));
+    $$ = ast;
+  }
+  | RelExp '<' AddExp {
+    auto ast = new RelExpAST();
+    ast->left_ast = unique_ptr<RelExpAST>(static_cast<RelExpAST*>($1));
+    ast->op = "<";
+    ast->right_ast = unique_ptr<AddExpAST>(static_cast<AddExpAST*>($3));
+    $$ = ast;
+  }
+  | RelExp '>' AddExp {
+    auto ast = new RelExpAST();
+    ast->left_ast = unique_ptr<RelExpAST>(static_cast<RelExpAST*>($1));
+    ast->op = ">";
+    ast->right_ast = unique_ptr<AddExpAST>(static_cast<AddExpAST*>($3));
+    $$ = ast;
+  }
+  | RelExp LE AddExp {
+    auto ast = new RelExpAST();
+    ast->left_ast = unique_ptr<RelExpAST>(static_cast<RelExpAST*>($1));
+    ast->op = "<=";
+    ast->right_ast = unique_ptr<AddExpAST>(static_cast<AddExpAST*>($3));
+    $$ = ast;
+  }
+  | RelExp GE AddExp {
+    auto ast = new RelExpAST();
+    ast->left_ast = unique_ptr<RelExpAST>(static_cast<RelExpAST*>($1));
+    ast->op = ">=";
+    ast->right_ast = unique_ptr<AddExpAST>(static_cast<AddExpAST*>($3));
+    $$ = ast;
   }
   ;
 

@@ -13,13 +13,34 @@ class BaseIR;
 class ProgramIR;
 class FunctionIR;
 class BasicBlockIR;
-class ValueIR;
-class IntegerIR;
-class RegisterIR;
 class InstructionIR;
 class ReturnIR;
-class EqIR;
-class SubIR;
+class BinaryArithmeticIR;
+
+enum class BinaryOpType {
+    NE, EQ, GT, LT, GE, LE,
+    ADD, SUB, MUL, DIV, MOD,
+    AND, OR, XOR,
+    SHL, SHR, SAR
+};
+
+struct Operand {
+    enum Type {VOID, IMM, ID } type;
+    
+    int val; 
+    Operand() : type(VOID), val(0) {}
+    Operand(Type t, int v) : type(t), val(v) {}
+
+    void dump() const {
+        if (type == IMM) {
+            std::cout << val;
+        } else if (type == ID) {
+            std::cout << "%" << val;
+        }
+    }
+
+    operator bool() const { return type != VOID; }
+};
 
 // =========================================================
 // 类定义
@@ -34,8 +55,8 @@ public:
 class ProgramIR : public BaseIR {
 public:
     std::vector<std::unique_ptr<FunctionIR>> funcs;
-    std::unique_ptr<ValueIR> cur_val;   // 当前生成的值（具体的数 或 临时寄存器id）
-    int next_reg_id = 0;    // 已经使用了的临时寄存器数量
+    Operand cur_val;
+    int cur_inst_id = 0;
     FunctionIR *cur_func = nullptr;
     BasicBlockIR *cur_block = nullptr;
     void dump() override;
@@ -44,7 +65,7 @@ public:
 class FunctionIR : public BaseIR {
 public:
     std::string func_name, func_type;
-    std::unique_ptr<ValueIR> ret_value;
+    Operand ret_value;
     std::vector<std::unique_ptr<BasicBlockIR>> basic_blocks;
     void dump() override;
 };
@@ -56,27 +77,6 @@ public:
     void dump() override;
 };
 
-class ValueIR : public BaseIR {
-public:
-    int value;
-    virtual ~ValueIR() = default;
-    virtual void dump() override = 0;
-};
-
-class IntegerIR : public ValueIR {
-public:
-    IntegerIR() {}
-    IntegerIR(int val) { value = val; }
-    void dump() override;
-};
-
-class RegisterIR : public ValueIR {
-public:
-    RegisterIR() {}
-    RegisterIR(int val) { value = val; }
-    void dump() override;
-};
-
 class InstructionIR : public BaseIR {
 public:
     virtual ~InstructionIR() = default;
@@ -85,20 +85,20 @@ public:
 
 class ReturnIR : public InstructionIR {
 public:
-    std::unique_ptr<ValueIR> ret_value; // 返回的数值或临时寄存器id
+    Operand ret_value;
     void dump()  override;
 };
 
-class EqIR : public InstructionIR {
+class BinaryArithmeticIR : public InstructionIR {
 public:
-    std::unique_ptr<ValueIR> target, op1, op2;
-    void dump()  override;
-};
+    BinaryOpType op;
+    int target;
+    Operand op1, op2;
 
-class SubIR : public InstructionIR {
-public:
-    std::unique_ptr<ValueIR> target, op1, op2;
-    void dump()  override;
+    BinaryArithmeticIR(BinaryOpType op, int target, Operand op1, Operand op2)
+        : op(op), target(target), op1(op1), op2(op2) {}
+
+    void dump() override;
 };
 
 // =========================================================
@@ -124,38 +124,41 @@ inline void BasicBlockIR::dump()  {
         inst->dump();
 }
 
-inline void IntegerIR::dump()  {
-    std::cout << value;
-}
-
-inline void RegisterIR::dump()  {
-    std::cout << '%' << value;
-}
-
 inline void ReturnIR::dump()  {
     std::cout << "  ret ";
     if (ret_value) {
-        ret_value->dump();
+        ret_value.dump();
     }
     std::cout << std::endl;
 }
 
-inline void EqIR::dump()  {
-    std::cout << "  ";
-    target->dump();
-    std::cout << " = eq ";
-    op1->dump();
-    std::cout << ", ";
-    op2->dump();
-    std::cout << std::endl;
-}
+inline void BinaryArithmeticIR::dump() {
+    std::cout << "  %" << target << " = ";
+    
+    switch (op) {
+        case BinaryOpType::NE: std::cout << "ne"; break;
+        case BinaryOpType::EQ: std::cout << "eq"; break;
+        case BinaryOpType::GT: std::cout << "gt"; break;
+        case BinaryOpType::LT: std::cout << "lt"; break;
+        case BinaryOpType::GE: std::cout << "ge"; break;
+        case BinaryOpType::LE: std::cout << "le"; break;
+        case BinaryOpType::ADD: std::cout << "add"; break;
+        case BinaryOpType::SUB: std::cout << "sub"; break;
+        case BinaryOpType::MUL: std::cout << "mul"; break;
+        case BinaryOpType::DIV: std::cout << "div"; break;
+        case BinaryOpType::MOD: std::cout << "mod"; break;
+        case BinaryOpType::AND: std::cout << "and"; break;
+        case BinaryOpType::OR:  std::cout << "or"; break;
+        case BinaryOpType::XOR: std::cout << "xor"; break;
+        case BinaryOpType::SHL: std::cout << "shl"; break;
+        case BinaryOpType::SHR: std::cout << "shr"; break;
+        case BinaryOpType::SAR: std::cout << "sar"; break;
+        default: std::cout << "\nIR error: unknown binary op\n"; break;
+    }
 
-inline void SubIR::dump()  {
-    std::cout << "  ";
-    target->dump();
-    std::cout << " = sub ";
-    op1->dump();
+    std::cout << " ";
+    op1.dump();
     std::cout << ", ";
-    op2->dump();
+    op2.dump();
     std::cout << std::endl;
 }
