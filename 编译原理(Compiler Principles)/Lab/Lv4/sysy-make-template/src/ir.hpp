@@ -28,17 +28,21 @@ enum class BinaryOpType {
 };
 
 struct Operand {
-    enum Type {VOID, IMM, ID } type;
+    enum Type { VOID, IMM, ID, VAR } type;
     
-    int val; 
+    int val; // IMM, ID
+    std::string name; // VAR
     Operand() : type(VOID), val(0) {}
     Operand(Type t, int v) : type(t), val(v) {}
+    Operand(std::string n) : type(VAR), val(0), name(n) {}
 
     void dump() const {
         if (type == IMM) {
             std::cout << val;
         } else if (type == ID) {
             std::cout << "%" << val;
+        } else if (type == VAR) {
+            std::cout << "@" << name; // 变量名前加 @
         }
     }
 
@@ -106,42 +110,25 @@ public:
 
 class AllocIR : public InstructionIR {
 public:
-    int target;
-
-    AllocIR(int target) : target(target) {}
-
-    void dump() override {
-        std::cout << "  @" << target << " = alloc i32" << std::endl;
-    }
+    std::string var_name;
+    AllocIR(std::string name) : var_name(name) {}
+    void dump() override;
 };
 
 class LoadIR : public InstructionIR {
 public:
     int target;
-    Operand src_addr; // 变量的地址 (Alloc 返回的 ID)
-
+    Operand src_addr;
     LoadIR(int target, Operand src) : target(target), src_addr(src) {}
-    void dump() override {
-        std::cout << "  %" << target << " = load ";
-        src_addr.dump();
-        std::cout << std::endl;
-    }
+    void dump() override;
 };
 
-// 写入内存 (对应 a = 1)
 class StoreIR : public InstructionIR {
 public:
-    Operand value;    // 要写入的值
-    Operand dst_addr; // 目标地址
-
+    Operand value;
+    Operand dst_addr;
     StoreIR(Operand val, Operand dst) : value(val), dst_addr(dst) {}
-    void dump() override {
-        std::cout << "  store ";
-        value.dump();
-        std::cout << ", ";
-        dst_addr.dump();
-        std::cout << std::endl;
-    }
+    void dump() override;
 };
 
 // =========================================================
@@ -203,5 +190,23 @@ inline void BinaryArithmeticIR::dump() {
     op1.dump();
     std::cout << ", ";
     op2.dump();
+    std::cout << std::endl;
+}
+
+inline void AllocIR::dump() {
+    std::cout << "  @" << var_name << " = alloc i32" << std::endl;
+}
+
+inline void LoadIR::dump() {
+    std::cout << "  %" << target << " = load ";
+    src_addr.dump();
+    std::cout << std::endl;
+}
+
+inline void StoreIR::dump() {
+    std::cout << "  store ";
+    value.dump();
+    std::cout << ", ";
+    dst_addr.dump();
     std::cout << std::endl;
 }

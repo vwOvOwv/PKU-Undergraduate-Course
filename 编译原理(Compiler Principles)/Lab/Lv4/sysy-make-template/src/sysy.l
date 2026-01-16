@@ -43,6 +43,7 @@ Hexadecimal   0[xX][0-9a-fA-F]+
 
 "int"           { return INT; }
 "return"        { return RETURN; }
+"const"         { return CONST; }
 
     /* yytext 代表 lexer 当前匹配到的字符串的内容, 它的类型是 char *
      * yylval 用来向 parser 传递 lexer 读取到的内容, str_val 和之后的 int_val 是我们在 Bison 文件中定义的字段

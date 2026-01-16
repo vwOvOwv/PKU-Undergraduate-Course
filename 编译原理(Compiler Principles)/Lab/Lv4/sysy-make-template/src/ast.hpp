@@ -3,11 +3,22 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <map>
+#include <vector>
+#include <stdexcept>
 #include "ir.hpp"
 
 // =========================================================
 // 前向声明
 // =========================================================
+
+struct SymbolInfo {
+    bool is_const; 
+    int const_val;  // IMM
+    std::string var_name; // VAR
+};
+
+extern std::map<std::string, SymbolInfo> global_symbol_table;
 
 class BaseAST;
 class CompUnitAST;
@@ -28,6 +39,17 @@ class PrimaryExpAST;
 class UnaryOpAST;
 class NumberAST;
 
+class BTypeAST;
+class DeclAST;
+class ConstDeclAST;
+class ConstDefAST;
+class ConstInitValAST;
+class ConstExpAST;
+class LValAST;
+class VarDeclAST;
+class VarDefAST;
+class InitValAST;
+
 std::unique_ptr<ProgramIR> generate_ir(const std::unique_ptr<BaseAST>& ast);
 
 // =========================================================
@@ -37,14 +59,15 @@ std::unique_ptr<ProgramIR> generate_ir(const std::unique_ptr<BaseAST>& ast);
 class BaseAST {
 public:
 	virtual ~BaseAST() = default;
-	virtual void dump() const = 0;
 	virtual void generate_ir(ProgramIR* ir) const = 0;
+    virtual int calculate_val() const {
+        throw std::runtime_error("This node cannot be evaluated at compile time.");
+    }
 };
 
 class CompUnitAST : public BaseAST {
 public:
 	std::unique_ptr<FuncDefAST> func_def_ast;
-	void dump() const override;
 	void generate_ir(ProgramIR* ir) const override;
 };
 
@@ -53,36 +76,41 @@ public:
 	std::unique_ptr<FuncTypeAST> func_type_ast;
 	std::string func_name;
 	std::unique_ptr<BlockAST> block_ast;
-	void dump() const override;
 	void generate_ir(ProgramIR* ir) const override;
 };
 
 class FuncTypeAST : public BaseAST {
 public:
 	std::string type;
-	void dump() const override;
 	void generate_ir(ProgramIR* ir) const override;
 };
 
 class BlockAST : public BaseAST {
 public:
-	std::unique_ptr<StmtAST> stmt_ast;
-	void dump() const override;
-	void generate_ir(ProgramIR* ir) const override;
+    std::vector<std::unique_ptr<BaseAST>> body; 
+    void generate_ir(ProgramIR* ir) const override;
 };
 
-class StmtAST : public BaseAST {
+class StmtAST : public BaseAST {};
+
+class ReturnStmtAST : public StmtAST {
 public:
-	std::unique_ptr<ExpAST> exp_ast;
-	void dump() const override;
-	void generate_ir(ProgramIR* ir) const override;
+    std::unique_ptr<ExpAST> exp_ast;
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class AssignStmtAST : public StmtAST {
+public:
+    std::unique_ptr<LValAST> lval;
+    std::unique_ptr<ExpAST> exp;
+    void generate_ir(ProgramIR* ir) const override;
 };
 
 class ExpAST : public BaseAST {
 public:
 	std::unique_ptr<LOrExpAST> lor_exp_ast;
-	void dump() const override;
 	void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class AddExpAST : public BaseAST {
@@ -93,9 +121,8 @@ public:
     std::unique_ptr<MulExpAST> right_ast;
     // 没有op
     std::unique_ptr<MulExpAST> mul_exp_ast; 
-
-    void dump() const override;
     void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class MulExpAST : public BaseAST {
@@ -107,8 +134,8 @@ public:
 	// 没有op
     std::unique_ptr<UnaryExpAST> unary_exp_ast;
 
-    void dump() const override;
     void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class LOrExpAST : public BaseAST {
@@ -117,8 +144,9 @@ public:
     std::string op;
     std::unique_ptr<LAndExpAST> right_ast; // 指向下一级
     std::unique_ptr<LAndExpAST> land_exp_ast; // 单个情况
-    void dump() const override;
+
     void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class LAndExpAST : public BaseAST {
@@ -127,8 +155,9 @@ public:
     std::string op;
     std::unique_ptr<EqExpAST> right_ast;
     std::unique_ptr<EqExpAST> eq_exp_ast;
-    void dump() const override;
+
     void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class EqExpAST : public BaseAST {
@@ -137,8 +166,9 @@ public:
     std::string op;
     std::unique_ptr<RelExpAST> right_ast;
     std::unique_ptr<RelExpAST> rel_exp_ast;
-    void dump() const override;
+
     void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class RelExpAST : public BaseAST {
@@ -147,8 +177,9 @@ public:
     std::string op;
     std::unique_ptr<AddExpAST> right_ast;
     std::unique_ptr<AddExpAST> add_exp_ast;
-    void dump() const override;
+
     void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class UnaryExpAST : public BaseAST {
@@ -156,210 +187,146 @@ public:
 	std::unique_ptr<PrimaryExpAST> primary_exp_ast;
 	std::unique_ptr<UnaryOpAST> unary_op_ast;
 	std::unique_ptr<UnaryExpAST> unary_exp_ast;
-	void dump() const override;
+
 	void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class PrimaryExpAST : public BaseAST {
 public:
-	std::unique_ptr<ExpAST> exp_ast;
-	std::unique_ptr<NumberAST> number_ast;
-	void dump() const override;
-	void generate_ir(ProgramIR* ir) const override;
+    std::unique_ptr<ExpAST> exp_ast;
+    std::unique_ptr<NumberAST> number_ast;
+    std::unique_ptr<LValAST> lval_ast;
+
+    void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 class UnaryOpAST : public BaseAST {
 public:
 	std::string op;
-	void dump() const override;
+
 	void generate_ir(ProgramIR* ir) const override;
 };
 
 class NumberAST : public BaseAST {
 public:
 	int number;
-	void dump() const override;
+
 	void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
+};
+
+class BTypeAST : public BaseAST {
+public:
+    std::string type;
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class DeclAST : public BaseAST {};
+
+class ConstDeclAST : public DeclAST {
+public:
+    std::string b_type; // "int"
+    std::vector<std::unique_ptr<ConstDefAST>> def_list;
+
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class ConstDefAST : public BaseAST {
+public:
+    std::string id;
+    std::unique_ptr<ConstInitValAST> init_val;
+
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class ConstInitValAST : public BaseAST {
+public:
+    std::unique_ptr<ConstExpAST> const_exp;
+
+    void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
+};
+
+class ConstExpAST : public BaseAST {
+public:
+    std::unique_ptr<ExpAST> exp;
+
+    void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
+};
+
+class LValAST : public BaseAST {
+public:
+    std::string id;
+
+    void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
+};
+
+class VarDeclAST : public DeclAST {
+public:
+    std::string b_type;
+    std::vector<std::unique_ptr<VarDefAST>> var_def_list;
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class VarDefAST : public BaseAST {
+public:
+    std::string id;
+    std::unique_ptr<InitValAST> init_val;
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class InitValAST : public BaseAST {
+public:
+    std::unique_ptr<ExpAST> exp;
+    void generate_ir(ProgramIR* ir) const override;
+    int calculate_val() const override;
 };
 
 // =========================================================
 // 方法实现
 // =========================================================
 
-// dump 已经不用了，但是还是实现一下，可能可以用于 debug
-inline void CompUnitAST::dump() const {
-	std::cout << "CompUnitAST { ";
-	func_def_ast->dump();
-	std::cout << " }";
-}
-
-inline void FuncDefAST::dump() const {
-	std::cout << "FuncDefAST { ";
-	func_type_ast->dump();
-	std::cout << ", " << func_name << ", ";
-	block_ast->dump();
-	std::cout << " }";
-}
-
-inline void FuncTypeAST::dump() const {
-	std::cout << "FuncTypeAST { " << type << " }";
-}
-
-inline void BlockAST::dump() const {
-	std::cout << "BlockAST { ";
-	stmt_ast->dump();
-	std::cout << " }";
-}
-
-inline void StmtAST::dump() const {
-	std::cout << "StmtAST { ";
-	exp_ast->dump();
-	std::cout << " }";
-}
-
-inline void ExpAST::dump() const {
-	std::cout << "ExpAST { ";
-	lor_exp_ast->dump();
-	std::cout << " }";
-}
-
-inline void AddExpAST::dump() const {
-    std::cout << "AddExpAST { ";
-    if (mul_exp_ast) {
-        mul_exp_ast->dump();
-    } else {
-        left_ast->dump();
-        std::cout << " " << op << " ";
-        right_ast->dump();
-    }
-    std::cout << " }";
-}
-
-inline void MulExpAST::dump() const {
-    std::cout << "MulExpAST { ";
-    if (unary_exp_ast) {
-        unary_exp_ast->dump();
-    } else {
-        left_ast->dump();
-        std::cout << " " << op << " ";
-        right_ast->dump();
-    }
-    std::cout << " }";
-}
-
-inline void LOrExpAST::dump() const {
-    std::cout << "OrExpAST { ";
-    if (land_exp_ast) {
-        land_exp_ast->dump();
-    } else {
-        left_ast->dump();
-        std::cout << " " << op << " ";
-        right_ast->dump();
-    }
-    std::cout << " }";
-}
-
-inline void LAndExpAST::dump() const {
-    std::cout << "AndExpAST { ";
-    if (eq_exp_ast) {
-        eq_exp_ast->dump();
-    } else {
-        left_ast->dump();
-        std::cout << " " << op << " ";
-        right_ast->dump();
-    }
-    std::cout << " }";
-}
-
-inline void EqExpAST::dump() const {
-    std::cout << "EqExpAST { ";
-    if (rel_exp_ast) {
-        rel_exp_ast->dump();
-    } else {
-        left_ast->dump();
-        std::cout << " " << op << " ";
-        right_ast->dump();
-    }
-    std::cout << " }";
-}
-
-inline void RelExpAST::dump() const {
-    std::cout << "RelExpAST { ";
-    if (add_exp_ast) {
-        add_exp_ast->dump();
-    } else {
-        left_ast->dump();
-        std::cout << " " << op << " ";
-        right_ast->dump();
-    }
-    std::cout << " }";
-}
-
-inline void PrimaryExpAST::dump() const {
-	std::cout << "PrimaryExpAST { ";
-	if (exp_ast) {
-		std::cout << "(";
-		exp_ast->dump();
-		std::cout << ")";
-	} else if (number_ast) {
-		number_ast->dump();
-	}
-	std::cout << " }";
-}
-
-inline void NumberAST::dump() const {
-	std::cout << "NumberAST { " << number << " }";
-}
-
-inline void UnaryExpAST::dump() const {
-	std::cout << "UnaryExpAST { ";
-	if (primary_exp_ast) {
-		primary_exp_ast->dump();
-	} else if (unary_op_ast && unary_exp_ast) {
-		unary_op_ast->dump();
-		unary_exp_ast->dump();
-	}
-	std::cout << " }";
-}
-
-inline void UnaryOpAST::dump() const {
-	std::cout << "UnaryOpAST { " << op << " }";
-}
-
 // generate_ir
-
 inline void CompUnitAST::generate_ir(ProgramIR* ir) const {
     func_def_ast->generate_ir(ir);
 }
 
 inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
-	auto func_ir = std::make_unique<FunctionIR>();
-	func_ir->func_name = func_name;
-	if(func_type_ast->type == "int")
-		func_ir->func_type = "i32";
-	else
-		func_ir->func_type = func_type_ast->type;
-	ir->cur_func = func_ir.get();
-	ir->funcs.push_back(std::move(func_ir));
+    auto func_ir = std::make_unique<FunctionIR>();
+    func_ir->func_name = func_name;
 
-	block_ast->generate_ir(ir);
+    if(func_type_ast->type == "int")
+        func_ir->func_type = "i32";
+    else
+        func_ir->func_type = func_type_ast->type;
+    ir->cur_func = func_ir.get();
+    ir->funcs.push_back(std::move(func_ir));
+
+    auto entry_block = std::make_unique<BasicBlockIR>();
+    entry_block->basic_block_name = "entry";
+    ir->cur_block = entry_block.get();
+    ir->cur_func->basic_blocks.push_back(std::move(entry_block));
+
+    block_ast->generate_ir(ir);
 }
 
 inline void FuncTypeAST::generate_ir(ProgramIR* ir) const {}
 
 inline void BlockAST::generate_ir(ProgramIR* ir) const {
-    auto basic_block_ir = std::make_unique<BasicBlockIR>();
-    basic_block_ir->basic_block_name = "entry";
-    ir->cur_block = basic_block_ir.get();
-    ir->cur_func->basic_blocks.push_back(std::move(basic_block_ir));
-    stmt_ast->generate_ir(ir);
+    for (const auto& item : body) {
+        item->generate_ir(ir);
+    }
 }
 
-inline void StmtAST::generate_ir(ProgramIR* ir) const {
-	exp_ast->generate_ir(ir);
-	auto ret_ir = std::make_unique<ReturnIR>();
-	ret_ir->ret_value = ir->cur_val;
-	ir->cur_block->insts.push_back(std::move(ret_ir));
+inline void ReturnStmtAST::generate_ir(ProgramIR* ir) const {
+    exp_ast->generate_ir(ir);
+    auto ret_ir = std::make_unique<ReturnIR>();
+    ret_ir->ret_value = ir->cur_val;
+    ir->cur_block->insts.push_back(std::move(ret_ir));
 }
 
 inline void ExpAST::generate_ir(ProgramIR* ir) const {
@@ -563,11 +530,13 @@ inline void UnaryExpAST::generate_ir(ProgramIR* ir) const {
 }
 
 inline void PrimaryExpAST::generate_ir(ProgramIR* ir) const {
-	if (exp_ast) {
-		exp_ast->generate_ir(ir);
-	} else if (number_ast) {
-		number_ast->generate_ir(ir);
-	}
+    if (exp_ast) {
+        exp_ast->generate_ir(ir);
+    } else if (number_ast) {
+        number_ast->generate_ir(ir);
+    } else if (lval_ast) {
+        lval_ast->generate_ir(ir);
+    }
 }
 
 inline void UnaryOpAST::generate_ir(ProgramIR* ir) const {
@@ -604,8 +573,215 @@ inline void NumberAST::generate_ir(ProgramIR* ir) const {
 	ir->cur_val = Operand(Operand::IMM, number);
 }
 
+inline void BTypeAST::generate_ir(ProgramIR* ir) const {}
+
+inline void ConstDeclAST::generate_ir(ProgramIR* ir) const {
+    for (const auto& def : def_list) {
+        def->generate_ir(ir);
+    }
+}
+
+inline void ConstDefAST::generate_ir(ProgramIR* ir) const {
+    // 获取编译期常量值
+    int val = init_val->calculate_val();
+    // 插入符号表
+    global_symbol_table[id] = {true, val, ""};
+}
+
+inline void ConstInitValAST::generate_ir(ProgramIR* ir) const {}
+
+inline void ConstExpAST::generate_ir(ProgramIR* ir) const {}
+
+inline void LValAST::generate_ir(ProgramIR* ir) const {
+    if (global_symbol_table.count(id)) {
+        SymbolInfo& info = global_symbol_table[id];
+        if (info.is_const) {
+            // 常量直接替换数值
+            ir->cur_val = Operand(Operand::IMM, info.const_val);
+        } else {
+            // 变量需要 load: %new_id = load @x
+            int target_id = ir->cur_inst_id++;
+            auto load_inst = std::make_unique<LoadIR>(target_id, Operand(info.var_name));
+            ir->cur_block->insts.push_back(std::move(load_inst));
+            // 当前表达式的值就是 load 出来的那个临时寄存器
+            ir->cur_val = Operand(Operand::ID, target_id);
+        }
+    } else {
+        std::cerr << "Error: Undefined identifier " << id << std::endl;
+        exit(1);
+    }
+}
+
+inline void VarDeclAST::generate_ir(ProgramIR* ir) const {
+    for (const auto& def : var_def_list) {
+        def->generate_ir(ir);
+    }
+}
+
+inline void VarDefAST::generate_ir(ProgramIR* ir) const {
+    // 生成 alloc 指令
+    auto alloc_inst = std::make_unique<AllocIR>(id);
+    ir->cur_block->insts.push_back(std::move(alloc_inst));
+    // 更新符号表
+    global_symbol_table[id] = {false, 0, id};
+    // 如果有初始值，生成 store
+    if (init_val) {
+        init_val->generate_ir(ir);
+        Operand rhs_val = ir->cur_val;
+        // store %val, @x
+        auto store_inst = std::make_unique<StoreIR>(rhs_val, Operand(id));
+        ir->cur_block->insts.push_back(std::move(store_inst));
+    }
+}
+
+inline void InitValAST::generate_ir(ProgramIR* ir) const {
+    exp->generate_ir(ir);
+}
+
 inline std::unique_ptr<ProgramIR> generate_ir(const std::unique_ptr<BaseAST>& ast) {
     auto ir = std::make_unique<ProgramIR>();
     ast->generate_ir(ir.get());
     return ir;
+}
+
+inline void AssignStmtAST::generate_ir(ProgramIR* ir) const {
+    // 计算表达式
+    exp->generate_ir(ir);
+    Operand rhs = ir->cur_val;
+    // 查表
+    if (global_symbol_table.count(lval->id)) {
+        SymbolInfo& info = global_symbol_table[lval->id];
+        if (info.is_const) {
+            std::cerr << "Error: Assign to const " << lval->id << std::endl;
+            exit(1);
+        }
+        // store %val, @x
+        auto store_inst = std::make_unique<StoreIR>(rhs, Operand(info.var_name));
+        ir->cur_block->insts.push_back(std::move(store_inst));
+    } else {
+        std::cerr << "Error: Undefined variable " << lval->id << std::endl;
+        exit(1);
+    }
+}
+
+// calculate_val
+
+inline int NumberAST::calculate_val() const {
+    return number;
+}
+
+inline int PrimaryExpAST::calculate_val() const {
+    if (number_ast) return number_ast->calculate_val();
+    if (exp_ast) return exp_ast->calculate_val();
+    if (lval_ast) return lval_ast->calculate_val();
+    return 0; 
+}
+
+inline int LValAST::calculate_val() const {
+    auto it = global_symbol_table.find(id);
+    if (it != global_symbol_table.end()) {
+        const SymbolInfo& info = it->second;
+        if (info.is_const) {
+            return info.const_val;
+        } else {
+            std::cerr << "Semantic Error: Variable '" << id << "' used in constant expression." << std::endl;
+            exit(1); 
+        }
+    } else {
+        std::cerr << "Semantic Error: Undefined identifier: " << id << std::endl;
+        exit(1);
+    }
+}
+
+inline int UnaryExpAST::calculate_val() const {
+    if (primary_exp_ast) return primary_exp_ast->calculate_val();
+    if (unary_op_ast && unary_exp_ast) {
+        int val = unary_exp_ast->calculate_val();
+        std::string op = unary_op_ast->op;
+        if (op == "+") 
+            return val;
+        if (op == "-") 
+            return -val;
+        if (op == "!") 
+            return !val;
+    }
+    return 0;
+}
+
+inline int MulExpAST::calculate_val() const {
+    if (unary_exp_ast) return unary_exp_ast->calculate_val();
+    int l = left_ast->calculate_val();
+    int r = right_ast->calculate_val();
+    if (op == "*") 
+        return l * r;
+    if (op == "/") {
+        if (r == 0) {
+            std::cerr << "Semantic Error: Div by zero at compile time." << std::endl;
+            exit(1);
+        }
+        return l / r;
+    }
+    if (op == "%") {
+        if (r == 0) {
+            std::cerr << "Semantic Error: Mod by zero at compile time." << std::endl;
+            exit(1);
+        }
+        return l % r;
+    }
+    return 0;
+}
+
+inline int AddExpAST::calculate_val() const {
+    if (mul_exp_ast) return mul_exp_ast->calculate_val();
+    int l = left_ast->calculate_val();
+    int r = right_ast->calculate_val();
+    if (op == "+") return l + r;
+    if (op == "-") return l - r;
+    return 0;
+}
+
+inline int RelExpAST::calculate_val() const {
+    if (add_exp_ast) return add_exp_ast->calculate_val();
+    int l = left_ast->calculate_val();
+    int r = right_ast->calculate_val();
+    if (op == "<") return l < r;
+    if (op == ">") return l > r;
+    if (op == "<=") return l <= r;
+    if (op == ">=") return l >= r;
+    return 0;
+}
+
+inline int EqExpAST::calculate_val() const {
+    if (rel_exp_ast) return rel_exp_ast->calculate_val();
+    int l = left_ast->calculate_val();
+    int r = right_ast->calculate_val();
+    if (op == "==") return l == r;
+    if (op == "!=") return l != r;
+    return 0;
+}
+
+inline int LAndExpAST::calculate_val() const {
+    if (eq_exp_ast) return eq_exp_ast->calculate_val();
+    return left_ast->calculate_val() && right_ast->calculate_val();
+}
+
+inline int LOrExpAST::calculate_val() const {
+    if (land_exp_ast) return land_exp_ast->calculate_val();
+    return left_ast->calculate_val() || right_ast->calculate_val();
+}
+
+inline int ExpAST::calculate_val() const {
+    return lor_exp_ast->calculate_val();
+}
+
+inline int ConstExpAST::calculate_val() const {
+    return exp->calculate_val();
+}
+
+inline int ConstInitValAST::calculate_val() const {
+    return const_exp->calculate_val();
+}
+
+inline int InitValAST::calculate_val() const {
+    return exp->calculate_val();
 }
