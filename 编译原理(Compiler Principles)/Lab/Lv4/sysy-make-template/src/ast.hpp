@@ -318,6 +318,19 @@ inline void FuncTypeAST::generate_ir(ProgramIR* ir) const {}
 
 inline void BlockAST::generate_ir(ProgramIR* ir) const {
     for (const auto& item : body) {
+        if (!ir->cur_block->insts.empty()) {
+            BaseIR* last_inst = ir->cur_block->insts.back().get();
+            if (dynamic_cast<ReturnIR*>(last_inst)) {
+                // 如果上一条是 ret，说明当前块已结束
+                auto dead_block = std::make_unique<BasicBlockIR>();
+                dead_block->basic_block_name = "dead_" + std::to_string(ir->cur_inst_id++);
+                
+                // 挂载到函数并更新 cur_block
+                ir->cur_block = dead_block.get();
+                ir->cur_func->basic_blocks.push_back(std::move(dead_block));
+            }
+        }
+        
         item->generate_ir(ir);
     }
 }
