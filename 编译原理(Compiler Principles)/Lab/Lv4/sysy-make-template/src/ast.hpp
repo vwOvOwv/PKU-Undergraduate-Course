@@ -142,8 +142,8 @@ class LOrExpAST : public BaseAST {
 public:
     std::unique_ptr<LOrExpAST> left_ast;
     std::string op;
-    std::unique_ptr<LAndExpAST> right_ast; // 指向下一级
-    std::unique_ptr<LAndExpAST> land_exp_ast; // 单个情况
+    std::unique_ptr<LAndExpAST> right_ast;
+    std::unique_ptr<LAndExpAST> land_exp_ast;
 
     void generate_ir(ProgramIR* ir) const override;
     int calculate_val() const override;
