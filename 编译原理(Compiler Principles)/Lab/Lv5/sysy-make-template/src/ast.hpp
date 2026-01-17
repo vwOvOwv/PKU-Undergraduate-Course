@@ -303,6 +303,7 @@ inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
         func_ir->func_type = "i32";
     else
         func_ir->func_type = func_type->type;
+    
     ir->cur_func = func_ir.get();
     ir->funcs.push_back(std::move(func_ir));
 
@@ -312,6 +313,26 @@ inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
     ir->cur_func->basic_blocks.push_back(std::move(entry_block));
 
     block->generate_ir(ir);
+
+    bool need_ret = true;
+    if (!ir->cur_block->insts.empty()) {
+        BaseIR* last_inst = ir->cur_block->insts.back().get();
+        if (dynamic_cast<ReturnIR*>(last_inst)) {
+            need_ret = false;
+        }
+    }
+
+    if (need_ret) {
+        auto ret_ir = std::make_unique<ReturnIR>();
+        if (func_type->type == "int") {
+            // int 函数缺省返回 0
+            ret_ir->ret_value = Operand(Operand::IMM, 0);
+        } else {
+            // 缺省返回 void
+            ret_ir->ret_value = Operand();
+        }
+        ir->cur_block->insts.push_back(std::move(ret_ir));
+    }
 }
 
 inline void FuncTypeAST::generate_ir(ProgramIR* ir) const {}
