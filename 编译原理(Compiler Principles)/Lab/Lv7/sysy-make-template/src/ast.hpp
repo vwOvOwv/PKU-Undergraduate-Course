@@ -48,6 +48,9 @@ class AssignStmtAST;
 class ReturnStmtAST;
 class ExpStmtAST;
 class IfStmtAST;
+class WhileStmtAST;
+class BreakStmtAST;
+class ContinueStmtAST;
 
 std::unique_ptr<ProgramIR> generate_ir(const std::unique_ptr<BaseAST>& ast);
 
@@ -116,6 +119,23 @@ public:
     std::unique_ptr<ExpAST> cond;
     std::unique_ptr<BaseAST> then_stmt;
     std::unique_ptr<BaseAST> else_stmt; // 如果没有 else，则为 nullptr
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class WhileStmtAST : public BaseAST {
+public:
+    std::unique_ptr<ExpAST> cond;
+    std::unique_ptr<BaseAST> stmt;
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class BreakStmtAST : public BaseAST {
+public:
+    void generate_ir(ProgramIR* ir) const override;
+};
+
+class ContinueStmtAST : public BaseAST {
+public:
     void generate_ir(ProgramIR* ir) const override;
 };
 
@@ -730,6 +750,196 @@ inline void AssignStmtAST::generate_ir(ProgramIR* ir) const {
     }
 }
 
+inline void IfStmtAST::generate_ir(ProgramIR* ir) const {
+    // 生成条件表达式 IR
+    if (cond) {
+        cond->generate_ir(ir);
+    }
+    Operand cond_val = ir->cur_val;
+
+    // 为了确保条件是布尔值（适用于 C 语义 if(5)），生成 "cond != 0" 的比较
+    int cmp_id = ir->cur_inst_id++;
+    auto cmp_inst = std::make_unique<BinaryArithmeticIR>(
+        BinaryOpType::NE, 
+        cmp_id, 
+        cond_val, 
+        Operand(Operand::IMM, 0)
+    );
+    ir->cur_block->insts.push_back(std::move(cmp_inst));
+    Operand is_true = Operand(Operand::ID, cmp_id);
+
+    // 预分配 Block 名字
+    std::string then_label = "then_" + std::to_string(ir->cur_inst_id++);
+    std::string else_label = "else_" + std::to_string(ir->cur_inst_id++);
+    std::string end_label = "end_" + std::to_string(ir->cur_inst_id++);
+
+    std::string true_target = then_label;
+    // 如果没有 else 分支，false 直接跳到 end
+    std::string false_target = else_stmt ? else_label : end_label;
+
+    // 生成条件跳转指令 (Branch)
+    auto br_inst = std::make_unique<BranchIR>(is_true, true_target, false_target);
+    ir->cur_block->insts.push_back(std::move(br_inst));
+
+    // ================= THEN BLOCK =================
+    auto then_block = std::make_unique<BasicBlockIR>();
+    then_block->basic_block_name = then_label;
+    ir->cur_block = then_block.get();
+    ir->funcs.back()->basic_blocks.push_back(std::move(then_block));
+
+    if (then_stmt) {
+        then_stmt->generate_ir(ir);
+    }
+
+    // 检查 then 块末尾是否需要插入跳转到 end
+    // 如果最后一条指令是 ret, br, jump 等终结指令，则不需要
+    bool then_has_term = false;
+    if (!ir->cur_block->insts.empty()) {
+        auto* last = ir->cur_block->insts.back().get();
+        if (dynamic_cast<ReturnIR*>(last) || 
+            dynamic_cast<BranchIR*>(last) || 
+            dynamic_cast<JumpIR*>(last)) {
+            then_has_term = true;
+        }
+    }
+    if (!then_has_term) {
+        auto jump = std::make_unique<JumpIR>(end_label);
+        ir->cur_block->insts.push_back(std::move(jump));
+    }
+
+    // ================= ELSE BLOCK (Optional) =================
+    if (else_stmt) {
+        auto else_block = std::make_unique<BasicBlockIR>();
+        else_block->basic_block_name = else_label;
+        ir->cur_block = else_block.get();
+        ir->funcs.back()->basic_blocks.push_back(std::move(else_block));
+
+        else_stmt->generate_ir(ir);
+
+        bool else_has_term = false;
+        if (!ir->cur_block->insts.empty()) {
+            auto* last = ir->cur_block->insts.back().get();
+            if (dynamic_cast<ReturnIR*>(last) || 
+                dynamic_cast<BranchIR*>(last) || 
+                dynamic_cast<JumpIR*>(last)) {
+                else_has_term = true;
+            }
+        }
+        if (!else_has_term) {
+            auto jump = std::make_unique<JumpIR>(end_label);
+            ir->cur_block->insts.push_back(std::move(jump));
+        }
+    }
+
+    // ================= END BLOCK =================
+    auto end_block = std::make_unique<BasicBlockIR>();
+    end_block->basic_block_name = end_label;
+    ir->cur_block = end_block.get();
+    ir->funcs.back()->basic_blocks.push_back(std::move(end_block));
+}
+
+inline void WhileStmtAST::generate_ir(ProgramIR* ir) const {
+    // 生成标号
+    std::string label_entry = "while_entry_" + std::to_string(ir->cur_inst_id++);
+    std::string label_body = "while_body_" + std::to_string(ir->cur_inst_id++);
+    std::string label_end = "while_end_" + std::to_string(ir->cur_inst_id++);
+
+    // 将 entry 和 end 压入栈中
+    ir->loop_entry_stack.push_back(label_entry);
+    ir->loop_end_stack.push_back(label_end);
+
+    // 当前块跳转到 entry
+    auto jump_inst = std::make_unique<JumpIR>(label_entry);
+    ir->cur_block->insts.push_back(std::move(jump_inst));
+
+    // Entry 块：计算条件并分支
+    auto entry_block = std::make_unique<BasicBlockIR>();
+    entry_block->basic_block_name = label_entry;
+    ir->cur_block = entry_block.get();
+    ir->funcs.back()->basic_blocks.push_back(std::move(entry_block));
+
+    cond->generate_ir(ir);
+    Operand cond_val = ir->cur_val;
+
+    int cmp_id = ir->cur_inst_id++;
+    auto cmp_inst = std::make_unique<BinaryArithmeticIR>(
+        BinaryOpType::NE, cmp_id, cond_val, Operand(Operand::IMM, 0)
+    );
+    ir->cur_block->insts.push_back(std::move(cmp_inst));
+    Operand is_true = Operand(Operand::ID, cmp_id);
+
+    // 如果真 -> body，假 -> end
+    auto br_inst = std::make_unique<BranchIR>(is_true, label_body, label_end);
+    ir->cur_block->insts.push_back(std::move(br_inst));
+
+    // Body 块：执行语句
+    auto body_block = std::make_unique<BasicBlockIR>();
+    body_block->basic_block_name = label_body;
+    ir->cur_block = body_block.get();
+    ir->funcs.back()->basic_blocks.push_back(std::move(body_block));
+
+    stmt->generate_ir(ir);
+
+    // Body 结束后跳回 entry（如果没有被 return/break/continue 终止）
+    bool has_term = false;
+    if (!ir->cur_block->insts.empty()) {
+        auto* last = ir->cur_block->insts.back().get();
+        if (dynamic_cast<ReturnIR*>(last) || 
+            dynamic_cast<BranchIR*>(last) || 
+            dynamic_cast<JumpIR*>(last)) {
+            has_term = true;
+        }
+    }
+    if (!has_term) {
+        auto jump_back = std::make_unique<JumpIR>(label_entry);
+        ir->cur_block->insts.push_back(std::move(jump_back));
+    }
+
+    // End 块
+    auto end_block = std::make_unique<BasicBlockIR>();
+    end_block->basic_block_name = label_end;
+    ir->cur_block = end_block.get();
+    ir->funcs.back()->basic_blocks.push_back(std::move(end_block));
+
+    // 弹出栈
+    ir->loop_entry_stack.pop_back();
+    ir->loop_end_stack.pop_back();
+}
+
+inline void BreakStmtAST::generate_ir(ProgramIR* ir) const {
+    if (ir->loop_end_stack.empty()) {
+        std::cerr << "Semantic Error: 'break' outside of loop." << std::endl;
+        exit(1);
+    }
+    // 跳转到当前循环的 end 标号
+    std::string target = ir->loop_end_stack.back();
+    auto jump = std::make_unique<JumpIR>(target);
+    ir->cur_block->insts.push_back(std::move(jump));
+
+    // 后续生成死代码块，防止后续指令写入已终结的块
+    auto dead_block = std::make_unique<BasicBlockIR>();
+    dead_block->basic_block_name = "dead_" + std::to_string(ir->cur_inst_id++);
+    ir->cur_block = dead_block.get();
+    ir->funcs.back()->basic_blocks.push_back(std::move(dead_block));
+}
+
+inline void ContinueStmtAST::generate_ir(ProgramIR* ir) const {
+    if (ir->loop_entry_stack.empty()) {
+        std::cerr << "Semantic Error: 'continue' outside of loop." << std::endl;
+        exit(1);
+    }
+    // 跳转到当前循环的 entry 标号
+    std::string target = ir->loop_entry_stack.back();
+    auto jump = std::make_unique<JumpIR>(target);
+    ir->cur_block->insts.push_back(std::move(jump));
+
+    // 后续生成死代码块
+    auto dead_block = std::make_unique<BasicBlockIR>();
+    dead_block->basic_block_name = "dead_" + std::to_string(ir->cur_inst_id++);
+    ir->cur_block = dead_block.get();
+    ir->funcs.back()->basic_blocks.push_back(std::move(dead_block));
+}
+
 // calculate_val
 
 inline int NumberAST::calculate_val() const {
@@ -849,92 +1059,4 @@ inline int ConstInitValAST::calculate_val() const {
 
 inline int InitValAST::calculate_val() const {
     return exp->calculate_val();
-}
-
-inline void IfStmtAST::generate_ir(ProgramIR* ir) const {
-    // 生成条件表达式 IR
-    if (cond) {
-        cond->generate_ir(ir);
-    }
-    Operand cond_val = ir->cur_val;
-
-    // 为了确保条件是布尔值（适用于 C 语义 if(5)），生成 "cond != 0" 的比较
-    int cmp_id = ir->cur_inst_id++;
-    auto cmp_inst = std::make_unique<BinaryArithmeticIR>(
-        BinaryOpType::NE, 
-        cmp_id, 
-        cond_val, 
-        Operand(Operand::IMM, 0)
-    );
-    ir->cur_block->insts.push_back(std::move(cmp_inst));
-    Operand is_true = Operand(Operand::ID, cmp_id);
-
-    // 预分配 Block 名字
-    std::string then_label = "then_" + std::to_string(ir->cur_inst_id++);
-    std::string else_label = "else_" + std::to_string(ir->cur_inst_id++);
-    std::string end_label = "end_" + std::to_string(ir->cur_inst_id++);
-
-    std::string true_target = then_label;
-    // 如果没有 else 分支，false 直接跳到 end
-    std::string false_target = else_stmt ? else_label : end_label;
-
-    // 生成条件跳转指令 (Branch)
-    auto br_inst = std::make_unique<BranchIR>(is_true, true_target, false_target);
-    ir->cur_block->insts.push_back(std::move(br_inst));
-
-    // ================= THEN BLOCK =================
-    auto then_block = std::make_unique<BasicBlockIR>();
-    then_block->basic_block_name = then_label;
-    ir->cur_block = then_block.get();
-    ir->funcs.back()->basic_blocks.push_back(std::move(then_block));
-
-    if (then_stmt) {
-        then_stmt->generate_ir(ir);
-    }
-
-    // 检查 then 块末尾是否需要插入跳转到 end
-    // 如果最后一条指令是 ret, br, jump 等终结指令，则不需要
-    bool then_has_term = false;
-    if (!ir->cur_block->insts.empty()) {
-        auto* last = ir->cur_block->insts.back().get();
-        if (dynamic_cast<ReturnIR*>(last) || 
-            dynamic_cast<BranchIR*>(last) || 
-            dynamic_cast<JumpIR*>(last)) {
-            then_has_term = true;
-        }
-    }
-    if (!then_has_term) {
-        auto jump = std::make_unique<JumpIR>(end_label);
-        ir->cur_block->insts.push_back(std::move(jump));
-    }
-
-    // ================= ELSE BLOCK (Optional) =================
-    if (else_stmt) {
-        auto else_block = std::make_unique<BasicBlockIR>();
-        else_block->basic_block_name = else_label;
-        ir->cur_block = else_block.get();
-        ir->funcs.back()->basic_blocks.push_back(std::move(else_block));
-
-        else_stmt->generate_ir(ir);
-
-        bool else_has_term = false;
-        if (!ir->cur_block->insts.empty()) {
-            auto* last = ir->cur_block->insts.back().get();
-            if (dynamic_cast<ReturnIR*>(last) || 
-                dynamic_cast<BranchIR*>(last) || 
-                dynamic_cast<JumpIR*>(last)) {
-                else_has_term = true;
-            }
-        }
-        if (!else_has_term) {
-            auto jump = std::make_unique<JumpIR>(end_label);
-            ir->cur_block->insts.push_back(std::move(jump));
-        }
-    }
-
-    // ================= END BLOCK =================
-    auto end_block = std::make_unique<BasicBlockIR>();
-    end_block->basic_block_name = end_label;
-    ir->cur_block = end_block.get();
-    ir->funcs.back()->basic_blocks.push_back(std::move(end_block));
 }

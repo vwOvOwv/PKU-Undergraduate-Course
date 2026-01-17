@@ -68,6 +68,8 @@ public:
     int cur_inst_id = 0;
     FunctionIR *cur_func = nullptr;
     BasicBlockIR *cur_block = nullptr;
+    std::vector<std::string> loop_entry_stack; // 记录 continue 跳转的目标
+    std::vector<std::string> loop_end_stack; // 记录 break 跳转的目标
     void dump() override;
 };
 

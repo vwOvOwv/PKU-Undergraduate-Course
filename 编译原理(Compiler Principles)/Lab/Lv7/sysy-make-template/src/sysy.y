@@ -49,6 +49,7 @@ using namespace std;
 %token EQ NE LE GE AND OR
 %token CONST
 %token IF ELSE
+%token WHILE BREAK CONTINUE
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -304,6 +305,20 @@ Stmt
       ast->cond = unique_ptr<ExpAST>(static_cast<ExpAST*>($3));
       ast->then_stmt = unique_ptr<BaseAST>($5);
       ast->else_stmt = unique_ptr<BaseAST>($7);
+      $$ = ast;
+  }
+  | WHILE '(' Exp ')' Stmt {
+      auto ast = new WhileStmtAST();
+      ast->cond = unique_ptr<ExpAST>(static_cast<ExpAST*>($3));
+      ast->stmt = unique_ptr<BaseAST>($5);
+      $$ = ast;
+  }
+  | BREAK ';' {
+      auto ast = new BreakStmtAST();
+      $$ = ast;
+  }
+  | CONTINUE ';' {
+      auto ast = new ContinueStmtAST();
       $$ = ast;
   }
   ;
