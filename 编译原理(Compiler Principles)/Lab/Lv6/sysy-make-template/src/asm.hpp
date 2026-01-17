@@ -34,6 +34,8 @@ private:
     void visit(const AllocIR* alloc_ir);
     void visit(const LoadIR* load_ir);
     void visit(const StoreIR* store_ir);
+    void visit(const BranchIR* branch_ir);
+    void visit(const JumpIR* jump_ir);
 
     void load_to_reg(const Operand& op, const std::string& reg_name);
     void store_from_reg(const std::string& reg_name, int target);
@@ -84,6 +86,10 @@ inline void RiscvGenerator::visit(const BasicBlockIR* block_ir) {
             visit(load);
         else if (auto store = dynamic_cast<const StoreIR*>(inst.get()))
             visit(store);
+        else if (auto branch = dynamic_cast<const BranchIR*>(inst.get()))
+            visit(branch);
+        else if (auto jump = dynamic_cast<const JumpIR*>(inst.get()))
+            visit(jump);
     }
 }
 
@@ -181,6 +187,20 @@ inline void RiscvGenerator::visit(const StoreIR* store_ir) {
     int offset = var_offset_map[store_ir->dst_addr.name];
     // Mem[sp + offset] = t0
     std::cout << "  sw    t0, " << offset << "(sp)" << std::endl;
+}
+
+inline void RiscvGenerator::visit(const BranchIR* branch_ir) {
+    // 加载条件变量到 t0
+    load_to_reg(branch_ir->cond, "t0");
+    // 如果 t0 != 0，跳转到 true_label
+    std::cout << "  bnez  t0, ." << branch_ir->true_label << std::endl;
+    // 否则（fallthrough），跳转到 false_label
+    std::cout << "  j     ." << branch_ir->false_label << std::endl;
+}
+
+inline void RiscvGenerator::visit(const JumpIR* jump_ir) {
+    // 无条件跳转
+    std::cout << "  j     ." << jump_ir->target_label << std::endl;
 }
 
 // calculate_stack_size, load_to_reg, store_from_reg

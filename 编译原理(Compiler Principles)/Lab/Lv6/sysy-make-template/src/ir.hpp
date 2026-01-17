@@ -19,6 +19,8 @@ class BinaryArithmeticIR;
 class AllocIR;
 class LoadIR;
 class StoreIR;
+class BranchIR;
+class JumpIR;
 
 enum class BinaryOpType {
     NE, EQ, GT, LT, GE, LE,
@@ -131,6 +133,27 @@ public:
     void dump() override;
 };
 
+class BranchIR : public InstructionIR {
+public:
+    Operand cond;
+    std::string true_label;
+    std::string false_label;
+
+    BranchIR(Operand cond, std::string true_label, std::string false_label)
+        : cond(cond), true_label(true_label), false_label(false_label) {}
+
+    void dump() override;
+};
+
+class JumpIR : public InstructionIR {
+public:
+    std::string target_label;
+
+    JumpIR(std::string target_label) : target_label(target_label) {}
+
+    void dump() override;
+};
+
 // =========================================================
 // 方法实现
 // =========================================================
@@ -209,4 +232,14 @@ inline void StoreIR::dump() {
     std::cout << ", ";
     dst_addr.dump();
     std::cout << std::endl;
+}
+
+inline void BranchIR::dump() {
+    std::cout << "  br ";
+    cond.dump();
+    std::cout << ", %" << true_label << ", %" << false_label << std::endl;
+}
+
+inline void JumpIR::dump() {
+    std::cout << "  jump %" << target_label << std::endl;
 }

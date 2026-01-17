@@ -48,6 +48,10 @@ using namespace std;
 %token <int_val> INT_CONST
 %token EQ NE LE GE AND OR
 %token CONST
+%token IF ELSE
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 // 非终结符的类型定义
 %type <ast_val> FuncDef FuncType Block Stmt Exp UnaryExp PrimaryExp UnaryOp MulExp AddExp LOrExp LAndExp EqExp RelExp
@@ -287,6 +291,20 @@ Stmt
     auto ast = new ReturnStmtAST();
     ast->exp = nullptr;
     $$ = ast;
+  }
+  | IF '(' Exp ')' Stmt %prec LOWER_THAN_ELSE {
+      auto ast = new IfStmtAST();
+      ast->cond = unique_ptr<ExpAST>(static_cast<ExpAST*>($3));
+      ast->then_stmt = unique_ptr<BaseAST>($5);
+      ast->else_stmt = nullptr;
+      $$ = ast;
+  }
+  | IF '(' Exp ')' Stmt ELSE Stmt {
+      auto ast = new IfStmtAST();
+      ast->cond = unique_ptr<ExpAST>(static_cast<ExpAST*>($3));
+      ast->then_stmt = unique_ptr<BaseAST>($5);
+      ast->else_stmt = unique_ptr<BaseAST>($7);
+      $$ = ast;
   }
   ;
   
