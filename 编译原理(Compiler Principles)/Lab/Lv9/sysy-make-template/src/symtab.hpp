@@ -11,6 +11,7 @@ struct SymbolInfo {
     bool is_array = false;
     bool is_pointer = false;
     std::vector<int> dims;
+    std::vector<int> const_array_vals;
 };
 
 class SymbolTable {
@@ -33,7 +34,9 @@ public:
     }
 
     // 插入符号
-    std::string push(const std::string& id, bool is_const, int const_val, bool is_array = false, bool is_pointer = false, std::vector<int> dims = {}) {
+    std::string push(const std::string& id, bool is_const, int const_val, 
+        bool is_array = false, bool is_pointer = false, std::vector<int> dims = {},
+        std::vector<int> const_array_vals = {}) {
         // 全局变量保持原名
         // 局部变量使用 id + "_" + counter
         std::string unique_ir_name;
@@ -51,7 +54,7 @@ public:
         info.is_array = is_array;
         info.is_pointer = is_pointer;
         info.dims = dims;
-
+        info.const_array_vals = const_array_vals;
         scopes.back()[id] = info;
         return unique_ir_name;
     }

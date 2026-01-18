@@ -779,91 +779,113 @@ inline void ConstDeclAST::generate_ir(ProgramIR* ir) const {
 
 inline void ConstDefAST::generate_ir(ProgramIR* ir) const {
     std::vector<int> dim_vals;
-    int total_len = 1;
     for (const auto& d : dims) {
-        int val = d->calculate_val();
-        dim_vals.push_back(val);
-        total_len *= val;
+        dim_vals.push_back(d->calculate_val());
+    }
+    int total_len = 1;
+    std::vector<int> strides; // strides[i] 表示第 i 层一个元素包含多少个整数
+    for (int val : dim_vals) total_len *= val;
+
+    if (!dim_vals.empty()) {
+        strides.resize(dim_vals.size());
+        int current_stride = 1;
+        for (int i = dim_vals.size() - 1; i >= 0; --i) {
+            strides[i] = current_stride;
+            current_stride *= dim_vals[i];
+        }
     }
 
     std::vector<int> init_vals;
-    if (!dims.empty()) {
-        std::function<void(ConstInitValAST*)> flatten;
-        flatten = [&](ConstInitValAST* node) {
-            if (node->const_exp) {
-                // 叶子节点
-                init_vals.push_back(node->const_exp->calculate_val());
-            } else {
-                // 列表节点
-                for (const auto& child : node->values) {
-                    flatten(child.get());
+
+    std::function<void(ConstInitValAST*, int)> process;
+    process = [&](ConstInitValAST* node, int depth) {
+        if (node->const_exp) {
+            init_vals.push_back(node->const_exp->calculate_val());
+        } else {
+            int start_pos = init_vals.size();
+            int current_container_size = (depth == 0) ? total_len : strides[depth - 1];
+            
+            for (const auto& child : node->values) {
+                if (!child->const_exp) {
+                    int target_depth = depth;
+                    for (int d = depth; d < strides.size(); ++d) {
+                        int current_offset = init_vals.size() - start_pos;
+                        if (current_offset % strides[d] == 0) {
+                            target_depth = d;
+                            break;
+                        }
+                    }
+                    int stride = (target_depth < strides.size()) ? strides[target_depth] : 1;
+                    int current_offset = init_vals.size() - start_pos;
+                    while (current_offset % stride != 0) {
+                        init_vals.push_back(0);
+                        current_offset++;
+                    }
+                    
+                    process(child.get(), target_depth + 1);
+                }
+                else{
+                    process(child.get(), depth + 1);
                 }
             }
-        };
+            while (init_vals.size() - start_pos < current_container_size) {
+                init_vals.push_back(0);
+            }
+        }
+    };
 
-        if (init_val) {
-            flatten(init_val.get());
-        }
-        // 填充剩余的 0
-        while (init_vals.size() < total_len) {
-            init_vals.push_back(0);
+    if (init_val) {
+        process(init_val.get(), 0);
+        while (init_vals.size() < total_len) init_vals.push_back(0);
+        if (init_vals.size() > total_len) {
+            init_vals.resize(total_len);
         }
     } else {
-        // 标量情况
-        if (init_val && init_val->const_exp) {
-            init_vals.push_back(init_val->const_exp->calculate_val());
-        } else {
-            init_vals.push_back(0);
-        }
+        init_vals.resize(total_len, 0);
     }
-    if (ir->cur_func == nullptr) { 
-        // --- 全局常量 ---
-        std::string unique_name = symbol_table.push(id, true, 0, !dims.empty(), false, dim_vals);
-        // 如果是数组，必须分配空间；如果是标量，SysY 中 const int 全局通常也可以直接替换值，
-        // 但为了统一，也可以 alloc。这里如果视为编译期常量替换，需在符号表记录 val。
-        if (!dims.empty()) {
-            auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, total_len, init_vals);
-            ir->globals.push_back(std::move(global_ir));
-        } else {
-            // 标量直接记录值，不生成 alloc (优化)，或者生成 alloc 并标记 const
-            // 这里选择直接记录值到符号表，不生成指令
-            // Update: 为了兼容 pointer 逻辑，如果之后取地址，还是需要 alloc
-            // 但题目要求 const int a = 1; 后面用到 a 时直接用 1。
-            SymbolInfo* info = symbol_table.lookup(id);
-            info->const_val = init_vals[0];
-            // 依然生成 global alloc 以便 IR 完整
-             auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, 1, init_vals);
-             ir->globals.push_back(std::move(global_ir));
+
+    std::string unique_name = symbol_table.push(id, true, 0, !dims.empty(), false, dim_vals);
+
+    if (ir->cur_func == nullptr) {
+        auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, total_len, init_vals);
+        ir->globals.push_back(std::move(global_ir));
+
+        if (dims.empty()) {
+             SymbolInfo* info = symbol_table.lookup(id);
+             if (info) info->const_val = init_vals[0];
         }
     } else {
-        // --- 局部常量 ---
-        // 局部常量数组需要分配栈空间并初始化
-        // 局部标量常量可以直接替换，不需要 Alloc (除非被取地址，SysY无取地址运算符)
+        // 局部常量
         if (!dims.empty()) {
-            std::string unique_name = symbol_table.push(id, true, 0, true, false, dim_vals);
             auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len);
             ir->cur_block->insts.push_back(std::move(alloc_inst));
-
-            // 生成 Store 指令进行初始化
             for (int i = 0; i < total_len; ++i) {
-                // 稳妥起见全部 store
-                
-                int addr_reg = ir->cur_inst_id++;
-                auto gep_inst = std::make_unique<GetElementPtrIR>(
-                    addr_reg, Operand(unique_name), Operand(Operand::IMM, i)
-                );
-                ir->cur_block->insts.push_back(std::move(gep_inst));
-
-                auto store_inst = std::make_unique<StoreIR>(
-                    Operand(Operand::IMM, init_vals[i]), 
-                    Operand(Operand::ID, addr_reg)
-                );
-                ir->cur_block->insts.push_back(std::move(store_inst));
+                if (init_vals[i] != 0) {
+                    int addr_reg = ir->cur_inst_id++;
+                    auto gep_inst = std::make_unique<GetElementPtrIR>(
+                        addr_reg, Operand(unique_name), Operand(Operand::IMM, i)
+                    );
+                    ir->cur_block->insts.push_back(std::move(gep_inst));
+                    auto store_inst = std::make_unique<StoreIR>(
+                        Operand(Operand::IMM, init_vals[i]), 
+                        Operand(Operand::ID, addr_reg)
+                    );
+                    ir->cur_block->insts.push_back(std::move(store_inst));
+                } else {
+                    int addr_reg = ir->cur_inst_id++;
+                    auto gep_inst = std::make_unique<GetElementPtrIR>(
+                        addr_reg, Operand(unique_name), Operand(Operand::IMM, i)
+                    );
+                    ir->cur_block->insts.push_back(std::move(gep_inst));
+                    auto store_inst = std::make_unique<StoreIR>(
+                        Operand(Operand::IMM, 0), 
+                        Operand(Operand::ID, addr_reg)
+                    );
+                    ir->cur_block->insts.push_back(std::move(store_inst));
+                }
             }
         } else {
-            // 局部标量
-            int val = init_vals[0];
-            symbol_table.push(id, true, val, false, false, {});
+            symbol_table.push(id, true, init_vals[0], false, false, {});
         }
     }
 }
@@ -968,67 +990,125 @@ inline void VarDeclAST::generate_ir(ProgramIR* ir) const {
 }
 
 inline void VarDefAST::generate_ir(ProgramIR* ir) const {
-    // 1. 计算维度
     std::vector<int> dim_vals;
+    for (const auto& d : dims) dim_vals.push_back(d->calculate_val());
     int total_len = 1;
-    for (const auto& d : dims) {
-        int val = d->calculate_val();
-        dim_vals.push_back(val);
-        total_len *= val;
+    for (int val : dim_vals) total_len *= val;
+
+    std::vector<int> strides;
+    if (!dim_vals.empty()) {
+        strides.resize(dim_vals.size());
+        int current_stride = 1;
+        for (int i = dim_vals.size() - 1; i >= 0; --i) {
+            strides[i] = current_stride;
+            current_stride *= dim_vals[i];
+        }
     }
 
     if (ir->cur_func == nullptr) {
-        // --- 全局变量 ---
-        // 全局变量的初始化必须是编译期常量
         std::vector<int> init_vals;
         if (init_val) {
-             // 这里需要一个类似于 ConstDef 中的 flatten，但是针对 InitValAST
-             // 且要在编译期计算出值 (全局初始化必须是常量)
-             std::function<void(InitValAST*)> flatten_const;
-             flatten_const = [&](InitValAST* node) {
+            std::function<void(InitValAST*, int)> process;
+            process = [&](InitValAST* node, int depth) {
                 if (node->exp) {
                     init_vals.push_back(node->exp->calculate_val());
                 } else {
-                    for (const auto& child : node->values) flatten_const(child.get());
+                    int start_pos = init_vals.size();
+                    int current_container_size = (depth == 0) ? total_len : strides[depth - 1];
+
+                    for (const auto& child : node->values) {
+                        if (!child->exp) { 
+                            int target_depth = depth;
+                            for (int d = depth; d < strides.size(); ++d) {
+                                int current_offset = init_vals.size() - start_pos;
+                                if (current_offset % strides[d] == 0) {
+                                    target_depth = d;
+                                    break;
+                                }
+                            }
+                            
+                            int stride = (target_depth < strides.size()) ? strides[target_depth] : 1;
+                            int current_offset = init_vals.size() - start_pos;
+                            while (current_offset % stride != 0) {
+                                init_vals.push_back(0);
+                                current_offset++;
+                            }
+
+                            process(child.get(), target_depth + 1);
+                        } else {
+                            process(child.get(), depth + 1);
+                        }
+                    }
+                    while (init_vals.size() - start_pos < current_container_size) {
+                        init_vals.push_back(0);
+                    }
                 }
             };
-            flatten_const(init_val.get());
+            process(init_val.get(), 0);
         }
         while (init_vals.size() < total_len) init_vals.push_back(0);
+        if (init_vals.size() > total_len) {
+            init_vals.resize(total_len);
+        }
 
         std::string unique_name = symbol_table.push(id, false, 0, !dims.empty(), false, dim_vals);
         auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, total_len, init_vals);
         ir->globals.push_back(std::move(global_ir));
 
     } else {
-        // --- 局部变量 ---
         std::string unique_name = symbol_table.push(id, false, 0, !dims.empty(), false, dim_vals);
         auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len);
         ir->cur_block->insts.push_back(std::move(alloc_inst));
 
         if (init_val) {
             if (!dims.empty()) {
-                // 数组初始化：需要扁平化 InitValAST，得到一系列 ExpAST*
-                // 然后依次生成 IR 计算这些 Exp，并 Store 到对应偏移
                 std::vector<ExpAST*> flat_exps;
-                std::function<void(InitValAST*)> flatten_exp;
-                flatten_exp = [&](InitValAST* node) {
+                std::function<void(InitValAST*, int)> process_exp;
+                process_exp = [&](InitValAST* node, int depth) {
                     if (node->exp) {
                         flat_exps.push_back(node->exp.get());
                     } else {
-                        for (const auto& child : node->values) flatten_exp(child.get());
+                        int start_pos = flat_exps.size();
+                        int current_container_size = (depth == 0) ? total_len : strides[depth - 1];
+
+                        for (const auto& child : node->values) {
+                            if (!child->exp) { 
+                                int target_depth = depth;
+                                for (int d = depth; d < strides.size(); ++d) {
+                                    int current_offset = flat_exps.size() - start_pos;
+                                    if (current_offset % strides[d] == 0) {
+                                        target_depth = d;
+                                        break;
+                                    }
+                                }
+
+                                int stride = (target_depth < strides.size()) ? strides[target_depth] : 1;
+                                int current_offset = flat_exps.size() - start_pos;
+                                while (current_offset % stride != 0) {
+                                    flat_exps.push_back(nullptr);
+                                    current_offset++;
+                                }
+                                process_exp(child.get(), target_depth + 1);
+                            } else {
+                                process_exp(child.get(), depth + 1);
+                            }
+                        }
+                        while (flat_exps.size() - start_pos < current_container_size) {
+                            flat_exps.push_back(nullptr); 
+                        }
                     }
                 };
-                flatten_exp(init_val.get());
+                process_exp(init_val.get(), 0);
+                
+                while (flat_exps.size() < total_len) flat_exps.push_back(nullptr);
 
-                // 遍历填充
                 for (int i = 0; i < total_len; ++i) {
                     Operand rhs_val;
-                    if (i < flat_exps.size()) {
+                    if (flat_exps[i]) {
                         flat_exps[i]->generate_ir(ir);
                         rhs_val = ir->cur_val;
                     } else {
-                        rhs_val = Operand(Operand::IMM, 0); // 不足补0
+                        rhs_val = Operand(Operand::IMM, 0);
                     }
 
                     int addr_reg = ir->cur_inst_id++;
@@ -1041,7 +1121,6 @@ inline void VarDefAST::generate_ir(ProgramIR* ir) const {
                     ir->cur_block->insts.push_back(std::move(store_inst));
                 }
             } else {
-                // 标量初始化
                 init_val->exp->generate_ir(ir);
                 auto store_inst = std::make_unique<StoreIR>(ir->cur_val, Operand(unique_name));
                 ir->cur_block->insts.push_back(std::move(store_inst));
