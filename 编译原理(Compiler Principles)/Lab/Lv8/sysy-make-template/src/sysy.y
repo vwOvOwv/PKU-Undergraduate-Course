@@ -43,7 +43,7 @@ using namespace std;
 
 // lexer 返回的所有 token 种类的声明
 // 注意 IDENT 和 INT_CONST 会返回 token 的值, 分别对应 str_val 和 int_val
-%token INT RETURN
+%token INT RETURN VOID
 %token <str_val> IDENT
 %token <int_val> INT_CONST
 %token EQ NE LE GE AND OR
@@ -60,6 +60,9 @@ using namespace std;
 %type <int_val> Number
 %type <vec_val> BlockItemList ConstDefList
 %type <vec_val> VarDefList
+%type <ast_val> FuncFParam
+%type <vec_val> FuncFParams FuncRParams
+%type <ast_val> CompUnit CompUnitItem
 
 %%
 
@@ -69,10 +72,25 @@ using namespace std;
 // 此时我们应该把 FuncDef 返回的结果收集起来, 作为 AST 传给调用 parser 的函数
 // $1 指代规则里第一个符号的返回值, 也就是 FuncDef 的返回值
 CompUnit
-  : FuncDef {
-	auto comp_unit = make_unique<CompUnitAST>();
-	comp_unit->func_def = std::unique_ptr<FuncDefAST>(static_cast<FuncDefAST*>($1));
-	ast = std::move(comp_unit);
+  : CompUnitItem {
+    auto ast_ptr = new CompUnitAST();
+    ast_ptr->func_defs.push_back(std::unique_ptr<BaseAST>($1));
+    ast.reset(ast_ptr); // 设置 parse-param
+    $$ = ast_ptr;       // 传递给递归规则
+  }
+  | CompUnit CompUnitItem {
+    auto ast_ptr = static_cast<CompUnitAST*>($1);
+    ast_ptr->func_defs.push_back(std::unique_ptr<BaseAST>($2));
+    $$ = ast_ptr;
+  }
+  ;
+
+CompUnitItem
+  : Decl {
+    $$ = $1;
+  }
+  | FuncDef {
+    $$ = $1;
   }
   ;
 
@@ -88,21 +106,95 @@ CompUnit
 // 这种写法会省下很多内存管理的负担
 FuncDef
   : FuncType IDENT '(' ')' Block {
-	// $1      $2   $3 $4   $5
-	auto ast = new FuncDefAST();
-	ast->func_type = unique_ptr<FuncTypeAST>(static_cast<FuncTypeAST*>($1));
-	ast->func_name = *unique_ptr<string>($2);
-	ast->block = unique_ptr<BlockAST>(static_cast<BlockAST*>($5));
-	$$ = ast;
+    // $1      $2   $3 $4   $5
+    auto ast = new FuncDefAST();
+    ast->func_type = unique_ptr<FuncTypeAST>(static_cast<FuncTypeAST*>($1));
+    ast->func_name = *unique_ptr<string>($2);
+    ast->block = unique_ptr<BlockAST>(static_cast<BlockAST*>($5));
+    $$ = ast;
+  }
+  | FuncType IDENT '(' FuncFParams ')' Block {
+    auto ast = new FuncDefAST();
+    ast->func_type = unique_ptr<FuncTypeAST>(static_cast<FuncTypeAST*>($1));
+    ast->func_name = *unique_ptr<string>($2);
+    // 处理参数列表
+    auto params = unique_ptr<vector<BaseAST*>>($4);
+    for (auto ptr : *params) {
+        ast->params.push_back(unique_ptr<FuncFParamAST>(static_cast<FuncFParamAST*>(ptr)));
+    }
+    ast->block = unique_ptr<BlockAST>(static_cast<BlockAST*>($6));
+    $$ = ast;
+  }
+  | BType IDENT '(' ')' Block {
+    auto ast = new FuncDefAST();
+    
+    // 手动构建 FuncTypeAST ("int")
+    auto btype = unique_ptr<BTypeAST>(static_cast<BTypeAST*>($1));
+    auto ftype = new FuncTypeAST();
+    ftype->type = btype->type; // "int"
+    ast->func_type.reset(ftype);
+    
+    ast->func_name = *unique_ptr<string>($2);
+    ast->block = unique_ptr<BlockAST>(static_cast<BlockAST*>($5));
+    $$ = ast;
+  }
+  | BType IDENT '(' FuncFParams ')' Block {
+    auto ast = new FuncDefAST();
+
+    // 手动构建 FuncTypeAST ("int")
+    auto btype = unique_ptr<BTypeAST>(static_cast<BTypeAST*>($1));
+    auto ftype = new FuncTypeAST();
+    ftype->type = btype->type; // "int"
+    ast->func_type.reset(ftype);
+
+    ast->func_name = *unique_ptr<string>($2);
+    auto params = unique_ptr<vector<BaseAST*>>($4);
+    for (auto ptr : *params) {
+        ast->params.push_back(unique_ptr<FuncFParamAST>(static_cast<FuncFParamAST*>(ptr)));
+    }
+    ast->block = unique_ptr<BlockAST>(static_cast<BlockAST*>($6));
+    $$ = ast;
   }
   ;
 
 // 同上, 不再解释
 FuncType
-  : INT {
-	auto ast = new FuncTypeAST();
-	ast->type = "int";
-	$$ = ast;
+  : VOID {
+    auto ast = new FuncTypeAST();
+    ast->type = "void";
+    $$ = ast;
+  }
+  ;
+
+FuncFParams
+  : FuncFParam {
+    $$ = new vector<BaseAST*>();
+    $$->push_back($1);
+  }
+  | FuncFParams ',' FuncFParam {
+    $1->push_back($3);
+    $$ = $1;
+  }
+  ;
+
+FuncFParam
+  : BType IDENT {
+    auto ast = new FuncFParamAST();
+    ast->b_type = static_cast<BTypeAST*>($1)->type; // "int"
+    ast->name = *unique_ptr<string>($2);
+    delete $1;
+    $$ = ast;
+  }
+  ;
+
+FuncRParams
+  : Exp {
+    $$ = new vector<BaseAST*>();
+    $$->push_back($1);
+  }
+  | FuncRParams ',' Exp {
+    $1->push_back($3);
+    $$ = $1;
   }
   ;
 
@@ -333,15 +425,30 @@ Exp
 
 UnaryExp
   : PrimaryExp {
-	auto ast = new UnaryExpAST();
-	ast->primary_exp = unique_ptr<PrimaryExpAST>(static_cast<PrimaryExpAST*>($1));
-	$$ = ast;
+    auto ast = new UnaryExpAST();
+    ast->primary_exp = unique_ptr<PrimaryExpAST>(static_cast<PrimaryExpAST*>($1));
+    $$ = ast;
   }
   | UnaryOp UnaryExp {
-	auto ast = new UnaryExpAST();
-	ast->unary_op = unique_ptr<UnaryOpAST>(static_cast<UnaryOpAST*>($1));
-	ast->unary_exp = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($2));
-	$$ = ast;
+    auto ast = new UnaryExpAST();
+    ast->unary_op = unique_ptr<UnaryOpAST>(static_cast<UnaryOpAST*>($1));
+    ast->unary_exp = unique_ptr<UnaryExpAST>(static_cast<UnaryExpAST*>($2));
+    $$ = ast;
+  }
+  | IDENT '(' ')' {
+    auto ast = new UnaryExpAST();
+    ast->func_name = *unique_ptr<string>($1);
+    // args 为空
+    $$ = ast;
+  }
+  | IDENT '(' FuncRParams ')' {
+    auto ast = new UnaryExpAST();
+    ast->func_name = *unique_ptr<string>($1);
+    auto args = unique_ptr<vector<BaseAST*>>($3);
+    for (auto ptr : *args) {
+        ast->call_args.push_back(unique_ptr<ExpAST>(static_cast<ExpAST*>(ptr)));
+    }
+    $$ = ast;
   }
   ;
 

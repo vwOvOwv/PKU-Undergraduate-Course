@@ -17,6 +17,7 @@ extern int yyparse(unique_ptr<BaseAST> &ast);
 
 // std::map<std::string, SymbolInfo> global_symbol_table;
 SymbolTable symbol_table;
+std::map<std::string, std::string> global_func_type_table;
 
 int main(int argc, const char *argv[]) {
 	// 解析命令行参数. 测试脚本/评测平台要求你的编译器能接收如下参数:
@@ -29,6 +30,15 @@ int main(int argc, const char *argv[]) {
 	if(string(output) != "stdout") {
 		freopen(output, "w", stdout);
 	}
+
+	global_func_type_table["getint"] = "int";
+    global_func_type_table["getch"] = "int";
+    global_func_type_table["getarray"] = "int";
+    global_func_type_table["putint"] = "void";
+    global_func_type_table["putch"] = "void";
+    global_func_type_table["putarray"] = "void";
+    global_func_type_table["starttime"] = "void";
+    global_func_type_table["stoptime"] = "void";
 
 	// 打开输入文件, 并且指定 lexer 在解析的时候读取这个文件
 	yyin = fopen(input, "r");

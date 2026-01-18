@@ -13,6 +13,7 @@
 // =========================================================
 
 extern SymbolTable symbol_table;
+extern std::map<std::string, std::string> global_func_type_table;
 
 class BaseAST;
 class CompUnitAST;
@@ -52,6 +53,9 @@ class WhileStmtAST;
 class BreakStmtAST;
 class ContinueStmtAST;
 
+class FuncFParamAST;
+
+
 std::unique_ptr<ProgramIR> generate_ir(const std::unique_ptr<BaseAST>& ast);
 
 // =========================================================
@@ -69,14 +73,22 @@ public:
 
 class CompUnitAST : public BaseAST {
 public:
-	std::unique_ptr<FuncDefAST> func_def;
+	std::vector<std::unique_ptr<BaseAST>> func_defs;
 	void generate_ir(ProgramIR* ir) const override;
+};
+
+class FuncFParamAST : public BaseAST {
+public:
+    std::string b_type;
+    std::string name;
+    void generate_ir(ProgramIR* ir) const override; // 不需要单独生成，在 FuncDef 中处理
 };
 
 class FuncDefAST : public BaseAST {
 public:
 	std::unique_ptr<FuncTypeAST> func_type;
 	std::string func_name;
+    std::vector<std::unique_ptr<FuncFParamAST>> params;
 	std::unique_ptr<BlockAST> block;
 	void generate_ir(ProgramIR* ir) const override;
 };
@@ -220,6 +232,8 @@ public:
 	std::unique_ptr<PrimaryExpAST> primary_exp;
 	std::unique_ptr<UnaryOpAST> unary_op;
 	std::unique_ptr<UnaryExpAST> unary_exp;
+    std::string func_name;
+    std::vector<std::unique_ptr<ExpAST>> call_args;
 
 	void generate_ir(ProgramIR* ir) const override;
     int calculate_val() const override;
@@ -325,18 +339,23 @@ public:
 
 // generate_ir
 inline void CompUnitAST::generate_ir(ProgramIR* ir) const {
-    func_def->generate_ir(ir);
+    for (const auto& def : func_defs) {
+        def->generate_ir(ir);
+    }
 }
+
+inline void FuncFParamAST::generate_ir(ProgramIR* ir) const {}
 
 inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
     auto func_ir = std::make_unique<FunctionIR>();
     func_ir->func_name = func_name;
+    func_ir->func_type = (func_type->type == "int") ? "i32" : "void";
 
-    if(func_type->type == "int")
-        func_ir->func_type = "i32";
-    else
-        func_ir->func_type = func_type->type;
-    
+    for (const auto& param : params) {
+        func_ir->params.push_back(param->name);
+    }
+    global_func_type_table[func_name] = func_ir->func_type;
+
     ir->cur_func = func_ir.get();
     ir->funcs.push_back(std::move(func_ir));
 
@@ -345,25 +364,34 @@ inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
     ir->cur_block = entry_block.get();
     ir->cur_func->basic_blocks.push_back(std::move(entry_block));
 
-    block->generate_ir(ir);
+    symbol_table.enter_scope();
 
+    // 处理参数：alloc 并 store 参数值
+    for (size_t i = 0; i < params.size(); ++i) {
+        std::string unique_name = symbol_table.push(params[i]->name, false, 0);
+            
+        auto alloc_inst = std::make_unique<AllocIR>(unique_name);
+        ir->cur_block->insts.push_back(std::move(alloc_inst));
+        
+        Operand arg_val = Operand::make_arg(i, params[i]->name);
+        auto store_inst = std::make_unique<StoreIR>(arg_val, Operand(unique_name));
+        ir->cur_block->insts.push_back(std::move(store_inst));
+    }
+
+    block->generate_ir(ir); // block 内部会再enter_scope
+    symbol_table.exit_scope();
+
+    // 处理缺省 return
     bool need_ret = true;
     if (!ir->cur_block->insts.empty()) {
         BaseIR* last_inst = ir->cur_block->insts.back().get();
-        if (dynamic_cast<ReturnIR*>(last_inst)) {
-            need_ret = false;
-        }
+        if (dynamic_cast<ReturnIR*>(last_inst)) need_ret = false;
     }
-
     if (need_ret) {
         auto ret_ir = std::make_unique<ReturnIR>();
-        if (func_type->type == "int") {
-            // int 函数缺省返回 0
+        if (func_type->type == "int") 
             ret_ir->ret_value = Operand(Operand::IMM, 0);
-        } else {
-            // 缺省返回 void
-            ret_ir->ret_value = Operand();
-        }
+        else ret_ir->ret_value = Operand(); // void
         ir->cur_block->insts.push_back(std::move(ret_ir));
     }
 }
@@ -409,12 +437,6 @@ inline void ReturnStmtAST::generate_ir(ProgramIR* ir) const {
         ir->cur_block->insts.push_back(std::move(ret_ir));
     }
 }
-// inline void ReturnStmtAST::generate_ir(ProgramIR* ir) const {
-//     exp_ast->generate_ir(ir);
-//     auto ret_ir = std::make_unique<ReturnIR>();
-//     ret_ir->ret_value = ir->cur_val;
-//     ir->cur_block->insts.push_back(std::move(ret_ir));
-// }
 
 inline void ExpAST::generate_ir(ProgramIR* ir) const {
 	lor_exp->generate_ir(ir);
@@ -476,42 +498,67 @@ inline void LOrExpAST::generate_ir(ProgramIR* ir) const {
     if (land_exp) {
         land_exp->generate_ir(ir);
     } else {
+        // 短路求值逻辑: left || right
+        // 1. 分配一个临时变量保存结果，初始化为 1 (true)
+        //    假设 left 为真，直接跳到 end，结果就是 1
+        std::string res_var = "or_res_" + std::to_string(ir->cur_inst_id++);
+        auto alloc = std::make_unique<AllocIR>(res_var);
+        ir->cur_block->insts.push_back(std::move(alloc));
+        
+        auto store_init = std::make_unique<StoreIR>(Operand(Operand::IMM, 1), Operand(res_var));
+        ir->cur_block->insts.push_back(std::move(store_init));
+
+        // 2. 计算左操作数
         left->generate_ir(ir);
         Operand left_val = ir->cur_val;
 
-        int temp1_id = ir->cur_inst_id++;
-        auto ne1_inst = std::make_unique<BinaryArithmeticIR>(
-            BinaryOpType::NE, 
-            temp1_id, 
-            left_val, 
-            Operand(Operand::IMM, 0)
-        );
-        ir->cur_block->insts.push_back(std::move(ne1_inst));
-        Operand ne1_val = Operand(Operand::ID, temp1_id);
+        // 3. 准备标号
+        std::string false_label = "or_false_" + std::to_string(ir->cur_inst_id++);
+        std::string end_label = "or_end_" + std::to_string(ir->cur_inst_id++);
+
+        // 4. 判断 left 是否为真
+        int cmp_id = ir->cur_inst_id++;
+        auto cmp_inst = std::make_unique<BinaryArithmeticIR>(
+            BinaryOpType::NE, cmp_id, left_val, Operand(Operand::IMM, 0));
+        ir->cur_block->insts.push_back(std::move(cmp_inst));
+
+        // 5. 分支：如果 left 为真，跳到 end (短路)；否则跳到 false_label (计算 right)
+        auto br_inst = std::make_unique<BranchIR>(Operand(Operand::ID, cmp_id), end_label, false_label);
+        ir->cur_block->insts.push_back(std::move(br_inst));
+
+        // 6. False Block: 计算 right
+        auto false_block = std::make_unique<BasicBlockIR>();
+        false_block->basic_block_name = false_label;
+        ir->cur_block = false_block.get();
+        ir->cur_func->basic_blocks.push_back(std::move(false_block));
 
         right->generate_ir(ir);
         Operand right_val = ir->cur_val;
 
-        int temp2_id = ir->cur_inst_id++;
-        auto ne2_inst = std::make_unique<BinaryArithmeticIR>(
-            BinaryOpType::NE, 
-            temp2_id, 
-            right_val, 
-            Operand(Operand::IMM, 0)
-        );
-        ir->cur_block->insts.push_back(std::move(ne2_inst));
-        Operand ne2_val = Operand(Operand::ID, temp2_id);
+        // 计算 right != 0 并存入结果
+        int cmp_r_id = ir->cur_inst_id++;
+        auto cmp_r_inst = std::make_unique<BinaryArithmeticIR>(
+            BinaryOpType::NE, cmp_r_id, right_val, Operand(Operand::IMM, 0));
+        ir->cur_block->insts.push_back(std::move(cmp_r_inst));
 
-        int target = ir->cur_inst_id++;
-        auto or_inst = std::make_unique<BinaryArithmeticIR>(
-            BinaryOpType::OR,
-            target, 
-            ne1_val, 
-            ne2_val
-        );
-        ir->cur_block->insts.push_back(std::move(or_inst));
+        auto store_r = std::make_unique<StoreIR>(Operand(Operand::ID, cmp_r_id), Operand(res_var));
+        ir->cur_block->insts.push_back(std::move(store_r));
 
-        ir->cur_val = Operand(Operand::ID, target);
+        // 跳到 end
+        auto jump_inst = std::make_unique<JumpIR>(end_label);
+        ir->cur_block->insts.push_back(std::move(jump_inst));
+
+        // 7. End Block: 读取结果
+        auto end_block = std::make_unique<BasicBlockIR>();
+        end_block->basic_block_name = end_label;
+        ir->cur_block = end_block.get();
+        ir->cur_func->basic_blocks.push_back(std::move(end_block));
+
+        int final_reg = ir->cur_inst_id++;
+        auto load_inst = std::make_unique<LoadIR>(final_reg, Operand(res_var));
+        ir->cur_block->insts.push_back(std::move(load_inst));
+
+        ir->cur_val = Operand(Operand::ID, final_reg);
     }
 }
 
@@ -519,43 +566,64 @@ inline void LAndExpAST::generate_ir(ProgramIR* ir) const {
     if (eq_exp) {
         eq_exp->generate_ir(ir);
     } else {
+        // 短路求值逻辑: left && right
+        // 分配结果变量，初始化为 0 (false)
+        std::string res_var = "and_res_" + std::to_string(ir->cur_inst_id++);
+        auto alloc = std::make_unique<AllocIR>(res_var);
+        ir->cur_block->insts.push_back(std::move(alloc));
+
+        auto store_init = std::make_unique<StoreIR>(Operand(Operand::IMM, 0), Operand(res_var));
+        ir->cur_block->insts.push_back(std::move(store_init));
+
+        // 计算左操作数
         left->generate_ir(ir);
         Operand left_val = ir->cur_val;
 
-        int temp1_id = ir->cur_inst_id++;
-        auto ne1_inst = std::make_unique<BinaryArithmeticIR>(
-            BinaryOpType::NE, 
-            temp1_id, 
-            left_val, 
-            Operand(Operand::IMM, 0)
-        );
-        ir->cur_block->insts.push_back(std::move(ne1_inst));
-        Operand ne1_val = Operand(Operand::ID, temp1_id);
+        std::string true_label = "and_true_" + std::to_string(ir->cur_inst_id++);
+        std::string end_label = "and_end_" + std::to_string(ir->cur_inst_id++);
 
+        // 判断 left 是否为真
+        int cmp_id = ir->cur_inst_id++;
+        auto cmp_inst = std::make_unique<BinaryArithmeticIR>(
+            BinaryOpType::NE, cmp_id, left_val, Operand(Operand::IMM, 0));
+        ir->cur_block->insts.push_back(std::move(cmp_inst));
+
+        // 分支：如果 left 为真，跳到 true_label (计算 right)；否则跳到 end (短路)
+        auto br_inst = std::make_unique<BranchIR>(Operand(Operand::ID, cmp_id), true_label, end_label);
+        ir->cur_block->insts.push_back(std::move(br_inst));
+
+        // True Block: 计算 right
+        auto true_block = std::make_unique<BasicBlockIR>();
+        true_block->basic_block_name = true_label;
+        ir->cur_block = true_block.get();
+        ir->cur_func->basic_blocks.push_back(std::move(true_block));
 
         right->generate_ir(ir);
         Operand right_val = ir->cur_val;
 
-        int temp2_id = ir->cur_inst_id++;
-        auto ne2_inst = std::make_unique<BinaryArithmeticIR>(
-            BinaryOpType::NE, 
-            temp2_id, 
-            right_val, 
-            Operand(Operand::IMM, 0)
-        );
-        ir->cur_block->insts.push_back(std::move(ne2_inst));
-        Operand ne2_val = Operand(Operand::ID, temp2_id);
+        // 计算 right != 0 并存入结果
+        int cmp_r_id = ir->cur_inst_id++;
+        auto cmp_r_inst = std::make_unique<BinaryArithmeticIR>(
+            BinaryOpType::NE, cmp_r_id, right_val, Operand(Operand::IMM, 0));
+        ir->cur_block->insts.push_back(std::move(cmp_r_inst));
 
-        int target = ir->cur_inst_id++;
-        auto and_inst = std::make_unique<BinaryArithmeticIR>(
-            BinaryOpType::AND,
-            target, 
-            ne1_val, 
-            ne2_val
-        );
-        ir->cur_block->insts.push_back(std::move(and_inst));
+        auto store_r = std::make_unique<StoreIR>(Operand(Operand::ID, cmp_r_id), Operand(res_var));
+        ir->cur_block->insts.push_back(std::move(store_r));
 
-        ir->cur_val = Operand(Operand::ID, target);
+        auto jump_inst = std::make_unique<JumpIR>(end_label);
+        ir->cur_block->insts.push_back(std::move(jump_inst));
+
+        // End Block
+        auto end_block = std::make_unique<BasicBlockIR>();
+        end_block->basic_block_name = end_label;
+        ir->cur_block = end_block.get();
+        ir->cur_func->basic_blocks.push_back(std::move(end_block));
+
+        int final_reg = ir->cur_inst_id++;
+        auto load_inst = std::make_unique<LoadIR>(final_reg, Operand(res_var));
+        ir->cur_block->insts.push_back(std::move(load_inst));
+
+        ir->cur_val = Operand(Operand::ID, final_reg);
     }
 }
 
@@ -608,10 +676,35 @@ inline void EqExpAST::generate_ir(ProgramIR* ir) const {
 }
 
 inline void UnaryExpAST::generate_ir(ProgramIR* ir) const {
-	if (primary_exp) {
+    if (!func_name.empty()) { // 函数调用
+        std::vector<Operand> args;
+        for (const auto& arg_ast : call_args) {
+            arg_ast->generate_ir(ir);
+            args.push_back(ir->cur_val);
+        }
+
+        int target_id = -1;
+        if (global_func_type_table.find(func_name) != global_func_type_table.end()) {
+            if (global_func_type_table[func_name] != "void") {
+                target_id = ir->cur_inst_id++;
+            }
+        } else {
+            // 外部函数，假设返回值为 int
+            target_id = ir->cur_inst_id++;
+        }
+        auto call_inst = std::make_unique<CallIR>(func_name, args, target_id);
+        ir->cur_block->insts.push_back(std::move(call_inst));
+            
+        if (target_id != -1)
+            ir->cur_val = Operand(Operand::ID, target_id);
+        else
+            ir->cur_val = Operand();
+    }
+    else if (primary_exp) {
 		primary_exp->generate_ir(ir);
-	} else if (unary_op && unary_exp) {
-		unary_exp->generate_ir(ir);	// 先求出被取负的值/id
+	} 
+    else if (unary_op && unary_exp) {
+		unary_exp->generate_ir(ir);
 		unary_op->generate_ir(ir);
 	}
 }
@@ -706,17 +799,25 @@ inline void VarDeclAST::generate_ir(ProgramIR* ir) const {
 }
 
 inline void VarDefAST::generate_ir(ProgramIR* ir) const {
-    std::string unique_name = symbol_table.push(id, false, 0);
-    // 生成 alloc 指令
-    auto alloc_inst = std::make_unique<AllocIR>(unique_name);
-    ir->cur_block->insts.push_back(std::move(alloc_inst));
-    // 如果有初始值，生成 store
-    if (init_val) {
-        init_val->generate_ir(ir);
-        Operand rhs_val = ir->cur_val;
-        // store %val, @x
-        auto store_inst = std::make_unique<StoreIR>(rhs_val, Operand(unique_name));
-        ir->cur_block->insts.push_back(std::move(store_inst));
+    if (ir->cur_func == nullptr) {  // 全局变量
+        int val = 0;
+        if (init_val) {
+            val = init_val->calculate_val();
+        }
+        std::string unique_name = symbol_table.push(id, false, 0);
+        auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, val);
+        ir->globals.push_back(std::move(global_ir));
+    }
+    else{   // 局部变量
+        std::string unique_name = symbol_table.push(id, false, 0);
+        auto alloc_inst = std::make_unique<AllocIR>(unique_name);
+        ir->cur_block->insts.push_back(std::move(alloc_inst));
+        if (init_val) {
+            init_val->generate_ir(ir);
+            Operand rhs_val = ir->cur_val;
+            auto store_inst = std::make_unique<StoreIR>(rhs_val, Operand(unique_name));
+            ir->cur_block->insts.push_back(std::move(store_inst));
+        }
     }
 }
 

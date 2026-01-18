@@ -42,6 +42,7 @@ Hexadecimal   0[xX][0-9a-fA-F]+
 <IN_BLOCK_COMMENT>.    { /* 忽略注释里的其他所有字符 */ }
 
 "int"           { return INT; }
+"void"          { return VOID; }
 "return"        { return RETURN; }
 "const"         { return CONST; }
 "if"            { return IF; }

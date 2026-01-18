@@ -21,6 +21,8 @@ class LoadIR;
 class StoreIR;
 class BranchIR;
 class JumpIR;
+class CallIR;
+class GlobalAllocIR;
 
 enum class BinaryOpType {
     NE, EQ, GT, LT, GE, LE,
@@ -30,21 +32,34 @@ enum class BinaryOpType {
 };
 
 struct Operand {
-    enum Type { VOID, IMM, ID, VAR } type;
+    enum Type { VOID, IMM, ID, VAR, ARG } type;
     
     int val; // IMM, ID
-    std::string name; // VAR
+    std::string name; // VAR, ARG
     Operand() : type(VOID), val(0) {}
     Operand(Type t, int v) : type(t), val(v) {}
     Operand(std::string n) : type(VAR), val(0), name(n) {}
 
+    static Operand make_arg(int index, std::string name) {
+        Operand op;
+        op.type = ARG;
+        op.val = index;  // 索引，供 ASM 使用 (a0, a1...)
+        op.name = name;  // 名字，供 IR dump 使用 (%x)
+        return op;
+    }
+
     void dump() const {
         if (type == IMM) {
             std::cout << val;
-        } else if (type == ID) {
+        } 
+        else if (type == ID) {
             std::cout << "%" << val;
-        } else if (type == VAR) {
-            std::cout << "@" << name; // 变量名前加 @
+        } 
+        else if (type == VAR) {
+            std::cout << "@" << name;
+        }
+        else if (type == ARG) {
+            std::cout << "%" << name;
         }
     }
 
@@ -63,6 +78,7 @@ public:
 
 class ProgramIR : public BaseIR {
 public:
+    std::vector<std::unique_ptr<GlobalAllocIR>> globals;
     std::vector<std::unique_ptr<FunctionIR>> funcs;
     Operand cur_val;
     int cur_inst_id = 0;
@@ -76,6 +92,7 @@ public:
 class FunctionIR : public BaseIR {
 public:
     std::string func_name, func_type;
+    std::vector<std::string> params;
     Operand ret_value;
     std::vector<std::unique_ptr<BasicBlockIR>> basic_blocks;
     void dump() override;
@@ -88,10 +105,55 @@ public:
     void dump() override;
 };
 
+class GlobalAllocIR : public BaseIR {
+public:
+    std::string name;
+    int init_val;
+    
+    GlobalAllocIR(std::string name, int val) 
+        : name(name), init_val(val) {}
+
+    void dump() override {
+        // global @var = alloc i32, zeroinit
+        // global @var = alloc i32, 10
+        std::cout << "global @" << name << " = alloc i32, ";
+        if (init_val == 0) {
+            std::cout << "zeroinit";
+        } else {
+            std::cout << init_val;
+        }
+        std::cout << std::endl;
+    }
+};
+
 class InstructionIR : public BaseIR {
 public:
     virtual ~InstructionIR() = default;
     virtual void dump()  override = 0;
+};
+
+class CallIR : public InstructionIR {
+public:
+    std::string func_name;
+    std::vector<Operand> args;
+    int target; // 如果返回值是 void，此字段无意义
+
+    CallIR(std::string name, std::vector<Operand> args, int target)
+        : func_name(name), args(args), target(target) {}
+
+    void dump() override {
+        if (target != -1) // 假设 -1 表示 void
+            std::cout << "  %" << target << " = ";
+        else
+            std::cout << "  ";
+        
+        std::cout << "call @" << func_name << "(";
+        for (size_t i = 0; i < args.size(); ++i) {
+            args[i].dump();
+            if (i != args.size() - 1) std::cout << ", ";
+        }
+        std::cout << ")" << std::endl;
+    }
 };
 
 class ReturnIR : public InstructionIR {
@@ -161,14 +223,41 @@ public:
 // =========================================================
 
 inline void ProgramIR::dump()  {
+    std::cout << "decl @getint(): i32" << std::endl;
+    std::cout << "decl @getch(): i32" << std::endl;
+    std::cout << "decl @getarray(*i32): i32" << std::endl;
+    std::cout << "decl @putint(i32)" << std::endl;
+    std::cout << "decl @putch(i32)" << std::endl;
+    std::cout << "decl @putarray(i32, *i32)" << std::endl;
+    std::cout << "decl @starttime()" << std::endl;
+    std::cout << "decl @stoptime()" << std::endl;
+    std::cout << std::endl;
+
+    for (auto &global : globals) {
+        global->dump();
+    }
+    if (!globals.empty()) std::cout << std::endl;
+
     for( auto &func : funcs) {
         func->dump();
     }
 }
 
 inline void FunctionIR::dump()  {
-    std::cout << "fun @" << func_name << "(): " << func_type << " {" << std::endl;
-    for( auto &basic_block : basic_blocks)
+    std::cout << "fun @" << func_name << "(";
+    
+    for (size_t i = 0; i < params.size(); ++i) {
+        std::cout << "%" << params[i] << ": i32";
+        if (i < params.size() - 1) std::cout << ", ";
+    }
+    std::cout << ")";
+
+    if (func_type != "void") {
+        std::cout << ": " << func_type;
+    }
+
+    std::cout << " {" << std::endl;
+    for (auto &basic_block : basic_blocks)
         basic_block->dump();
     std::cout << "}" << std::endl;
 }
