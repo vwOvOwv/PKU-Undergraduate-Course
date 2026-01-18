@@ -112,18 +112,7 @@ public:
     
     GlobalAllocIR(std::string name, int val) 
         : name(name), init_val(val) {}
-
-    void dump() override {
-        // global @var = alloc i32, zeroinit
-        // global @var = alloc i32, 10
-        std::cout << "global @" << name << " = alloc i32, ";
-        if (init_val == 0) {
-            std::cout << "zeroinit";
-        } else {
-            std::cout << init_val;
-        }
-        std::cout << std::endl;
-    }
+    void dump() override;
 };
 
 class InstructionIR : public BaseIR {
@@ -333,4 +322,16 @@ inline void BranchIR::dump() {
 
 inline void JumpIR::dump() {
     std::cout << "  jump %" << target_label << std::endl;
+}
+
+inline void GlobalAllocIR::dump() {    
+    // global @var = alloc i32, zeroinit
+    // global @var = alloc i32, 10
+    std::cout << "global @" << name << " = alloc i32, ";
+    if (init_val == 0) {
+        std::cout << "zeroinit";
+    } else {
+        std::cout << init_val;
+    }
+    std::cout << std::endl;
 }

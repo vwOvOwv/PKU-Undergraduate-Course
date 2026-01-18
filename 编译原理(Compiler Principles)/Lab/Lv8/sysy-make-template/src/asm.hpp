@@ -52,11 +52,9 @@ private:
 
 inline void RiscvGenerator::generate() {
     if (!program->globals.empty()) {
-        std::cout << "  .data" << std::endl;
         for (const auto& global : program->globals) {
             visit(global.get());
         }
-        std::cout << std::endl;
     }
 
     std::cout << "  .text" << std::endl;
@@ -267,9 +265,14 @@ inline void RiscvGenerator::visit(const CallIR* call_ir) {
 }
 
 inline void RiscvGenerator::visit(const GlobalAllocIR* global_ir) {
+    std::cout << "  .data" << std::endl;             // 切换到数据段
     std::cout << "  .globl " << global_ir->name << std::endl;
+    std::cout << "  .align 2" << std::endl;          // 4字节对齐
+    std::cout << "  .type " << global_ir->name << ", @object" << std::endl; // 声明符号类型为对象
+    std::cout << "  .size " << global_ir->name << ", 4" << std::endl;       // 声明大小为4字节
     std::cout << global_ir->name << ":" << std::endl;
     std::cout << "  .word " << global_ir->init_val << std::endl;
+    std::cout << std::endl;
 }
 
 // calculate_stack_size, load_to_reg, store_from_reg

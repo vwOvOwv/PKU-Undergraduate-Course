@@ -394,6 +394,7 @@ inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
         else ret_ir->ret_value = Operand(); // void
         ir->cur_block->insts.push_back(std::move(ret_ir));
     }
+    ir->cur_func = nullptr;
 }
 
 inline void FuncTypeAST::generate_ir(ProgramIR* ir) const {}
