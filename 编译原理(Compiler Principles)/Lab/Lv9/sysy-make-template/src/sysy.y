@@ -63,6 +63,7 @@ using namespace std;
 %type <ast_val> FuncFParam
 %type <vec_val> FuncFParams FuncRParams
 %type <ast_val> CompUnit CompUnitItem
+%type <vec_val> ConstDefIndices ConstInitValList InitValList
 
 %%
 
@@ -185,6 +186,19 @@ FuncFParam
     delete $1;
     $$ = ast;
   }
+  | BType IDENT '[' ']' ConstDefIndices {
+    auto ast = new FuncFParamAST();
+    ast->b_type = static_cast<BTypeAST*>($1)->type;
+    ast->name = *unique_ptr<string>($2);
+    delete $1;
+
+    ast->dims.push_back(nullptr);
+    for (auto ptr : *$5) {
+        ast->dims.push_back(unique_ptr<BaseAST>(static_cast<ConstExpAST*>(ptr)));
+    }
+    delete $5;
+    $$ = ast;
+  }
   ;
 
 FuncRParams
@@ -275,11 +289,25 @@ ConstDefList
   ;
 
 ConstDef
-  : IDENT '=' ConstInitVal {
+  : IDENT ConstDefIndices '=' ConstInitVal {
     auto ast = new ConstDefAST();
     ast->id = *unique_ptr<string>($1);
-    ast->init_val = unique_ptr<ConstInitValAST>(static_cast<ConstInitValAST*>($3));
+    for (auto ptr : *$2) {
+        ast->dims.push_back(std::unique_ptr<ConstExpAST>(static_cast<ConstExpAST*>(ptr)));
+    }
+    delete $2;
+    ast->init_val = unique_ptr<ConstInitValAST>(static_cast<ConstInitValAST*>($4));
     $$ = ast;
+  }
+  ;
+
+ConstDefIndices
+  : /* empty */ {
+    $$ = new std::vector<BaseAST*>();
+  }
+  | ConstDefIndices '[' ConstExp ']' {
+    ($1)->push_back($3);
+    $$ = $1;
   }
   ;
 
@@ -288,6 +316,29 @@ ConstInitVal
     auto ast = new ConstInitValAST();
     ast->const_exp = unique_ptr<ConstExpAST>(static_cast<ConstExpAST*>($1));
     $$ = ast;
+  }
+  | '{' '}' {
+    auto ast = new ConstInitValAST();
+    $$ = ast;
+  }
+  | '{' ConstInitValList '}' {
+    auto ast = new ConstInitValAST();
+    auto list = unique_ptr<vector<BaseAST*>>($2);
+    for (auto ptr : *list) {
+        ast->values.push_back(unique_ptr<ConstInitValAST>(static_cast<ConstInitValAST*>(ptr)));
+    }
+    $$ = ast;
+  }
+  ;
+
+ConstInitValList
+  : ConstInitVal {
+    $$ = new std::vector<BaseAST*>();
+    ($$)->push_back($1);
+  }
+  | ConstInitValList ',' ConstInitVal {
+    ($1)->push_back($3);
+    $$ = $1;
   }
   ;
 
@@ -303,6 +354,11 @@ LVal
   : IDENT {
     auto ast = new LValAST();
     ast->id = *unique_ptr<string>($1);
+    $$ = ast;
+  }
+  | LVal '[' Exp ']' {
+    auto ast = static_cast<LValAST*>($1);
+    ast->indices.push_back(unique_ptr<ExpAST>(static_cast<ExpAST*>($3)));
     $$ = ast;
   }
   ;
@@ -334,15 +390,23 @@ VarDefList
   ;
 
 VarDef
-  : IDENT {
+  : IDENT ConstDefIndices {
     auto ast = new VarDefAST();
     ast->id = *unique_ptr<string>($1);
+    for (auto ptr : *$2) {
+        ast->dims.push_back(std::unique_ptr<ConstExpAST>(static_cast<ConstExpAST*>(ptr)));
+    }
+    delete $2;
     $$ = ast;
   }
-  | IDENT '=' InitVal {
+  | IDENT ConstDefIndices '=' InitVal {
     auto ast = new VarDefAST();
     ast->id = *unique_ptr<string>($1);
-    ast->init_val = unique_ptr<InitValAST>(static_cast<InitValAST*>($3));
+    for (auto ptr : *$2) {
+        ast->dims.push_back(std::unique_ptr<ConstExpAST>(static_cast<ConstExpAST*>(ptr)));
+    }
+    delete $2;
+    ast->init_val = unique_ptr<InitValAST>(static_cast<InitValAST*>($4));
     $$ = ast;
   }
   ;
@@ -352,6 +416,29 @@ InitVal
     auto ast = new InitValAST();
     ast->exp = unique_ptr<ExpAST>(static_cast<ExpAST*>($1));
     $$ = ast;
+  }
+  | '{' '}' {
+    auto ast = new InitValAST();
+    $$ = ast;
+  }
+  | '{' InitValList '}' {
+    auto ast = new InitValAST();
+    auto list = unique_ptr<vector<BaseAST*>>($2);
+    for (auto ptr : *list) {
+        ast->values.push_back(unique_ptr<InitValAST>(static_cast<InitValAST*>(ptr)));
+    }
+    $$ = ast;
+  }
+  ;
+
+InitValList
+  : InitVal {
+    $$ = new std::vector<BaseAST*>();
+    ($$)->push_back($1);
+  }
+  | InitValList ',' InitVal {
+    ($1)->push_back($3);
+    $$ = $1;
   }
   ;
 

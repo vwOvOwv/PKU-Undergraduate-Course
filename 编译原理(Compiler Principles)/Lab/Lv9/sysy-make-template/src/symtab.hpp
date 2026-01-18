@@ -8,6 +8,9 @@ struct SymbolInfo {
     bool is_const; 
     int const_val;
     std::string var_name;
+    bool is_array = false;
+    bool is_pointer = false;
+    std::vector<int> dims;
 };
 
 class SymbolTable {
@@ -30,7 +33,7 @@ public:
     }
 
     // 插入符号
-    std::string push(const std::string& id, bool is_const, int const_val) {
+    std::string push(const std::string& id, bool is_const, int const_val, bool is_array = false, bool is_pointer = false, std::vector<int> dims = {}) {
         // 全局变量保持原名
         // 局部变量使用 id + "_" + counter
         std::string unique_ir_name;
@@ -40,7 +43,16 @@ public:
             unique_ir_name = id + "_" + std::to_string(var_counter++);
         }
         
-        scopes.back()[id] = {is_const, const_val, unique_ir_name};
+        // 构造 SymbolInfo
+        SymbolInfo info;
+        info.is_const = is_const;
+        info.const_val = const_val;
+        info.var_name = unique_ir_name;
+        info.is_array = is_array;
+        info.is_pointer = is_pointer;
+        info.dims = dims;
+
+        scopes.back()[id] = info;
         return unique_ir_name;
     }
 

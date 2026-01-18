@@ -23,6 +23,8 @@ class BranchIR;
 class JumpIR;
 class CallIR;
 class GlobalAllocIR;
+class GetElementPtrIR;
+class GetPtrIR;
 
 enum class BinaryOpType {
     NE, EQ, GT, LT, GE, LE,
@@ -95,6 +97,7 @@ public:
     std::vector<std::string> params;
     Operand ret_value;
     std::vector<std::unique_ptr<BasicBlockIR>> basic_blocks;
+    std::vector<bool> param_is_array;
     void dump() override;
 };
 
@@ -108,10 +111,14 @@ public:
 class GlobalAllocIR : public BaseIR {
 public:
     std::string name;
-    int init_val;
-    
+    int size;
+    std::vector<int> init_vals;
+
     GlobalAllocIR(std::string name, int val) 
-        : name(name), init_val(val) {}
+        : name(name), size(1), init_vals({val}) {}
+    GlobalAllocIR(std::string name, int size, std::vector<int> vals)
+        : name(name), size(size), init_vals(vals) {}
+
     void dump() override;
 };
 
@@ -119,6 +126,42 @@ class InstructionIR : public BaseIR {
 public:
     virtual ~InstructionIR() = default;
     virtual void dump()  override = 0;
+};
+
+class GetElementPtrIR : public InstructionIR {
+public:
+    int target;
+    Operand base;
+    Operand offset;
+
+    GetElementPtrIR(int target, Operand base, Operand offset)
+        : target(target), base(base), offset(offset) {}
+    
+    void dump() override {
+        std::cout << "  %" << target << " = getelemptr ";
+        base.dump();
+        std::cout << ", ";
+        offset.dump();
+        std::cout << std::endl;
+    }
+};
+
+class GetPtrIR : public InstructionIR {
+public:
+    int target;
+    Operand base;
+    Operand offset;
+
+    GetPtrIR(int target, Operand base, Operand offset)
+        : target(target), base(base), offset(offset) {}
+    
+    void dump() override {
+        std::cout << "  %" << target << " = getptr ";
+        base.dump();
+        std::cout << ", ";
+        offset.dump();
+        std::cout << std::endl;
+    }
 };
 
 class CallIR : public InstructionIR {
@@ -131,7 +174,7 @@ public:
         : func_name(name), args(args), target(target) {}
 
     void dump() override {
-        if (target != -1) // 假设 -1 表示 void
+        if (target != -1) 
             std::cout << "  %" << target << " = ";
         else
             std::cout << "  ";
@@ -166,7 +209,9 @@ public:
 class AllocIR : public InstructionIR {
 public:
     std::string var_name;
-    AllocIR(std::string name) : var_name(name) {}
+    int size;
+    bool is_pointer;
+    AllocIR(std::string name, int size=1, bool is_pointer=false) : var_name(name), size(size), is_pointer(is_pointer) {}
     void dump() override;
 };
 
@@ -236,8 +281,13 @@ inline void FunctionIR::dump()  {
     std::cout << "fun @" << func_name << "(";
     
     for (size_t i = 0; i < params.size(); ++i) {
-        std::cout << "%" << params[i] << ": i32";
-        if (i < params.size() - 1) std::cout << ", ";
+        std::cout << "%" << params[i] << ": ";
+        if (i < param_is_array.size() && param_is_array[i])
+            std::cout << "*i32";
+        else
+            std::cout << "i32";
+        if (i < params.size() - 1)
+            std::cout << ", ";
     }
     std::cout << ")";
 
@@ -297,7 +347,14 @@ inline void BinaryArithmeticIR::dump() {
 }
 
 inline void AllocIR::dump() {
-    std::cout << "  @" << var_name << " = alloc i32" << std::endl;
+    if (is_pointer) {
+        std::cout << "  @" << var_name << " = alloc *i32" << std::endl;
+    } else {
+        if (size > 1)
+            std::cout << "  @" << var_name << " = alloc [i32, " << size << "]" << std::endl;
+        else 
+            std::cout << "  @" << var_name << " = alloc i32" << std::endl;
+    }
 }
 
 inline void LoadIR::dump() {
@@ -325,13 +382,24 @@ inline void JumpIR::dump() {
 }
 
 inline void GlobalAllocIR::dump() {    
-    // global @var = alloc i32, zeroinit
-    // global @var = alloc i32, 10
-    std::cout << "global @" << name << " = alloc i32, ";
-    if (init_val == 0) {
-        std::cout << "zeroinit";
+    if (size > 1) {
+        std::cout << "global @" << name << " = alloc [i32, " << size << "]";
     } else {
-        std::cout << init_val;
+        std::cout << "global @" << name << " = alloc i32";
+    }
+    if (init_vals.empty()) {
+        std::cout << ", zeroinit";
+    } else {
+        if (size > 1) {
+            std::cout << ", {";
+            for (size_t i = 0; i < init_vals.size(); ++i) {
+                std::cout << init_vals[i];
+                if (i != init_vals.size() - 1) std::cout << ", ";
+            }
+            std::cout << "}";
+        } else {
+            std::cout << ", " << init_vals[0];
+        }
     }
     std::cout << std::endl;
 }

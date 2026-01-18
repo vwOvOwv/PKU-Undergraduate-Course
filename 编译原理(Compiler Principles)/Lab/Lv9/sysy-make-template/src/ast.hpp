@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include "ir.hpp"
 #include "symtab.hpp"
+#include <functional>
 
 // =========================================================
 // 前向声明
@@ -81,6 +82,7 @@ class FuncFParamAST : public BaseAST {
 public:
     std::string b_type;
     std::string name;
+    std::vector<std::unique_ptr<BaseAST>> dims;
     void generate_ir(ProgramIR* ir) const override; // 不需要单独生成，在 FuncDef 中处理
 };
 
@@ -284,14 +286,14 @@ class ConstDefAST : public BaseAST {
 public:
     std::string id;
     std::unique_ptr<ConstInitValAST> init_val;
-
+    std::vector<std::unique_ptr<ConstExpAST>> dims;
     void generate_ir(ProgramIR* ir) const override;
 };
 
 class ConstInitValAST : public BaseAST {
 public:
     std::unique_ptr<ConstExpAST> const_exp;
-
+    std::vector<std::unique_ptr<ConstInitValAST>> values;
     void generate_ir(ProgramIR* ir) const override;
     int calculate_val() const override;
 };
@@ -307,7 +309,7 @@ public:
 class LValAST : public BaseAST {
 public:
     std::string id;
-
+    std::vector<std::unique_ptr<ExpAST>> indices;
     void generate_ir(ProgramIR* ir) const override;
     int calculate_val() const override;
 };
@@ -323,12 +325,14 @@ class VarDefAST : public BaseAST {
 public:
     std::string id;
     std::unique_ptr<InitValAST> init_val;
+    std::vector<std::unique_ptr<ConstExpAST>> dims;
     void generate_ir(ProgramIR* ir) const override;
 };
 
 class InitValAST : public BaseAST {
 public:
     std::unique_ptr<ExpAST> exp;
+    std::vector<std::unique_ptr<InitValAST>> values;
     void generate_ir(ProgramIR* ir) const override;
     int calculate_val() const override;
 };
@@ -353,6 +357,11 @@ inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
 
     for (const auto& param : params) {
         func_ir->params.push_back(param->name);
+        if (param->dims.empty()) {
+            func_ir->param_is_array.push_back(false);
+        } else {
+            func_ir->param_is_array.push_back(true);
+        }
     }
     global_func_type_table[func_name] = func_ir->func_type;
 
@@ -366,11 +375,17 @@ inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
 
     symbol_table.enter_scope();
 
-    // 处理参数：alloc 并 store 参数值
     for (size_t i = 0; i < params.size(); ++i) {
-        std::string unique_name = symbol_table.push(params[i]->name, false, 0);
-            
-        auto alloc_inst = std::make_unique<AllocIR>(unique_name);
+        std::vector<int> param_dims;
+        for (size_t k = 1; k < params[i]->dims.size(); ++k) {
+             if (auto cp = dynamic_cast<ConstExpAST*>(params[i]->dims[k].get()))
+                param_dims.push_back(cp->calculate_val());
+        }
+
+        bool is_ptr = !params[i]->dims.empty();
+        std::string unique_name = symbol_table.push(params[i]->name, false, 0, is_ptr, is_ptr, param_dims);
+        
+        auto alloc_inst = std::make_unique<AllocIR>(unique_name, 1, is_ptr);
         ir->cur_block->insts.push_back(std::move(alloc_inst));
         
         Operand arg_val = Operand::make_arg(i, params[i]->name);
@@ -378,7 +393,7 @@ inline void FuncDefAST::generate_ir(ProgramIR* ir) const {
         ir->cur_block->insts.push_back(std::move(store_inst));
     }
 
-    block->generate_ir(ir); // block 内部会再enter_scope
+    block->generate_ir(ir); 
     symbol_table.exit_scope();
 
     // 处理缺省 return
@@ -763,10 +778,94 @@ inline void ConstDeclAST::generate_ir(ProgramIR* ir) const {
 }
 
 inline void ConstDefAST::generate_ir(ProgramIR* ir) const {
-    // 获取编译期常量值
-    int val = init_val->calculate_val();
-    // 插入符号表
-    symbol_table.push(id, true, val);
+    std::vector<int> dim_vals;
+    int total_len = 1;
+    for (const auto& d : dims) {
+        int val = d->calculate_val();
+        dim_vals.push_back(val);
+        total_len *= val;
+    }
+
+    std::vector<int> init_vals;
+    if (!dims.empty()) {
+        std::function<void(ConstInitValAST*)> flatten;
+        flatten = [&](ConstInitValAST* node) {
+            if (node->const_exp) {
+                // 叶子节点
+                init_vals.push_back(node->const_exp->calculate_val());
+            } else {
+                // 列表节点
+                for (const auto& child : node->values) {
+                    flatten(child.get());
+                }
+            }
+        };
+
+        if (init_val) {
+            flatten(init_val.get());
+        }
+        // 填充剩余的 0
+        while (init_vals.size() < total_len) {
+            init_vals.push_back(0);
+        }
+    } else {
+        // 标量情况
+        if (init_val && init_val->const_exp) {
+            init_vals.push_back(init_val->const_exp->calculate_val());
+        } else {
+            init_vals.push_back(0);
+        }
+    }
+    if (ir->cur_func == nullptr) { 
+        // --- 全局常量 ---
+        std::string unique_name = symbol_table.push(id, true, 0, !dims.empty(), false, dim_vals);
+        // 如果是数组，必须分配空间；如果是标量，SysY 中 const int 全局通常也可以直接替换值，
+        // 但为了统一，也可以 alloc。这里如果视为编译期常量替换，需在符号表记录 val。
+        if (!dims.empty()) {
+            auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, total_len, init_vals);
+            ir->globals.push_back(std::move(global_ir));
+        } else {
+            // 标量直接记录值，不生成 alloc (优化)，或者生成 alloc 并标记 const
+            // 这里选择直接记录值到符号表，不生成指令
+            // Update: 为了兼容 pointer 逻辑，如果之后取地址，还是需要 alloc
+            // 但题目要求 const int a = 1; 后面用到 a 时直接用 1。
+            SymbolInfo* info = symbol_table.lookup(id);
+            info->const_val = init_vals[0];
+            // 依然生成 global alloc 以便 IR 完整
+             auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, 1, init_vals);
+             ir->globals.push_back(std::move(global_ir));
+        }
+    } else {
+        // --- 局部常量 ---
+        // 局部常量数组需要分配栈空间并初始化
+        // 局部标量常量可以直接替换，不需要 Alloc (除非被取地址，SysY无取地址运算符)
+        if (!dims.empty()) {
+            std::string unique_name = symbol_table.push(id, true, 0, true, false, dim_vals);
+            auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len);
+            ir->cur_block->insts.push_back(std::move(alloc_inst));
+
+            // 生成 Store 指令进行初始化
+            for (int i = 0; i < total_len; ++i) {
+                // 稳妥起见全部 store
+                
+                int addr_reg = ir->cur_inst_id++;
+                auto gep_inst = std::make_unique<GetElementPtrIR>(
+                    addr_reg, Operand(unique_name), Operand(Operand::IMM, i)
+                );
+                ir->cur_block->insts.push_back(std::move(gep_inst));
+
+                auto store_inst = std::make_unique<StoreIR>(
+                    Operand(Operand::IMM, init_vals[i]), 
+                    Operand(Operand::ID, addr_reg)
+                );
+                ir->cur_block->insts.push_back(std::move(store_inst));
+            }
+        } else {
+            // 局部标量
+            int val = init_vals[0];
+            symbol_table.push(id, true, val, false, false, {});
+        }
+    }
 }
 
 inline void ConstInitValAST::generate_ir(ProgramIR* ir) const {}
@@ -775,21 +874,90 @@ inline void ConstExpAST::generate_ir(ProgramIR* ir) const {}
 
 inline void LValAST::generate_ir(ProgramIR* ir) const {
     SymbolInfo* info = symbol_table.lookup(id);
-    if (info) {
-        if (info->is_const) {
-            // 常量直接替换数值
-            ir->cur_val = Operand(Operand::IMM, info->const_val);
+    if (!info) {
+        std::cerr << "Error: Undefined identifier " << id << std::endl;
+        exit(1);
+    }
+
+    if (info->is_const && !info->is_array) {
+        ir->cur_val = Operand(Operand::IMM, info->const_val);
+        return;
+    }
+
+    Operand base_op;
+    if (info->is_pointer) {
+        int ptr_val_id = ir->cur_inst_id++;
+        auto load_ptr = std::make_unique<LoadIR>(ptr_val_id, Operand(info->var_name));
+        ir->cur_block->insts.push_back(std::move(load_ptr));
+        base_op = Operand(Operand::ID, ptr_val_id);
+    } else {
+        base_op = Operand(info->var_name);
+    }
+
+    if (indices.empty()) {
+        if (info->is_array && !info->is_pointer) {
+            int addr_reg = ir->cur_inst_id++;
+            auto gep_inst = std::make_unique<GetElementPtrIR>(
+                addr_reg, base_op, Operand(Operand::IMM, 0)
+            );
+            ir->cur_block->insts.push_back(std::move(gep_inst));
+            ir->cur_val = Operand(Operand::ID, addr_reg);
         } else {
-            // 变量需要 load: %new_id = load @x
             int target_id = ir->cur_inst_id++;
             auto load_inst = std::make_unique<LoadIR>(target_id, Operand(info->var_name));
             ir->cur_block->insts.push_back(std::move(load_inst));
-            // 当前表达式的值就是 load 出来的那个临时寄存器
             ir->cur_val = Operand(Operand::ID, target_id);
         }
+        return;
+    }
+
+    Operand final_offset = Operand(Operand::IMM, 0);
+    for (size_t i = 0; i < indices.size(); ++i) {
+        indices[i]->generate_ir(ir);
+        Operand idx_val = ir->cur_val;
+
+        int stride = 1;
+        size_t start_dim = info->is_pointer ? i : i + 1;
+        for (size_t k = start_dim; k < info->dims.size(); ++k) {
+            stride *= info->dims[k];
+        }
+
+        int mul_res = ir->cur_inst_id++;
+        auto mul_inst = std::make_unique<BinaryArithmeticIR>(
+            BinaryOpType::MUL, mul_res, idx_val, Operand(Operand::IMM, stride)
+        );
+        ir->cur_block->insts.push_back(std::move(mul_inst));
+
+        int add_res = ir->cur_inst_id++;
+        auto add_inst = std::make_unique<BinaryArithmeticIR>(
+            BinaryOpType::ADD, add_res, final_offset, Operand(Operand::ID, mul_res)
+        );
+        ir->cur_block->insts.push_back(std::move(add_inst));
+        final_offset = Operand(Operand::ID, add_res);
+    }
+
+    int addr_reg = ir->cur_inst_id++;
+    if (info->is_pointer) {
+        auto ptr_inst = std::make_unique<GetPtrIR>(
+            addr_reg, base_op, final_offset
+        );
+        ir->cur_block->insts.push_back(std::move(ptr_inst));
     } else {
-        std::cerr << "Error: Undefined identifier " << id << std::endl;
-        exit(1);
+        auto gep_inst = std::make_unique<GetElementPtrIR>(
+            addr_reg, base_op, final_offset
+        );
+        ir->cur_block->insts.push_back(std::move(gep_inst));
+    }
+
+    size_t needed_dims = info->dims.size();
+    if (info->is_pointer) needed_dims += 1;
+    if (indices.size() == needed_dims) {
+        int val_reg = ir->cur_inst_id++;
+        auto load_inst = std::make_unique<LoadIR>(val_reg, Operand(Operand::ID, addr_reg));
+        ir->cur_block->insts.push_back(std::move(load_inst));
+        ir->cur_val = Operand(Operand::ID, val_reg);
+    } else {
+        ir->cur_val = Operand(Operand::ID, addr_reg);
     }
 }
 
@@ -800,24 +968,84 @@ inline void VarDeclAST::generate_ir(ProgramIR* ir) const {
 }
 
 inline void VarDefAST::generate_ir(ProgramIR* ir) const {
-    if (ir->cur_func == nullptr) {  // 全局变量
-        int val = 0;
-        if (init_val) {
-            val = init_val->calculate_val();
-        }
-        std::string unique_name = symbol_table.push(id, false, 0);
-        auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, val);
-        ir->globals.push_back(std::move(global_ir));
+    // 1. 计算维度
+    std::vector<int> dim_vals;
+    int total_len = 1;
+    for (const auto& d : dims) {
+        int val = d->calculate_val();
+        dim_vals.push_back(val);
+        total_len *= val;
     }
-    else{   // 局部变量
-        std::string unique_name = symbol_table.push(id, false, 0);
-        auto alloc_inst = std::make_unique<AllocIR>(unique_name);
-        ir->cur_block->insts.push_back(std::move(alloc_inst));
+
+    if (ir->cur_func == nullptr) {
+        // --- 全局变量 ---
+        // 全局变量的初始化必须是编译期常量
+        std::vector<int> init_vals;
         if (init_val) {
-            init_val->generate_ir(ir);
-            Operand rhs_val = ir->cur_val;
-            auto store_inst = std::make_unique<StoreIR>(rhs_val, Operand(unique_name));
-            ir->cur_block->insts.push_back(std::move(store_inst));
+             // 这里需要一个类似于 ConstDef 中的 flatten，但是针对 InitValAST
+             // 且要在编译期计算出值 (全局初始化必须是常量)
+             std::function<void(InitValAST*)> flatten_const;
+             flatten_const = [&](InitValAST* node) {
+                if (node->exp) {
+                    init_vals.push_back(node->exp->calculate_val());
+                } else {
+                    for (const auto& child : node->values) flatten_const(child.get());
+                }
+            };
+            flatten_const(init_val.get());
+        }
+        while (init_vals.size() < total_len) init_vals.push_back(0);
+
+        std::string unique_name = symbol_table.push(id, false, 0, !dims.empty(), false, dim_vals);
+        auto global_ir = std::make_unique<GlobalAllocIR>(unique_name, total_len, init_vals);
+        ir->globals.push_back(std::move(global_ir));
+
+    } else {
+        // --- 局部变量 ---
+        std::string unique_name = symbol_table.push(id, false, 0, !dims.empty(), false, dim_vals);
+        auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len);
+        ir->cur_block->insts.push_back(std::move(alloc_inst));
+
+        if (init_val) {
+            if (!dims.empty()) {
+                // 数组初始化：需要扁平化 InitValAST，得到一系列 ExpAST*
+                // 然后依次生成 IR 计算这些 Exp，并 Store 到对应偏移
+                std::vector<ExpAST*> flat_exps;
+                std::function<void(InitValAST*)> flatten_exp;
+                flatten_exp = [&](InitValAST* node) {
+                    if (node->exp) {
+                        flat_exps.push_back(node->exp.get());
+                    } else {
+                        for (const auto& child : node->values) flatten_exp(child.get());
+                    }
+                };
+                flatten_exp(init_val.get());
+
+                // 遍历填充
+                for (int i = 0; i < total_len; ++i) {
+                    Operand rhs_val;
+                    if (i < flat_exps.size()) {
+                        flat_exps[i]->generate_ir(ir);
+                        rhs_val = ir->cur_val;
+                    } else {
+                        rhs_val = Operand(Operand::IMM, 0); // 不足补0
+                    }
+
+                    int addr_reg = ir->cur_inst_id++;
+                    auto gep_inst = std::make_unique<GetElementPtrIR>(
+                        addr_reg, Operand(unique_name), Operand(Operand::IMM, i)
+                    );
+                    ir->cur_block->insts.push_back(std::move(gep_inst));
+
+                    auto store_inst = std::make_unique<StoreIR>(rhs_val, Operand(Operand::ID, addr_reg));
+                    ir->cur_block->insts.push_back(std::move(store_inst));
+                }
+            } else {
+                // 标量初始化
+                init_val->exp->generate_ir(ir);
+                auto store_inst = std::make_unique<StoreIR>(ir->cur_val, Operand(unique_name));
+                ir->cur_block->insts.push_back(std::move(store_inst));
+            }
         }
     }
 }
@@ -833,33 +1061,83 @@ inline std::unique_ptr<ProgramIR> generate_ir(const std::unique_ptr<BaseAST>& as
 }
 
 inline void AssignStmtAST::generate_ir(ProgramIR* ir) const {
-    // 计算表达式
     exp->generate_ir(ir);
     Operand rhs = ir->cur_val;
-    // 查表
+
     SymbolInfo* info = symbol_table.lookup(lval->id);
-    if (info) {
-        if (info->is_const) {
-            std::cerr << "Error: Assign to const " << lval->id << std::endl;
-            exit(1);
-        }
-        // store %val, @x
-        auto store_inst = std::make_unique<StoreIR>(rhs, Operand(info->var_name));
-        ir->cur_block->insts.push_back(std::move(store_inst));
-    } else {
+    if (!info) {
         std::cerr << "Error: Undefined variable " << lval->id << std::endl;
         exit(1);
     }
+    if (info->is_const) {
+        std::cerr << "Error: Assign to const " << lval->id << std::endl;
+        exit(1);
+    }
+
+    Operand target_addr;
+    if (lval->indices.empty()) {
+        target_addr = Operand(info->var_name);
+    } else {
+        Operand base_op;
+        if (info->is_pointer) {
+            int ptr_val_id = ir->cur_inst_id++;
+            auto load_ptr = std::make_unique<LoadIR>(ptr_val_id, Operand(info->var_name));
+            ir->cur_block->insts.push_back(std::move(load_ptr));
+            base_op = Operand(Operand::ID, ptr_val_id);
+        } else {
+            base_op = Operand(info->var_name);
+        }
+
+        Operand final_offset = Operand(Operand::IMM, 0);
+        for (size_t i = 0; i < lval->indices.size(); ++i) {
+            lval->indices[i]->generate_ir(ir);
+            Operand idx_val = ir->cur_val;
+
+            int stride = 1;
+            size_t start_dim = info->is_pointer ? i : i + 1;
+            for (size_t k = start_dim; k < info->dims.size(); ++k) {
+                stride *= info->dims[k];
+            }
+
+            int mul_res = ir->cur_inst_id++;
+            auto mul_inst = std::make_unique<BinaryArithmeticIR>(
+                BinaryOpType::MUL, mul_res, idx_val, Operand(Operand::IMM, stride)
+            );
+            ir->cur_block->insts.push_back(std::move(mul_inst));
+
+            int add_res = ir->cur_inst_id++;
+            auto add_inst = std::make_unique<BinaryArithmeticIR>(
+                BinaryOpType::ADD, add_res, final_offset, Operand(Operand::ID, mul_res)
+            );
+            ir->cur_block->insts.push_back(std::move(add_inst));
+            final_offset = Operand(Operand::ID, add_res);
+        }
+
+        int addr_reg = ir->cur_inst_id++;
+        if (info->is_pointer) {
+            auto ptr_inst = std::make_unique<GetPtrIR>(
+                addr_reg, base_op, final_offset
+            );
+            ir->cur_block->insts.push_back(std::move(ptr_inst));
+        } else {
+            auto gep_inst = std::make_unique<GetElementPtrIR>(
+                addr_reg, base_op, final_offset
+            );
+            ir->cur_block->insts.push_back(std::move(gep_inst));
+        }
+        target_addr = Operand(Operand::ID, addr_reg);
+    }
+
+    auto store_inst = std::make_unique<StoreIR>(rhs, target_addr);
+    ir->cur_block->insts.push_back(std::move(store_inst));
 }
 
 inline void IfStmtAST::generate_ir(ProgramIR* ir) const {
-    // 生成条件表达式 IR
     if (cond) {
         cond->generate_ir(ir);
     }
     Operand cond_val = ir->cur_val;
 
-    // 为了确保条件是布尔值（适用于 C 语义 if(5)），生成 "cond != 0" 的比较
     int cmp_id = ir->cur_inst_id++;
     auto cmp_inst = std::make_unique<BinaryArithmeticIR>(
         BinaryOpType::NE, 
@@ -870,20 +1148,16 @@ inline void IfStmtAST::generate_ir(ProgramIR* ir) const {
     ir->cur_block->insts.push_back(std::move(cmp_inst));
     Operand is_true = Operand(Operand::ID, cmp_id);
 
-    // 预分配 Block 名字
     std::string then_label = "then_" + std::to_string(ir->cur_inst_id++);
     std::string else_label = "else_" + std::to_string(ir->cur_inst_id++);
     std::string end_label = "end_" + std::to_string(ir->cur_inst_id++);
 
     std::string true_target = then_label;
-    // 如果没有 else 分支，false 直接跳到 end
     std::string false_target = else_stmt ? else_label : end_label;
 
-    // 生成条件跳转指令 (Branch)
     auto br_inst = std::make_unique<BranchIR>(is_true, true_target, false_target);
     ir->cur_block->insts.push_back(std::move(br_inst));
 
-    // ================= THEN BLOCK =================
     auto then_block = std::make_unique<BasicBlockIR>();
     then_block->basic_block_name = then_label;
     ir->cur_block = then_block.get();
@@ -893,8 +1167,6 @@ inline void IfStmtAST::generate_ir(ProgramIR* ir) const {
         then_stmt->generate_ir(ir);
     }
 
-    // 检查 then 块末尾是否需要插入跳转到 end
-    // 如果最后一条指令是 ret, br, jump 等终结指令，则不需要
     bool then_has_term = false;
     if (!ir->cur_block->insts.empty()) {
         auto* last = ir->cur_block->insts.back().get();
@@ -909,7 +1181,6 @@ inline void IfStmtAST::generate_ir(ProgramIR* ir) const {
         ir->cur_block->insts.push_back(std::move(jump));
     }
 
-    // ================= ELSE BLOCK (Optional) =================
     if (else_stmt) {
         auto else_block = std::make_unique<BasicBlockIR>();
         else_block->basic_block_name = else_label;
@@ -933,7 +1204,6 @@ inline void IfStmtAST::generate_ir(ProgramIR* ir) const {
         }
     }
 
-    // ================= END BLOCK =================
     auto end_block = std::make_unique<BasicBlockIR>();
     end_block->basic_block_name = end_label;
     ir->cur_block = end_block.get();

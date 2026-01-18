@@ -24,6 +24,8 @@ public:
 private:
     const ProgramIR* program;
     int stack_size = 0;
+    int saved_reg_args_base = 0; 
+    int ra_offset = 0;
     bool has_call = false;
     std::map<std::string, int> var_offset_map;  // name -> offset
     std::map<int, int> val_offset_map; // id -> offset
@@ -39,11 +41,16 @@ private:
     void visit(const JumpIR* jump_ir);
     void visit(const CallIR* call_ir);
     void visit(const GlobalAllocIR* global_ir);
+    void visit(const GetElementPtrIR* gep_ir);
+    void visit(const GetPtrIR* gep_ir);
 
     void load_to_reg(const Operand& op, const std::string& reg_name);
+    void load_addr_to_reg(const Operand& op, const std::string& reg_name);
     void store_from_reg(const std::string& reg_name, int target);
     void calculate_stack_size(const FunctionIR* func_ir);
     bool check_has_call(const FunctionIR* func_ir);
+    void safe_lw(const std::string& rd, int offset, const std::string& base);
+    void safe_sw(const std::string& rs, int offset, const std::string& base);
 };
 
 // =========================================================
@@ -52,6 +59,7 @@ private:
 
 inline void RiscvGenerator::generate() {
     if (!program->globals.empty()) {
+        std::cout << "  .data" << std::endl;
         for (const auto& global : program->globals) {
             visit(global.get());
         }
@@ -70,6 +78,26 @@ inline bool RiscvGenerator::check_has_call(const FunctionIR* func_ir) {
         }
     }
     return false;
+}
+
+inline void RiscvGenerator::safe_lw(const std::string& rd, int offset, const std::string& base) {
+    if (offset >= -2048 && offset <= 2047) {
+        std::cout << "  lw    " << rd << ", " << offset << "(" << base << ")" << std::endl;
+    } else {
+        std::cout << "  li    t2, " << offset << std::endl;
+        std::cout << "  add   t2, t2, " << base << std::endl;
+        std::cout << "  lw    " << rd << ", 0(t2)" << std::endl;
+    }
+}
+
+inline void RiscvGenerator::safe_sw(const std::string& rs, int offset, const std::string& base) {
+    if (offset >= -2048 && offset <= 2047) {
+        std::cout << "  sw    " << rs << ", " << offset << "(" << base << ")" << std::endl;
+    } else {
+        std::cout << "  li    t2, " << offset << std::endl;
+        std::cout << "  add   t2, t2, " << base << std::endl;
+        std::cout << "  sw    " << rs << ", 0(t2)" << std::endl;
+    }
 }
 
 inline void RiscvGenerator::visit(const FunctionIR* func_ir) {
@@ -91,8 +119,15 @@ inline void RiscvGenerator::visit(const FunctionIR* func_ir) {
     }
 
     if (has_call) {
-        int ra_offset = stack_size - 4;
-        std::cout << "  sw    ra, " << ra_offset << "(sp)" << std::endl;
+        safe_sw("ra", ra_offset, "sp");
+    }
+
+    int num_params = func_ir->params.size();
+    int num_reg_params = std::min(num_params, 8);
+    for (int i = 0; i < num_reg_params; ++i) {
+        int offset = saved_reg_args_base + i * 4;
+        std::string reg = "a" + std::to_string(i);
+        safe_sw(reg, offset, "sp");
     }
 
     for (const auto& block : func_ir->basic_blocks) {
@@ -122,6 +157,10 @@ inline void RiscvGenerator::visit(const BasicBlockIR* block_ir) {
             visit(jump);
         else if (auto call = dynamic_cast<const CallIR*>(inst.get()))
             visit(call);
+        else if (auto gep = dynamic_cast<const GetElementPtrIR*>(inst.get()))
+            visit(gep);
+        else if (auto ptr = dynamic_cast<const GetPtrIR*>(inst.get()))
+            visit(ptr);
     }
 }
 
@@ -130,8 +169,7 @@ inline void RiscvGenerator::visit(const ReturnIR* ret_ir) {
         load_to_reg(ret_ir->ret_value, "a0"); // 返回值存入 a0
     }
     if (has_call) {
-        int ra_offset = stack_size - 4;
-        std::cout << "  lw    ra, " << ra_offset << "(sp)" << std::endl;
+        safe_lw("ra", this->ra_offset, "sp");
     }
     if (stack_size > 0) {
         if (stack_size <= 2047) {
@@ -213,47 +251,56 @@ inline void RiscvGenerator::visit(const BinaryArithmeticIR* bin_op_ir) {
 inline void RiscvGenerator::visit(const AllocIR* alloc_ir) {}
 
 inline void RiscvGenerator::visit(const LoadIR* load_ir) {
-    std::string name = load_ir->src_addr.name;
-    
-    // 检查是否为栈上的局部变量
-    if (var_offset_map.count(name)) {
-        int offset = var_offset_map[name];
-        if (offset >= -2048 && offset <= 2047) {
-            std::cout << "  lw    t0, " << offset << "(sp)" << std::endl;
-        } else {
-            std::cout << "  li    t2, " << offset << std::endl;
-            std::cout << "  add   t2, t2, sp" << std::endl;
-            std::cout << "  lw    t0, 0(t2)" << std::endl;
+    if (load_ir->src_addr.type == Operand::VAR) {
+        std::string name = load_ir->src_addr.name;
+        if (var_offset_map.count(name)) { // 栈上局部变量
+            int offset = var_offset_map[name];
+            safe_lw("t0", offset, "sp");
+        } else { // 全局变量
+            std::cout << "  la    t0, " << name << std::endl;
+            std::cout << "  lw    t0, 0(t0)" << std::endl;
+        }
     }
-    } 
-    else {
-        // 不在栈映射中，认为是全局变量
-        // lui + lw (或使用伪指令 la)
-        std::cout << "  la    t0, " << name << std::endl;
-        std::cout << "  lw    t0, 0(t0)" << std::endl;
+    else if (load_ir->src_addr.type == Operand::ID) {
+        load_to_reg(load_ir->src_addr, "t1");
+        std::cout << "  lw    t0, 0(t1)" << std::endl;
     }
     store_from_reg("t0", load_ir->target);
 }
 
 inline void RiscvGenerator::visit(const StoreIR* store_ir) {
-    std::string name = store_ir->dst_addr.name;
-    load_to_reg(store_ir->value, "t0");
-    if (var_offset_map.count(name)) {
-        // 局部变量
-        int offset = var_offset_map[name];
-        if (offset >= -2048 && offset <= 2047) {
-            std::cout << "  sw    t0, " << offset << "(sp)" << std::endl;
+    load_to_reg(store_ir->value, "t0"); // 值在 t0
+
+    if (store_ir->dst_addr.type == Operand::VAR) {
+        std::string name = store_ir->dst_addr.name;
+        if (var_offset_map.count(name)) {
+            int offset = var_offset_map[name];
+            safe_sw("t0", offset, "sp");
         } else {
-            std::cout << "  li    t2, " << offset << std::endl;
-            std::cout << "  add   t2, t2, sp" << std::endl;
-            std::cout << "  sw    t0, 0(t2)" << std::endl;
+            std::cout << "  la    t1, " << name << std::endl;
+            std::cout << "  sw    t0, 0(t1)" << std::endl;
         }
-    } 
-    else {
-        // 全局变量 store
-        std::cout << "  la    t1, " << name << std::endl;
+    }
+    else if (store_ir->dst_addr.type == Operand::ID) {
+        load_to_reg(store_ir->dst_addr, "t1");
         std::cout << "  sw    t0, 0(t1)" << std::endl;
     }
+}
+
+inline void RiscvGenerator::visit(const GetElementPtrIR* gep_ir) {
+    load_addr_to_reg(gep_ir->base, "t0");
+    load_to_reg(gep_ir->offset, "t1");
+    std::cout << "  slli  t1, t1, 2" << std::endl;
+    std::cout << "  add   t0, t0, t1" << std::endl;
+    store_from_reg("t0", gep_ir->target);
+}
+
+inline void RiscvGenerator::visit(const GetPtrIR* gep_ir) {
+    load_addr_to_reg(gep_ir->base, "t0");
+    load_to_reg(gep_ir->offset, "t1");
+    std::cout << "  slli  t1, t1, 2" << std::endl;
+    std::cout << "  add   t0, t0, t1" << std::endl;
+    store_from_reg("t0", gep_ir->target);
 }
 
 inline void RiscvGenerator::visit(const BranchIR* branch_ir) {
@@ -278,7 +325,7 @@ inline void RiscvGenerator::visit(const CallIR* call_ir) {
     for (size_t i = 8; i < call_ir->args.size(); ++i) {
         load_to_reg(call_ir->args[i], "t0");
         int offset = (i - 8) * 4;
-        std::cout << "  sw    t0, " << offset << "(sp)" << std::endl;
+        safe_sw("t0", offset, "sp");
     }
     std::cout << "  call  " << call_ir->func_name << std::endl; 
     if (call_ir->target != -1) {
@@ -287,13 +334,26 @@ inline void RiscvGenerator::visit(const CallIR* call_ir) {
 }
 
 inline void RiscvGenerator::visit(const GlobalAllocIR* global_ir) {
-    std::cout << "  .data" << std::endl;             // 切换到数据段
-    std::cout << "  .globl " << global_ir->name << std::endl;
-    std::cout << "  .align 2" << std::endl;          // 4字节对齐
-    std::cout << "  .type " << global_ir->name << ", @object" << std::endl; // 声明符号类型为对象
-    std::cout << "  .size " << global_ir->name << ", 4" << std::endl;       // 声明大小为4字节
-    std::cout << global_ir->name << ":" << std::endl;
-    std::cout << "  .word " << global_ir->init_val << std::endl;
+    std::string name = global_ir->name;
+    int size_bytes = global_ir->size * 4;
+
+    std::cout << "  .globl " << name << std::endl;
+    std::cout << "  .align 2" << std::endl;
+    std::cout << "  .type " << name << ", @object" << std::endl;
+    std::cout << "  .size " << name << ", " << size_bytes << std::endl;
+    std::cout << name << ":" << std::endl;
+    
+    if (global_ir->init_vals.empty()) {
+        std::cout << "  .zero " << size_bytes << std::endl;
+    } else {
+        for (int val : global_ir->init_vals) {
+            std::cout << "  .word " << val << std::endl;
+        }
+        int initialized_bytes = global_ir->init_vals.size() * 4;
+        if (initialized_bytes < size_bytes) {
+            std::cout << "  .zero " << (size_bytes - initialized_bytes) << std::endl;
+        }
+    }
     std::cout << std::endl;
 }
 
@@ -319,11 +379,16 @@ inline void RiscvGenerator::calculate_stack_size(const FunctionIR* func_ir) {
         stack_size = (max_call_args - 8) * 4;
     }
 
+    saved_reg_args_base = stack_size;
+    int num_params = func_ir->params.size();
+    int num_reg_params = std::min(num_params, 8);
+    stack_size += num_reg_params * 4;
+
     for (const auto& block : func_ir->basic_blocks) {
         for (const auto& inst : block->insts) {
             if (auto alloc = dynamic_cast<const AllocIR*>(inst.get())) {
                 var_offset_map[alloc->var_name] = stack_size;
-                stack_size += 4;
+                stack_size += alloc->size * 4;
             }
             else if (auto load = dynamic_cast<const LoadIR*>(inst.get())) {
                 val_offset_map[load->target] = stack_size;
@@ -339,12 +404,22 @@ inline void RiscvGenerator::calculate_stack_size(const FunctionIR* func_ir) {
                     stack_size += 4;
                 }
             }
+            else if (auto gep = dynamic_cast<const GetElementPtrIR*>(inst.get())) {
+                val_offset_map[gep->target] = stack_size;
+                stack_size += 4; 
+            }
+            else if (auto ptr = dynamic_cast<const GetPtrIR*>(inst.get())) {
+                val_offset_map[ptr->target] = stack_size;
+                stack_size += 4;
+            }
         }
     }
     
     if (has_call) {
+        ra_offset = stack_size;
         stack_size += 4; 
     }
+
     if (stack_size % 16 != 0) {
         stack_size = (stack_size / 16 + 1) * 16;
     }
@@ -355,33 +430,40 @@ inline void RiscvGenerator::load_to_reg(const Operand& op, const std::string& re
         std::cout << "  li    " << reg_name << ", " << op.val << std::endl;
     } else if (op.type == Operand::ID) {
         int offset = val_offset_map[op.val];
-        if (offset >= -2048 && offset <= 2047) {
-            std::cout << "  lw    " << reg_name << ", " << offset << "(sp)" << std::endl;
-        } else {
-            std::cout << "  li    t2, " << offset << std::endl;
-            std::cout << "  add   t2, t2, sp" << std::endl;
-            std::cout << "  lw    " << reg_name << ", 0(t2)" << std::endl;
-        }
+        safe_lw(reg_name, offset, "sp");
     }
     else if (op.type == Operand::ARG) {
         if (op.val < 8) {
-            std::cout << "  mv    " << reg_name << ", a" << op.val << std::endl;
+            int offset = saved_reg_args_base + op.val * 4;
+            safe_lw(reg_name, offset, "sp");
         }
         else {
             int offset = stack_size + (op.val - 8) * 4;
-            std::cout << "  lw    " << reg_name << ", " << offset << "(sp)" << std::endl;
+            safe_lw(reg_name, offset, "sp");
         }
     }
     // 不需要处理VAR(@x)
 }
 
+inline void RiscvGenerator::load_addr_to_reg(const Operand& op, const std::string& reg_name) {
+    if (op.type == Operand::VAR) {
+        std::string name = op.name;
+        if (var_offset_map.count(name)) {
+            int offset = var_offset_map[name];
+            std::cout << "  li    " << reg_name << ", " << offset << std::endl;
+            std::cout << "  add   " << reg_name << ", " << reg_name << ", sp" << std::endl;
+        } else {
+            if (!name.empty() && name[0] == '@') name = name.substr(1);
+            std::cout << "  la    " << reg_name << ", " << name << std::endl;
+        }
+    } else if (op.type == Operand::ID) {
+        load_to_reg(op, reg_name);
+    } else if (op.type == Operand::ARG) {
+        load_to_reg(op, reg_name);
+    }
+}
+
 inline void RiscvGenerator::store_from_reg(const std::string& reg_name, int target) {
     int offset = val_offset_map[target];
-    if (offset >= -2048 && offset <= 2047) {
-        std::cout << "  sw    " << reg_name << ", " << offset << "(sp)" << std::endl;
-    } else {
-        std::cout << "  li    t2, " << offset << std::endl;
-        std::cout << "  add   t2, t2, sp" << std::endl;
-        std::cout << "  sw    " << reg_name << ", 0(t2)" << std::endl;
-    }
+    safe_sw(reg_name, offset, "sp");
 }
