@@ -82,7 +82,12 @@ inline void RiscvGenerator::visit(const FunctionIR* func_ir) {
 
     // 分配栈帧
     if (stack_size > 0) {
-        std::cout << "  addi  sp, sp, -" << stack_size << std::endl;
+        if (stack_size <= 2048) { // -2048 fits in imm12
+            std::cout << "  addi  sp, sp, -" << stack_size << std::endl;
+        } else {
+            std::cout << "  li    t0, -" << stack_size << std::endl;
+            std::cout << "  add   sp, sp, t0" << std::endl;
+        }
     }
 
     if (has_call) {
@@ -129,7 +134,12 @@ inline void RiscvGenerator::visit(const ReturnIR* ret_ir) {
         std::cout << "  lw    ra, " << ra_offset << "(sp)" << std::endl;
     }
     if (stack_size > 0) {
-        std::cout << "  addi  sp, sp, " << stack_size << std::endl;
+        if (stack_size <= 2047) {
+            std::cout << "  addi  sp, sp, " << stack_size << std::endl;
+        } else {
+            std::cout << "  li    t0, " << stack_size << std::endl;
+            std::cout << "  add   sp, sp, t0" << std::endl;
+        }
     }
     std::cout << "  ret" << std::endl;
 }
@@ -208,7 +218,13 @@ inline void RiscvGenerator::visit(const LoadIR* load_ir) {
     // 检查是否为栈上的局部变量
     if (var_offset_map.count(name)) {
         int offset = var_offset_map[name];
-        std::cout << "  lw    t0, " << offset << "(sp)" << std::endl;
+        if (offset >= -2048 && offset <= 2047) {
+            std::cout << "  lw    t0, " << offset << "(sp)" << std::endl;
+        } else {
+            std::cout << "  li    t2, " << offset << std::endl;
+            std::cout << "  add   t2, t2, sp" << std::endl;
+            std::cout << "  lw    t0, 0(t2)" << std::endl;
+    }
     } 
     else {
         // 不在栈映射中，认为是全局变量
@@ -225,7 +241,13 @@ inline void RiscvGenerator::visit(const StoreIR* store_ir) {
     if (var_offset_map.count(name)) {
         // 局部变量
         int offset = var_offset_map[name];
-        std::cout << "  sw    t0, " << offset << "(sp)" << std::endl;
+        if (offset >= -2048 && offset <= 2047) {
+            std::cout << "  sw    t0, " << offset << "(sp)" << std::endl;
+        } else {
+            std::cout << "  li    t2, " << offset << std::endl;
+            std::cout << "  add   t2, t2, sp" << std::endl;
+            std::cout << "  sw    t0, 0(t2)" << std::endl;
+        }
     } 
     else {
         // 全局变量 store
@@ -332,7 +354,14 @@ inline void RiscvGenerator::load_to_reg(const Operand& op, const std::string& re
     if (op.type == Operand::IMM) {
         std::cout << "  li    " << reg_name << ", " << op.val << std::endl;
     } else if (op.type == Operand::ID) {
-        std::cout << "  lw    " << reg_name << ", " << val_offset_map[op.val] << "(sp)" << std::endl;
+        int offset = val_offset_map[op.val];
+        if (offset >= -2048 && offset <= 2047) {
+            std::cout << "  lw    " << reg_name << ", " << offset << "(sp)" << std::endl;
+        } else {
+            std::cout << "  li    t2, " << offset << std::endl;
+            std::cout << "  add   t2, t2, sp" << std::endl;
+            std::cout << "  lw    " << reg_name << ", 0(t2)" << std::endl;
+        }
     }
     else if (op.type == Operand::ARG) {
         if (op.val < 8) {
@@ -347,5 +376,12 @@ inline void RiscvGenerator::load_to_reg(const Operand& op, const std::string& re
 }
 
 inline void RiscvGenerator::store_from_reg(const std::string& reg_name, int target) {
-    std::cout << "  sw    " << reg_name << ", " << val_offset_map[target] << "(sp)" << std::endl;
+    int offset = val_offset_map[target];
+    if (offset >= -2048 && offset <= 2047) {
+        std::cout << "  sw    " << reg_name << ", " << offset << "(sp)" << std::endl;
+    } else {
+        std::cout << "  li    t2, " << offset << std::endl;
+        std::cout << "  add   t2, t2, sp" << std::endl;
+        std::cout << "  sw    " << reg_name << ", 0(t2)" << std::endl;
+    }
 }
