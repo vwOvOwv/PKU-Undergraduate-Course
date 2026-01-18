@@ -857,7 +857,7 @@ inline void ConstDefAST::generate_ir(ProgramIR* ir) const {
     } else {
         // 局部常量
         if (!dims.empty()) {
-            auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len);
+            auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len, false, true);
             ir->cur_block->insts.push_back(std::move(alloc_inst));
             for (int i = 0; i < total_len; ++i) {
                 if (init_vals[i] != 0) {
@@ -1057,7 +1057,7 @@ inline void VarDefAST::generate_ir(ProgramIR* ir) const {
 
     } else {
         std::string unique_name = symbol_table.push(id, false, 0, !dims.empty(), false, dim_vals);
-        auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len);
+        auto alloc_inst = std::make_unique<AllocIR>(unique_name, total_len, false, !dims.empty());
         ir->cur_block->insts.push_back(std::move(alloc_inst));
 
         if (init_val) {

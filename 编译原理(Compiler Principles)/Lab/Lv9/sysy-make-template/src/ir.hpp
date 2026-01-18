@@ -211,7 +211,11 @@ public:
     std::string var_name;
     int size;
     bool is_pointer;
-    AllocIR(std::string name, int size=1, bool is_pointer=false) : var_name(name), size(size), is_pointer(is_pointer) {}
+    bool is_array; // 新增字段
+    
+    AllocIR(std::string name, int size=1, bool is_pointer=false, bool is_array=false) 
+        : var_name(name), size(size), is_pointer(is_pointer), is_array(is_array) {}
+        
     void dump() override;
 };
 
@@ -350,7 +354,7 @@ inline void AllocIR::dump() {
     if (is_pointer) {
         std::cout << "  @" << var_name << " = alloc *i32" << std::endl;
     } else {
-        if (size > 1)
+        if (size > 1 || is_array) // 即使 size 为 1，如果是数组也应按数组分配
             std::cout << "  @" << var_name << " = alloc [i32, " << size << "]" << std::endl;
         else 
             std::cout << "  @" << var_name << " = alloc i32" << std::endl;
