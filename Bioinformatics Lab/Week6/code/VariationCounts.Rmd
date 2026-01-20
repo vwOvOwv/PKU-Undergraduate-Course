@@ -1,0 +1,50 @@
+# 基因变异次数统计
+
+```{r}
+library(tidyr)
+library(tidyverse)
+```
+
+## 读取数据
+
+```{r}
+PATH <- "/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week6/results/3 GeneAnnotation/step4.variant_function"
+```
+
+```{r}
+variations <- read.table(PATH, sep='\t')
+variations
+```
+
+## 数据清洗
+
+### 去除\`intergenic\`的变异
+
+```{r}
+variations <- subset(variations, V1!='intergenic')
+rownames(variations) <- NULL
+variations
+```
+
+### 去除基因名称列中的括号并分割多个基因
+
+```{r}
+variations$V2 <- gsub("\\(.*?\\)", "", variations$V2)
+variations2 <- separate_rows(as_tibble(variations), V2, sep = ',')
+variations2
+
+```
+
+##  统计每个基因变异次数并绘图
+
+```{r}
+freq <- as.data.frame(table(variations2$V2))
+freq <- sort_by(freq, freq$Freq, decreasing=TRUE)
+rownames(freq) <- NULL
+freq
+```
+
+```{r}
+ggplot(data = freq, mapping = aes(x = Freq)) + geom_histogram(binwidth = 2, color = "black") + labs(x = "mutation times", y = "gene counts")
+ggsave("histogram.pdf")
+```

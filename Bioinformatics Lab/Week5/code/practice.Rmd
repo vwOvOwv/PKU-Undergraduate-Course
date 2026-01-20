@@ -1,0 +1,36 @@
+```{r}
+library(tidyverse)
+library(viridis)
+```
+
+```{r}
+setwd("/Users/peiyuliu/Desktop/PKU-Undergraduate-Course-Public/生物信息学实验(Bioinformatics Lab.)/Week5")
+```
+
+```{r}
+gene_types <- read.table("./gene_types.txt", sep = "\n")
+head(gene_types)
+```
+
+```{r}
+gene_types$V1 <- gsub(";", "", gene_types$V1)
+head(gene_types)
+```
+
+```{r}
+gene_types_table <- table(gene_types$V1)
+gene_types_df <- as.data.frame(gene_types_table)
+gene_types_df
+```
+
+```{r}
+colors <- magma(length(unique(gene_types_df$Var1)))
+ggplot(gene_types_df, aes(x = "", y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  scale_fill_manual(values = colors) + 
+  labs(title = "Gene Types Proportions") +
+  theme(legend.title = element_blank())
+ggsave("./fig.pdf")
+```

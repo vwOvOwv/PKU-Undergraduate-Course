@@ -1,0 +1,11 @@
+#ROW_NO.	INPUT	PROTEIN_ID	LENGTH	STRAND	CODON_CHANGE	POS	RESIDUE_REF	RESIDUE_ALT	TYPE	SCORE	PREDICTION (cutoff=-2.5)	#SEQ	#CLUSTER	SCORE	PREDICTION (cutoff=0.05)	MEDIAN_INFO	#SEQ	dbSNP_ID
+1	1,19226,T,A	record not found																rs138930629
+2	1,19249,G,A	record not found																
+3	1,19254,G,C	record not found																rs11525710
+4	1,19279,C,T	record not found																rs11525709
+5	1,103984,G,A	record not found																
+6	1,104108,A,G	record not found																rs4492556
+7	1,264562,C,T	record not found																
+8	1,601581,T,C	record not found																
+9	1,866356,G,T	record not found																
+10	1,943911,G,GC	record not found																
