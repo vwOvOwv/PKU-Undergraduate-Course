@@ -1,43 +1,18 @@
-
-/分子生物学(Molecular Biology)/课件
-免疫学(Immunology)/.DS_Store
-生物数学建模(Mathematical Modeling in the Life Sciences)/Final Project/.DS_Store
-生物数学建模(Mathematical Modeling in the Life Sciences)/.DS_Store
-生物进化论(Biological Evolution)/论文/.DS_Store
-生物进化论(Biological Evolution)/.DS_Store
-生物进化论(Biological Evolution)/.gitattributes 2
-免疫学(Immunology)/.DS_Store
-遗传学(Genetics)/课件
-信息学中的概率统计(Probability Theory and Statistics)/课件
-神经网络的计算基础(Neuroscience and Computing Fundamentals for Neural Networks)/课件
-计算机视觉导论(Introduction to Computer Vision)/slides
-.DS_Store
-*/.DS_Store
-遗传学(Genetics)/.DS_Store
-课件
-*/课件
-slides
-*/slides
-分子生物学(Molecular Biology)/.DS_Store
-分子生物学(Molecular Biology)/.DS_Store
-微生物学(Microbiology)/.DS_Store
-生物信息学实验(Bioinformatics Lab.)/Week3/codes/data
-生物信息学实验(Bioinformatics Lab.)/Week3/codes/.Rhistory
-生物信息学实验(Bioinformatics Lab.)/Week3/data
-生物信息学实验(Bioinformatics Lab.)/Week4/bioinfo
-遗传学(Genetics)/讨论课/2025年春 Genetics Topic-3_遗传学技术
-信息学中的概率统计(Probability Theory and Statistics)/总结
-生物信息学实验(Bioinformatics Lab.)/Week5/codes/.Rhistory
-生物信息学实验(Bioinformatics Lab.)/Week5/.RData
-生物信息学实验(Bioinformatics Lab.)/Week5/.Rhistory
-生物信息学实验(Bioinformatics Lab.)/Week8/codes/.Rhistory
-生物信息学实验(Bioinformatics Lab.)/Week8/data
-生物信息学实验(Bioinformatics Lab.)/Week8/pre
-生物信息学实验(Bioinformatics Lab.)/Week8/pre
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/assignment4_ans
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans
-发育生物学(Developmental Biology)/.DS_Store
-编译原理(Compiler Principles)
-分子生物学实验(Molecular Biology Lab.)/实验报告/tmp.pptx
-多模态学习(Multimodal Learning)/作业/HW3
-强化学习(Reinforment Learning)/作业/HW8
+*.DS_Store
+*slides
+*.ipynb_checkpoints
+*__pycache__
+*build
+*debug
+*.pth
+*.pt
+*code
+Introduction to Computer Vision/assignments/HW4/assignment4_ans/data
+Introduction to Computer Vision/assignments/HW4/assignment4_ans/PointNet/exps
+Introduction to Computer Vision/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn
+Introduction to Computer Vision/assignments/HW4/full_ans/PointNet/exps
+Introduction to Computer Vision/assignments/HW4/full_ans/RNN/datasets/coco
+Introduction to Computer Vision/assignments/HW4/full_ans/RNN/datasets/coco_captioning.zip
+Introduction to Computer Vision/assignments/HW4/full_ans/data/shapenetcore_partanno_segmentation_benchmark_v0
+Multimodal Learning/assignment/HW3/handin
+Multimodal Learning/assignment/HW3/visualizations
