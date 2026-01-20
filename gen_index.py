@@ -135,7 +135,6 @@ html_template = """
         .btn:hover:not(:disabled) { background-color: #2c974b; }
 
         /* === 侧边栏树 === */
-        .sidebar-title { padding: 15px 20px; font-size: 18px; font-weight: 600; color: #24292e; border-bottom: 1px solid #eaecef; }
         .tree-container { flex-grow: 1; overflow-y: auto; overflow-x: auto; padding: 10px 0; }
         .tree-item { padding: 6px 15px 6px 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; font-size: 14px; color: #444; user-select: none; }
         .tree-item:hover { background-color: var(--hover); }
