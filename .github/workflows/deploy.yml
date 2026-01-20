@@ -15,7 +15,13 @@ jobs:
       - name: Checkout Config
         uses: actions/checkout@v4
 
-      # 但我们不会把这些文件上传到 gh-pages，只用它们来生成 index.html
+      # 1. 准备目录
+      - name: Prepare Directories
+        run: |
+          mkdir -p docs/computer-science
+          mkdir -p docs/life-science
+
+      # 2. 拉取 CS 分支 (路径要和 gen_index.py 里的对应)
       - name: Checkout CS Branch
         uses: actions/checkout@v4
         with:
@@ -23,6 +29,7 @@ jobs:
           path: docs/computer-science
           fetch-depth: 1
 
+      # 3. 拉取 LS 分支
       - name: Checkout LS Branch
         uses: actions/checkout@v4
         with:
@@ -35,14 +42,28 @@ jobs:
         with:
           python-version: 3.x
 
-      # 运行我们刚才写的脚本
+      # 4. 生成网页
       - name: Generate File Index
         run: |
+          # 运行脚本生成 index.html
           python gen_index.py
+          
+          # 创建 .nojekyll
+          touch docs/.nojekyll
 
-      # === 关键步骤：只发布 index.html ===
-      # 我们不需要发布 pdf/ppt，我们只发布这个生成的网页
-      # 这样 artifact 大小只有几 KB，绝对不会报错
+      # 5. ⚠️ 关键步骤：暴力清理大文件 ⚠️
+      # 在发布之前，把那两个巨大的文件夹直接删掉
+      # 这样只留下了 index.html，绝对不会报错
+      - name: Cleanup Heavy Files
+        run: |
+          echo "Deleting heavy folders to prevent upload errors..."
+          rm -rf docs/computer-science
+          rm -rf docs/life-science
+          
+          echo "Files remaining to be deployed:"
+          ls -R docs/
+
+      # 6. 发布 (现在只剩几KB的网页了，秒传)
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -50,5 +71,3 @@ jobs:
           publish_dir: ./docs
           publish_branch: gh-pages
           force_orphan: true
-          # 排除所有大文件，只上传 html
-          exclude_assets: '**/*.pdf,**/*.ppt*,**/*.zip,**/*.mp4,**/*.mov,cs/**,ls/**'
