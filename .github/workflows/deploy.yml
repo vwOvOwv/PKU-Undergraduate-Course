@@ -1,4 +1,4 @@
-name: Deploy Course Site
+name: Deploy File Index
 on:
   push:
     branches:
@@ -15,12 +15,12 @@ jobs:
       - name: Checkout Config
         uses: actions/checkout@v4
 
+      # 但我们不会把这些文件上传到 gh-pages，只用它们来生成 index.html
       - name: Checkout CS Branch
         uses: actions/checkout@v4
         with:
           ref: ComputerScience
           path: docs/computer-science
-          submodules: true
           fetch-depth: 1
 
       - name: Checkout LS Branch
@@ -28,30 +28,27 @@ jobs:
         with:
           ref: LifeScience
           path: docs/life-science
-          submodules: true
           fetch-depth: 1
-
-      - name: Create Index
-        run: |
-          echo "# Welcome to Peiyu's Course Hub" > docs/index.md
-          echo "Select a department from the navigation bar above to browse course materials." >> docs/index.md
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.x
 
-      - name: Install Dependencies
+      # 运行我们刚才写的脚本
+      - name: Generate File Index
         run: |
-          pip install mkdocs-material mkdocs-awesome-pages-plugin
-      
-      - name: Configure Git Buffer
-        run: |
-          git config --global http.postBuffer 524288000
-          git config --global http.version HTTP/1.1
-          git config --global http.lowSpeedLimit 0
-          git config --global http.lowSpeedTime 999999
+          python gen_index.py
 
-      - name: Build and Deploy
-        run: |
-          mkdocs gh-deploy --force
+      # === 关键步骤：只发布 index.html ===
+      # 我们不需要发布 pdf/ppt，我们只发布这个生成的网页
+      # 这样 artifact 大小只有几 KB，绝对不会报错
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
+          force_orphan: true
+          # 排除所有大文件，只上传 html
+          exclude_assets: '**/*.pdf,**/*.ppt*,**/*.zip,**/*.mp4,**/*.mov,cs/**,ls/**'
