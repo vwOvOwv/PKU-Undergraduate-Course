@@ -1,0 +1,173 @@
+Training starts
+Episode 100000, Win rate: 92.203%
+Episode 200000, Win rate: 92.321%
+Episode 300000, Win rate: 93.8173%
+Episode 400000, Win rate: 94.6102%
+Episode 500000, Win rate: 95.1094%
+Episode 600000, Win rate: 95.4025%
+Episode 700000, Win rate: 95.6279%
+Episode 800000, Win rate: 95.8089%
+Episode 900000, Win rate: 95.9423%
+Episode 1000000, Win rate: 96.0452%
+Episode 1100000, Win rate: 96.1319%
+Episode 1200000, Win rate: 96.2059%
+Episode 1300000, Win rate: 96.2681%
+Episode 1400000, Win rate: 96.3277%
+Episode 1500000, Win rate: 96.3805%
+Episode 1600000, Win rate: 96.4278%
+Episode 1700000, Win rate: 96.4659%
+Episode 1800000, Win rate: 96.503%
+Episode 1900000, Win rate: 96.5341%
+Episode 2000000, Win rate: 96.5626%
+Episode 2100000, Win rate: 96.5974%
+Episode 2200000, Win rate: 96.6412%
+Episode 2300000, Win rate: 96.6767%
+Episode 2400000, Win rate: 96.7015%
+Episode 2500000, Win rate: 96.7236%
+Episode 2600000, Win rate: 96.7523%
+Episode 2700000, Win rate: 96.7747%
+Episode 2800000, Win rate: 96.7935%
+Episode 2900000, Win rate: 96.8203%
+Episode 3000000, Win rate: 96.8407%
+Episode 3100000, Win rate: 96.8539%
+Episode 3200000, Win rate: 96.8674%
+Episode 3300000, Win rate: 96.8748%
+Episode 3400000, Win rate: 96.893%
+Episode 3500000, Win rate: 96.9086%
+Episode 3600000, Win rate: 96.9176%
+Episode 3700000, Win rate: 96.9291%
+Episode 3800000, Win rate: 96.9485%
+Episode 3900000, Win rate: 96.969%
+Episode 4000000, Win rate: 96.9837%
+Episode 4100000, Win rate: 96.9936%
+Episode 4200000, Win rate: 97.0076%
+Episode 4300000, Win rate: 97.0177%
+Episode 4400000, Win rate: 97.026%
+Episode 4500000, Win rate: 97.0324%
+Episode 4600000, Win rate: 97.0403%
+Episode 4700000, Win rate: 97.0475%
+Episode 4800000, Win rate: 97.0539%
+Episode 4900000, Win rate: 97.0594%
+Episode 5000000, Win rate: 97.0685%
+Episode 5100000, Win rate: 97.0735%
+Episode 5200000, Win rate: 97.0799%
+Episode 5300000, Win rate: 97.0901%
+Episode 5400000, Win rate: 97.0959%
+Episode 5500000, Win rate: 97.1015%
+Episode 5600000, Win rate: 97.1046%
+Episode 5700000, Win rate: 97.1153%
+Episode 5800000, Win rate: 97.1221%
+Episode 5900000, Win rate: 97.126%
+Episode 6000000, Win rate: 97.1329%
+Episode 6100000, Win rate: 97.14%
+Episode 6200000, Win rate: 97.142%
+Episode 6300000, Win rate: 97.1447%
+Episode 6400000, Win rate: 97.1488%
+Episode 6500000, Win rate: 97.1538%
+Episode 6600000, Win rate: 97.1569%
+Episode 6700000, Win rate: 97.1588%
+Episode 6800000, Win rate: 97.1603%
+Episode 6900000, Win rate: 97.1631%
+Episode 7000000, Win rate: 97.1633%
+Episode 7100000, Win rate: 97.1641%
+Episode 7200000, Win rate: 97.1667%
+Episode 7300000, Win rate: 97.1719%
+Episode 7400000, Win rate: 97.1753%
+Episode 7500000, Win rate: 97.1799%
+Episode 7600000, Win rate: 97.1819%
+Episode 7700000, Win rate: 97.183%
+Episode 7800000, Win rate: 97.1869%
+Episode 7900000, Win rate: 97.1908%
+Episode 8000000, Win rate: 97.1956%
+Episode 8100000, Win rate: 97.1987%
+Episode 8200000, Win rate: 97.2023%
+Episode 8300000, Win rate: 97.2054%
+Episode 8400000, Win rate: 97.2095%
+Episode 8500000, Win rate: 97.2128%
+Episode 8600000, Win rate: 97.2149%
+Episode 8700000, Win rate: 97.2175%
+Episode 8800000, Win rate: 97.2176%
+Episode 8900000, Win rate: 97.2184%
+Episode 9000000, Win rate: 97.2211%
+Episode 9100000, Win rate: 97.22%
+Episode 9200000, Win rate: 97.2212%
+Episode 9300000, Win rate: 97.2212%
+Episode 9400000, Win rate: 97.2232%
+Episode 9500000, Win rate: 97.2247%
+Episode 9600000, Win rate: 97.2261%
+Episode 9700000, Win rate: 97.229%
+Episode 9800000, Win rate: 97.2297%
+Episode 9900000, Win rate: 97.2321%
+Episode 10000000, Win rate: 97.2312%
+Training finished, validation starts
+Game reset.
+Board: 
+	_	_	_
+	_	_	_
+	_	_	_
+Next turn: X
+
+Action (0,2) taken.
+Board: 
+	_	_	X
+	_	_	_
+	_	_	_
+Next turn: O
+
+Winner not found.
+
+Action (0,0) taken.
+Board: 
+	O	_	X
+	_	_	_
+	_	_	_
+Next turn: X
+
+Winner not found.
+
+Action (2,2) taken.
+Board: 
+	O	_	X
+	_	_	_
+	_	_	X
+Next turn: O
+
+Winner not found.
+
+Action (0,1) taken.
+Board: 
+	O	O	X
+	_	_	_
+	_	_	X
+Next turn: X
+
+Winner not found.
+
+Action (2,0) taken.
+Board: 
+	O	O	X
+	_	_	_
+	X	_	X
+Next turn: O
+
+Winner not found.
+
+Action (1,0) taken.
+Board: 
+	O	O	X
+	O	_	_
+	X	_	X
+Next turn: X
+
+Winner not found.
+
+Action (1,2) taken.
+Board: 
+	O	O	X
+	O	_	X
+	X	_	X
+Next turn: O
+
+Winner: X
+
+Winner: X

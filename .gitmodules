@@ -4,3 +4,6 @@
 [submodule "Multimodal Learning/project/code"]
 	path = Multimodal Learning/project/code
 	url = https://github.com/vwOvOwv/Multimodal-Learning-2025-Fall-Project
+[submodule "Reinforment Learning/project/code"]
+	path = Reinforment Learning/project/code
+	url = https://github.com/vwOvOwv/Reinforcement-Learning-2025-Fall-Project
