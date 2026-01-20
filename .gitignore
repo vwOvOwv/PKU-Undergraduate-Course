@@ -2,8 +2,10 @@
 *slides
 *.ipynb_checkpoints
 *__pycache__
-*sysy-make-template*
+*build
+*debug
 *.pth
+*.pt
 Introduction to Computer Vision/assignments/HW4/assignment4_ans/data
 Introduction to Computer Vision/assignments/HW4/assignment4_ans/PointNet/exps
 Introduction to Computer Vision/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn
