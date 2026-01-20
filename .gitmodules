@@ -1,15 +1,12 @@
-[submodule "强化学习(Reinforment Learning)/作业/Project/code"]
-	path = 强化学习(Reinforment Learning)/作业/Project/code
-	url = https://github.com/vwOvOwv/Reinforcement-Learning-2025-Fall-Project
 [submodule "Multimodal Learning/project/code"]
 	path = Multimodal Learning/project/code
 	url = https://github.com/vwOvOwv/Multimodal-Learning-2025-Fall-Project
-[submodule "Reinforment Learning/project/code"]
-	path = Reinforment Learning/project/code
-	url = https://github.com/vwOvOwv/Reinforcement-Learning-2025-Fall-Project
 [submodule "Reinforcement Learning/project/code"]
 	path = Reinforcement Learning/project/code
 	url = https://github.com/vwOvOwv/Reinforcement-Learning-2025-Fall-Project
 [submodule "Computing Fundamentals for Neural Networks/project/code"]
 	path = Computing Fundamentals for Neural Networks/project/code
 	url = https://github.com/vwOvOwv/TTFS-PyTorch
+[submodule "NeuroAI-From Brain Science to Brain-Inspired Intelligence/project/code"]
+	path = NeuroAI-From Brain Science to Brain-Inspired Intelligence/project/code
+	url = https://github.com/vwOvOwv/NeuroAI-2025-Fall-Project
