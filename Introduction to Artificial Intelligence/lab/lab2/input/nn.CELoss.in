@@ -1,0 +1,3 @@
+y=randint(0, 10, (100))
+ls=Softmax()
+L=CrossEntropyLoss(y)

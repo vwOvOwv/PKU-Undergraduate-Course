@@ -1,0 +1,11 @@
+Model Information:
+* title:	Pac- Man
+* source:	https://sketchfab.com/3d-models/pac-man-93e23bce34c346b698ec2729dd9f8960
+* author:	IDon'tHaveAUsername (https://sketchfab.com/anonoymous)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Pac- Man" (https://sketchfab.com/3d-models/pac-man-93e23bce34c346b698ec2729dd9f8960) by IDon'tHaveAUsername (https://sketchfab.com/anonoymous) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

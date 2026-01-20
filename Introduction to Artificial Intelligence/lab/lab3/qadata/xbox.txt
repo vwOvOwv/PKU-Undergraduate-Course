@@ -1,0 +1,56 @@
+Xbox is a video gaming brand created and owned by Microsoft. The brand consists of five video game consoles, as well as applications (games), streaming service Xbox Cloud Gaming, online services such as the Xbox network and Xbox Game Pass, and the development arm Xbox Game Studios. The brand was first introduced in the United States in November 2001, with the launch of the original Xbox console.
+
+The original device was the first video game console offered by an American company after the Atari Jaguar stopped sales in 1996. It reached over 24 million units sold by May 2006.[1] Microsoft's second console, the Xbox 360, was released in 2005 and has sold 86 million units as of October 2021. The third console, the Xbox One, was released in November 2013 and has sold 51 million units.[2] The fourth line of Xbox consoles, the Xbox Series X and Series S, were released in November 2020. The head of Xbox is Phil Spencer, who succeeded former head Marc Whitten in late March 2014.[3][4]
+
+History
+When Sony Computer Entertainment first announced the PlayStation 2 in 1999, the company had positioned the console as a centerpiece for home entertainment, as it not only would play video games, but also could play audio CDs and video DVDs. Microsoft, whose business had been primarily in supporting the personal computer (PC) business with its Windows operating system, software, and games, saw the PlayStation 2 as a threat to the personal computer.[5]
+
+Four engineers from Microsoft's DirectX team—Kevin Bachus, Seamus Blackley, Ted Hase and DirectX team leader Otto Berkes, began to envision what a Microsoft console to compete against the PlayStation 2 would be like. They designed a system that would use many hardware components in common with PCs, effectively running a version of Windows and DirectX to power the games on the console.[6][5] This approach would make it easy for developers on Windows to build games for their new system, differentiating itself from the custom hardware solutions of most consoles.[7][8] Numerous names were suggested for this console, including "Direct X Box",[9] and the "Windows Entertainment Project".[10] Microsoft's marketing team conducted consumer surveys of the name, using the name "Xbox" as a control believing this would be least desirable, but found that this had the highest preference from their tests, and was selected as the name of the console.[11]
+
+While the original Xbox had modest sales, Microsoft took a large financial loss to support it. However, its performance was sufficient to convince the company to continue to produce the line. Since its release, there have been four generations of Xbox, with the most recent being the Xbox Series X and Series S units. The Xbox has become a direct competitor to Sony's PlayStation brand, both offering high performance gaming systems at roughly similar specifications.
+
+Future
+Microsoft has been recently working to leverage the branding of "Xbox" beyond the console hardware but as a general video game brand, reflected in the renaming of Microsoft Studios to Xbox Game Studios in 2019.[12][13] Phil Spencer stated in June 2019 that for Microsoft, "The business isn't how many consoles you sell. The business is how many players are playing the games that they buy, how they play." which journalists have taken as a route to de-emphasize console hardware and prioritize games, subscriptions and services for players.[14][15] Later in February 2020, Spencer said that moving forward, the company does not see "traditional gaming companies" like Nintendo and Sony as their competitors but instead those that offer cloud computing services such as Amazon and Google. Spencer identified that Microsoft Azure is a major component of their plans going forward, which powers its xCloud game streaming service.[16] Spencer also cited mobile gaming as a potential area, and where Microsoft was trying to position itself with its services should this become the more preferred form for gaming. Spencer said "I don't think it's "hardware agnostic" as much as it's 'where you want to play'", in describing how Microsoft was strategizing the Xbox branding for the future.[17]
+
+Consoles
+First generation: Xbox
+Main article: Xbox (console)
+
+Xbox console with "Controller S"
+The original Xbox was released on November 15, 2001, in North America, February 22, 2002, in Japan, and March 14, 2002, in Australia and Europe. It was Microsoft's first foray into the gaming console market. As part of the sixth generation of video game consoles, the Xbox competed with Sony's PlayStation 2, Sega's Dreamcast (which stopped American sales before the Xbox went on sale), and Nintendo's GameCube. The Xbox was built around a 733 MHz 32-bit Intel Pentium III CPU and a 233 MHz Nvidia GeForce 3-based NV2A GPU with 64 MB of memory. The Xbox was the first console offered by an American company after the Atari Jaguar stopped sales in 1996. The name Xbox was derived from a contraction of DirectX Box, a reference to Microsoft's graphics API, DirectX.[18][19]
+
+The integrated Xbox Live service launched in November 2002 allowed players to play games online with a broadband connection.[20] It first competed with Dreamcast's online service but later primarily competed with PlayStation 2's online service. Although the two competing services were free, while Xbox Live required a subscription - as well as broadband-only connection, which was not completely adopted yet - Xbox Live was a success due to it having better servers, features such as a buddy list, and milestone titles such as Halo 2 (released in November 2004), which became the best-selling Xbox video game and was by far the most popular online game for the original Xbox system.
+
+Second generation: Xbox 360
+Main article: Xbox 360
+
+Left: Xbox 360 Elite
+Right: Xbox 360 S and new-style controller
+The Xbox 360 was released as the successor of the original Xbox in November 2005, competing with Sony's PlayStation 3 and Nintendo's Wii as part of the seventh generation of video game consoles. It featured a custom triple-core 64-bit PowerPC-based processor design by IBM with 512 MB of RAM memory. As of June 2014, 84 million Xbox 360 consoles have been sold worldwide.[21] The Xbox 360 was officially unveiled on MTV on May 12, 2005, with detailed launch and game information divulged later that month at the Electronic Entertainment Expo (E3). The console sold out completely upon release in all regions except in Japan.[22][23][24] Several retail configurations of the core Xbox 360 model were offered over its lifetime, varying the amount of RAM and internal storage offered.
+
+The Xbox 360 showed an expanded Xbox Live service (which now included a limited "Free" tier called Silver), the ability to stream multimedia content from PCs, while later updates added the ability to purchase and stream music, television programs, and films through the Xbox Music and Xbox Video services, along with access to third-party content services through third-party media streaming applications. Microsoft also released Kinect, a motion control system for the Xbox 360 which uses an advanced sensor system.
+
+Two major revisions of the Xbox 360 were released following the initial launch. The Xbox 360 S (typically considered as "Slim"), launched in 2010, featured the same core hardware but with a redesigned, slimmer form factor with a smaller-sized 250 GB hard drive. It also added integrated 802.11 b/g/n Wi-Fi, TOSLINK S/PDIF optical audio output, five USB 2.0 ports (compared to the three from older versions) and a special port designed for the Kinect peripheral. The Xbox 360 S replaced the base Xbox 360 unit, which was discontinued, and sold at the same price.[25][26][27] A cheaper Xbox 360 S unit, removing the 250 GB drive while adding 4 GB of internal storage, was released later in 2010; the unit allowed users to hook up an external storage solution or purchase a 250 GB internal add-on.
+
+The second major revision of the Xbox 360 was the Xbox 360 E, released in 2013. It featured a case style similar to the upcoming Xbox One, and eliminated one USB port and the S/PDIF, YPbPr component and S-video connections, but otherwise shared the same specifications as the Xbox 360 S.
+
+Third generation: Xbox One
+Main article: Xbox One
+
+The Xbox One with the redesigned Kinect and controller
+The Xbox One was released on November 22, 2013, in North America, as the successor to the Xbox 360. The Xbox One competes with Sony's PlayStation 4 and Nintendo's Wii U and Switch as part of the eighth generation of video game consoles. It features an AMD Accelerated Processing Unit (APU) built around the 64-bit x86-64 instruction set and can come with up to 12 GB of memory.
+
+Announced on May 21, 2013,[28] the Xbox One has an emphasis on internet-based features, including the ability to record and stream gameplay, and the ability to integrate with a set-top box to watch cable or satellite TV through the console with an enhanced guide interface and Kinect-based voice control.[29][30][31][32]
+
+Following its unveiling, the Xbox One proved controversial for its original digital rights management and privacy practices; while Microsoft touted the ability for users to access their library of games (regardless of whether they were purchased physically or digitally) on any Xbox One console without needing their discs, and the ability to share their entire library with 10 designated "family" members, all games would have to be tied to the user's Xbox Live account and their Xbox One console, and the console would be required to connect to the Internet on a periodic basis (at least once every 24 hours) to synchronize the library, or else the console would be unable to play any games at all.[33][34] After an overwhelmingly negative response from critics and consumers (who also showed concerns that the system could prevent or hinder the resale of used games), Microsoft announced that these restrictions would be dropped.[35] Microsoft was also criticized for requiring the Xbox One to have its updated Kinect peripheral plugged in to function, which critics and privacy advocates believed could be used as a surveillance device. As a gesture toward showing a commitment to user privacy, Microsoft decided to allow the console to function without Kinect.[36][37][38]
+
+On June 13, 2016, Microsoft announced the Xbox One S at E3 2016, which featured a smaller form factor, as well as support for 4K video (including streaming and Ultra HD Blu-ray) and HDR.[39] At E3 2017, Microsoft unveiled Xbox One X, a high-end model with improved hardware designed to facilitate the playing of games at 4K resolution.[40]
+
+Since November 2014, Microsoft has stated it will not release sales numbers for the Xbox One line.[41] Industry estimates project global sales of the Xbox One family to be about 51 million units.[2] Xbox head Phil Spencer said that while they do internally track sales figures, they do not want their developers to be focused on these numbers as to affect their products, and thus have opted not to report further sales of Xbox hardware going forward.[42]
+
+Fourth generation: Xbox Series X and Series S
+Main article: Xbox Series X and Series S
+
+The Xbox Series X and the controller
+
+The Xbox Series S and the controller

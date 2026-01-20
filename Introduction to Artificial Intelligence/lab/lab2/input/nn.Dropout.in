@@ -1,0 +1,7 @@
+y=randint(0, 3, (100))
+l1=Linear(10, 3)
+b1=Dropout()
+a1=relu()
+l2=Linear(3, 6)
+ls=LogSoftmax()
+L=NLLLoss(y)

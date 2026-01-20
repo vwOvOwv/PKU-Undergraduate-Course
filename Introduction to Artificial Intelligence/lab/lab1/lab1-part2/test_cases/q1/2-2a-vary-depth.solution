@@ -1,0 +1,3 @@
+# This is the solution file for test_cases/q2/2-2a-vary-depth.test.
+action: "Right"
+generated: "a b1 b2 c1 c2 cx"

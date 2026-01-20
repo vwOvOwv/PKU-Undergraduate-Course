@@ -1,0 +1,52 @@
+class: "GraphGameTreeTest"
+alg: "AlphaBetaAgent"
+depth: "3"
+
+diagram: """
+            /-----a------\
+           /              \
+          /                \
+        b1                  b2
+      /    \              /     \
+   c1        c2        c3        c4
+  /  \      /  \      /   \     /   \
+ d1   d2  d3   d4    d5   d6   d7   d8
+ 3    9   10   6     4    7    0    5
+
+a - max
+b - min
+c - min
+"""
+num_agents: "3"
+
+start_state: "a"
+win_states: "d1 d2 d3 d4 d5 d6 d7 d8"
+lose_states: ""
+
+successors: """
+a Left b1
+a Right b2
+b1 Left c1
+b1 Right c2
+b2 Left c3
+b2 Right c4
+c1 Left d1
+c1 Right d2
+c2 Left d3
+c2 Right d4
+c3 Left d5
+c3 Right d6
+c4 Left d7
+c4 Right d8
+"""
+
+evaluation: """
+d1 3.0
+d2 9.0
+d3 10.0
+d4 6.0
+d5 4.0
+d6 7.0
+d7 0.0
+d8 5.0
+"""

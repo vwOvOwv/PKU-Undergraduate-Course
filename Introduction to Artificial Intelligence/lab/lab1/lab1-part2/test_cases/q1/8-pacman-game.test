@@ -1,0 +1,18 @@
+class: "PacmanGameTreeTest"
+alg: "MinimaxAgent"
+seed: "0"
+depth: "2"
+max_points: "4"
+
+# The following specifies the layout to be used 
+layoutName: "smallClassic"
+layout: """
+%%%%%%%%%%%%%%%%%%%%
+%......%G  G%......%
+%.%%...%%  %%...%%.%
+%.%o.%........%.o%.%
+%.%%.%.%%%%%%.%.%%.%
+%........P.........%
+%%%%%%%%%%%%%%%%%%%%
+"""
+

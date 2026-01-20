@@ -1,0 +1,50 @@
+class: "GraphGameTreeTest"
+alg: "AlphaBetaAgent"
+depth: "2"
+
+#  Tree from lecture 6 slides
+diagram: """
+           max
+      /-/   |   \--\
+     /      |       \
+    /       |        \
+ min1      min2      min3
+  /|\      /|\       /|\ 
+ / | \    / | \     / | \
+A  B  C  D  E  F   G  H  I  
+3 12  8  5  4  6  14  1  11
+"""
+
+num_agents: "2"
+
+start_state: "max"
+win_states: "A B C D E F G H I"
+lose_states: ""
+
+successors: """
+max Left min1
+max Center min2
+max Right min3
+min1 Left A
+min1 Center B
+min1 Right C
+min2 Left D
+min2 Center E
+min2 Right F
+min3 Left G
+min3 Center H
+min3 Right I
+"""
+
+
+evaluation: """
+A 3.0
+B 12.0
+C 8.0
+D 5.0
+E 4.0
+F 6.0
+G 14.0
+H 1.0
+I 11.0
+"""

@@ -1,0 +1,16 @@
+class: "EvalAgentTest"
+
+agentName: "MCTSAgent"
+layoutName: "testClassic"
+maxTime: "600"
+numGames: "10"
+
+nonTimeoutMinimum: "10"
+
+scoreThresholds: "200 400"
+
+winsMinimum: "1"
+winsThresholds: "4 8"
+
+randomSeed: "9"
+ghosts: "[RandomGhost(1)]"

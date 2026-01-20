@@ -1,0 +1,36 @@
+class: "GraphGameTreeTest"
+alg: "MinimaxAgent"
+depth: "3"
+
+diagram: """
+        root
+       /    \
+ minLeft  minRight
+  / \       /    \
+ A   B     C   deeper
+ 4   3     2     |
+                 D
+               1000
+"""
+num_agents: "2"
+
+start_state: "root"
+win_states: "A C"
+lose_states: "B D"
+
+successors: """
+root pacLeft minLeft
+root pacRight minRight
+minLeft gLeft A
+minLeft gRight B
+minRight gLeft C
+minRight gRight deeper
+deeper pacLeft D
+"""
+
+evaluation: """
+A 4.0
+B 3.0
+C 2.0
+D 1000.0
+"""

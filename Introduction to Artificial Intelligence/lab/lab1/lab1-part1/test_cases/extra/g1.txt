@@ -1,0 +1,10 @@
+# Graph files look like this:
+# (comments start with a # sign, blank lines are ignored)
+# so this line will be ignored
+# Note that goals is plural and can have a list of goal states
+start=A
+goals=G
+A A->B B 1 
+A A->C C 1 
+A A->D D 1 
+C C->G G 1 
