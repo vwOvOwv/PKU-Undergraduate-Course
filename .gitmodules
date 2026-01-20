@@ -10,3 +10,6 @@
 [submodule "Reinforcement Learning/project/code"]
 	path = Reinforcement Learning/project/code
 	url = https://github.com/vwOvOwv/Reinforcement-Learning-2025-Fall-Project
+[submodule "Computing Fundamentals for Neural Networks/project/code"]
+	path = Computing Fundamentals for Neural Networks/project/code
+	url = https://github.com/vwOvOwv/TTFS-PyTorch
