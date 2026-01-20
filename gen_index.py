@@ -111,7 +111,9 @@ html_template = """
         /* 1. 这是右侧顶部栏 (你之前不小心删掉的) */
         .header { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
         .header h1 { font-size: 18px; margin: 0; white-space: nowrap; font-weight: bold; }
-        
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .search-wrapper { position: relative; width: 250px; }
+
         /* 2. 这是左侧顶部栏 (与右侧对齐) */
         .sidebar-title { 
             height: 60px; /* 关键：与右侧 .header 高度一致 */
@@ -192,16 +194,17 @@ html_template = """
 
     <div class="main-view">
         <div class="header">
-            <div class="header-left">
-                <h1 id="view-title">Course Zoo</h1>
+            <h1 id="view-title">Course Zoo</h1>
+            
+            <div class="header-right">
                 <div class="search-wrapper">
                     <span class="search-icon">🔍</span>
                     <input type="text" class="search-box" id="search-input" placeholder="Search files..." oninput="handleSearch(this.value)">
                 </div>
+                <button class="btn" id="download-btn" onclick="downloadSelected()" disabled>
+                    <span>⬇</span> Download
+                </button>
             </div>
-            <button class="btn" id="download-btn" onclick="downloadSelected()" disabled>
-                <span>⬇</span> Download
-            </button>
         </div>
         
         <div class="breadcrumbs" id="breadcrumbs"></div>
