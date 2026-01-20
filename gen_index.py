@@ -157,7 +157,7 @@ html_template = """
         .col-check { width: 40px; text-align: center; }
         .col-icon { width: 36px; text-align: center; font-size: 16px; }
         .col-name { width: auto; }
-        .col-size { width: 100px; text-align: right; color: #6a737d; font-family: monospace; font-size: 12px; }
+        .col-size { width: auto; text-align: right;}
         
         .path-hint { display: block; font-size: 11px; color: #888; margin-top: 2px; }
         .match-highlight { background-color: #fff5b1; border-radius: 2px; }
@@ -290,6 +290,10 @@ html_template = """
 
                 const name = document.createElement('span');
                 name.innerText = node.name;
+
+                if (level === 0) {
+                    name.style.fontWeight = 'bold';
+                }
 
                 div.append(toggle, name);
                 container.appendChild(div);
