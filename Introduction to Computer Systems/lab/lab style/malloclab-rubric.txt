@@ -1,0 +1,64 @@
+*********************
+Malloclab Rubric (v4)
+*********************
+
+***************************
+Updates to autograded score
+***************************
+Submissions with an index below 50 will get an Autograded score of 0
+points. After the lab is complete, manually add the following "Tweaks":
+
+1. Implicit list allocator from the book: +0 pts
+
+2. Student makes reasonable attempt at a non-implicit list allocator: 
+  a. Doesn't compile: +10 pts 
+  b. Compiles, but segfaults, times out, or fails some traces: +35 pts 
+  c. Passes all of the traces, but too slow or space inefficient: +50
+   pts
+
+*********************************
+Style deductions (saturate at 10)
+*********************************
+* Using header comment from the CS:APP implicit list malloc: -2 pts
+* Missing or non-descriptive program header comment: -2 pts
+* Missing or non-descriptive function header comments: -1 pt each,
+  saturate at -2 pts
+* Inconsistent indentation anywhere (student or provided code): -1 pt
+      each, saturate at -2 Ignore single-space indents that might be added
+      by Autolab.
+* Lines *greatly* exceeding 80 chars: -1 pt each, saturate at -2 pts
+* Poor use of white space: -1
+* Magic number(s): -1
+* Dead code (commented out rather than ifdef'd): -1
+* Poor modularity (code should be in function or macro): -2
+* Not checking syscall return values:  -1 pt each, saturate at -3
+* Any other egregious readability issue(s): -2 pts
+
+****************************************
+Heap Checker deductions (saturate at -10)
+****************************************
+* Doesn't run silently: -2
+* Doesn't check all heap blocks: -3
+* Doesn't check all free blocks: -3
+* Missing checks for key global invariants (e.g, #free blocks=size of
+  free list): -1
+* Missing checks for key heap block invariants (e.g., header=footer,
+  alignment): -1 each, saturate at -2
+* Missing checks for key free block invariants (e.g., consistent
+  prev/next, offset within heap): -1 each, saturate at -2
+* Detects a non-existent heap inconsistency: -2
+
+**********************
+Correctness Deductions 
+**********************
+* Small global array (e.g., array of pointers to seglist heads): -2
+* Large global array or call to system malloc: -5
+  Ok to use global structs and scalars.
+* Attempting to determine which specific trace is running: -20 (as per writeup)
+  Note that optimizing for a specific size is OK, but not a specific trace.
+  Also, attempting to learn the access pattern is OK. 
+* Computing offsets by truncating high order 4 bytes rather than
+  computing offset from mem_heap_lo: -5
+
+
+

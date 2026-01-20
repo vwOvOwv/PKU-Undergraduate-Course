@@ -1,0 +1,641 @@
+                            | #######################################################################
+                            | # Test for copying block of size 200;
+                            | #######################################################################
+0x000:                      | 	.pos 0
+0x000: 30f41011000000000000 | main:	irmovq Stack, %rsp  	# Set up stack pointer
+                            | 
+                            | 	# Set up arguments for copy function and then invoke it
+0x00a: 30f2c800000000000000 | 	irmovq $200, %rdx		# src and dst have 200 elements
+0x014: 30f6480a000000000000 | 	irmovq dest, %rsi	# dst array
+0x01e: 30f7f803000000000000 | 	irmovq src, %rdi	# src array
+0x028: 803b00000000000000   | 	call ncopy		 
+0x031: 808a02000000000000   | 	call check	        # Call checker code
+0x03a: 00                   | 	halt                    # should halt with 0xaaaa in %rax
+0x03b:                      | StartFun:
+                            | #/* $begin ncopy-ys */
+                            | ##################################################################
+                            | # ncopy.ys - Copy a src block of len words to dst.
+                            | # Return the number of positive words (>0) contained in src.
+                            | #
+                            | # Include your name and ID here.
+                            | # 刘沛雨 2100012289
+                            | # Describe how and why you modified the baseline code.
+                            | #
+                            | ##################################################################
+                            | # Do not modify this portion
+                            | # Function prologue.
+                            | # %rdi = src, %rsi = dst, %rdx = len
+0x03b:                      | ncopy:
+                            | 
+                            | ##################################################################
+                            | # You can modify this portion
+                            | 	# Loop header
+0x03b: 6300                 | 	xorq %rax,%rax		# count = 0;
+0x03d: 6222                 | 	andq %rdx,%rdx		# len <= 0?
+0x03f: 718902000000000000   | 	jle Done		# if so, goto Done:
+0x048: 2021                 | 	rrmovq %rdx,%rcx	
+0x04a: c0f1f7ffffffffffffff | 	iaddq  $-9,%rcx		# limit = len - 9
+0x054: 30fb0000000000000000 | 	irmovq $0,%r11		# i = 0
+0x05e: 701f02000000000000   | 	jmp Test1
+0x067:                      | Loop1:
+0x067: 50d70000000000000000 | 	mrmovq (%rdi),%r13
+0x071: 40d60000000000000000 | 	rmmovq %r13,(%rsi)
+0x07b: 62dd                 | 	andq %r13,%r13
+0x07d: 719000000000000000   | 	jle Npos0
+0x086: c0f00100000000000000 | 	iaddq $1,%rax
+0x090:                      | Npos0:
+0x090: 50d70800000000000000 | 	mrmovq 8(%rdi),%r13
+0x09a: 40d60800000000000000 | 	rmmovq %r13,8(%rsi)
+0x0a4: 62dd                 | 	andq %r13,%r13
+0x0a6: 71b900000000000000   | 	jle Npos1
+0x0af: c0f00100000000000000 | 	iaddq $1,%rax
+0x0b9:                      | Npos1:
+0x0b9: 50d71000000000000000 | 	mrmovq 16(%rdi),%r13
+0x0c3: 40d61000000000000000 | 	rmmovq %r13,16(%rsi)
+0x0cd: 62dd                 | 	andq %r13,%r13
+0x0cf: 71e200000000000000   | 	jle Npos2
+0x0d8: c0f00100000000000000 | 	iaddq $1,%rax
+0x0e2:                      | Npos2:
+0x0e2: 50d71800000000000000 | 	mrmovq 24(%rdi),%r13
+0x0ec: 40d61800000000000000 | 	rmmovq %r13,24(%rsi)
+0x0f6: 62dd                 | 	andq %r13,%r13
+0x0f8: 710b01000000000000   | 	jle Npos3
+0x101: c0f00100000000000000 | 	iaddq $1,%rax
+0x10b:                      | Npos3:
+0x10b: 50d72000000000000000 | 	mrmovq 32(%rdi),%r13
+0x115: 40d62000000000000000 | 	rmmovq %r13,32(%rsi)
+0x11f: 62dd                 | 	andq %r13,%r13
+0x121: 713401000000000000   | 	jle Npos4
+0x12a: c0f00100000000000000 | 	iaddq $1,%rax
+0x134:                      | Npos4:
+0x134: 50d72800000000000000 | 	mrmovq 40(%rdi),%r13
+0x13e: 40d62800000000000000 | 	rmmovq %r13,40(%rsi)
+0x148: 62dd                 | 	andq %r13,%r13
+0x14a: 715d01000000000000   | 	jle Npos5
+0x153: c0f00100000000000000 | 	iaddq $1,%rax
+0x15d:                      | Npos5:
+0x15d: 50d73000000000000000 | 	mrmovq 48(%rdi),%r13
+0x167: 40d63000000000000000 | 	rmmovq %r13,48(%rsi)
+0x171: 62dd                 | 	andq %r13,%r13
+0x173: 718601000000000000   | 	jle Npos6
+0x17c: c0f00100000000000000 | 	iaddq $1,%rax
+0x186:                      | Npos6:
+0x186: 50d73800000000000000 | 	mrmovq 56(%rdi),%r13
+0x190: 40d63800000000000000 | 	rmmovq %r13,56(%rsi)
+0x19a: 62dd                 | 	andq %r13,%r13
+0x19c: 71af01000000000000   | 	jle Npos7
+0x1a5: c0f00100000000000000 | 	iaddq $1,%rax
+0x1af:                      | Npos7:
+0x1af: 50d74000000000000000 | 	mrmovq 64(%rdi),%r13
+0x1b9: 40d64000000000000000 | 	rmmovq %r13,64(%rsi)
+0x1c3: 62dd                 | 	andq %r13,%r13
+0x1c5: 71d801000000000000   | 	jle Npos8
+0x1ce: c0f00100000000000000 | 	iaddq $1,%rax
+0x1d8:                      | Npos8:
+0x1d8: 50d74800000000000000 | 	mrmovq 72(%rdi),%r13
+0x1e2: 40d64800000000000000 | 	rmmovq %r13,72(%rsi)
+0x1ec: 62dd                 | 	andq %r13,%r13
+0x1ee: 710102000000000000   | 	jle Npos9
+0x1f7: c0f00100000000000000 | 	iaddq $1,%rax
+0x201:                      | Npos9:
+0x201: c0fb0a00000000000000 | 	iaddq $10,%r11
+0x20b: c0f75000000000000000 | 	iaddq $80,%rdi
+0x215: c0f65000000000000000 | 	iaddq $80,%rsi
+0x21f:                      | Test1:
+0x21f: 201c                 | 	rrmovq %rcx,%r12
+0x221: 61bc                 | 	subq %r11,%r12	# limit - i
+0x223: 766700000000000000   | 	jg Loop1
+0x22c: 707c02000000000000   | 	jmp Test2
+0x235:                      | Loop2:
+0x235: 50d70000000000000000 | 	mrmovq (%rdi),%r13
+0x23f: 40d60000000000000000 | 	rmmovq %r13,(%rsi)
+0x249: 62dd                 | 	andq %r13,%r13
+0x24b: 715e02000000000000   | 	jle Npos10
+0x254: c0f00100000000000000 | 	iaddq $1,%rax
+0x25e:                      | Npos10:
+0x25e: c0fb0100000000000000 | 	iaddq $1,%r11
+0x268: c0f70800000000000000 | 	iaddq $8,%rdi
+0x272: c0f60800000000000000 | 	iaddq $8,%rsi
+0x27c:                      | Test2:
+0x27c: 202c                 | 	rrmovq %rdx,%r12
+0x27e: 61bc                 | 	subq %r11,%r12 # len - i
+0x280: 763502000000000000   | 	jg Loop2
+                            | ##################################################################
+                            | # Do not modify the following section of code
+                            | # Function epilogue.
+0x289:                      | Done:
+0x289: 90                   | 	ret
+                            | ##################################################################
+                            | # Keep the following label at the end of your function
+0x28a:                      | End:
+                            | #/* $end ncopy-ys */
+0x28a:                      | EndFun:
+                            | #################################################################### 
+                            | # Epilogue code for the correctness testing driver
+                            | ####################################################################
+                            | 
+                            | # This is the correctness checking code.
+                            | # It checks:
+                            | #   1. %rax has 100.  Set %rax to 0xbbbb if not.
+                            | #   2. The total length of the code is less than or equal to 1000.
+                            | #      Set %rax to 0xcccc if not.
+                            | #   3. The source data was copied to the destination.
+                            | #      Set %rax to 0xdddd if not.
+                            | #   4. The words just before and just after the destination region
+                            | #      were not corrupted.  Set %rax to 0xeeee if not.
+                            | # If all checks pass, then sets %rax to 0xaaaa
+0x28a:                      | check:
+                            | 	# Return value test
+0x28a: 30fa6400000000000000 | 	irmovq $100,%r10
+0x294: 61a0                 | 	subq %r10,%rax
+0x296: 73b202000000000000   | 	je checkb
+0x29f: 30f0bbbb000000000000 | 	irmovq $0xbbbb,%rax  # Failed test #1
+0x2a9: 70f003000000000000   | 	jmp cdone
+0x2b2:                      | checkb:
+                            | 	# Code length check
+0x2b2: 30f08a02000000000000 | 	irmovq EndFun,%rax
+0x2bc: 30f23b00000000000000 | 	irmovq StartFun,%rdx
+0x2c6: 6120                 | 	subq %rdx,%rax
+0x2c8: 30f2e803000000000000 | 	irmovq $1000,%rdx
+0x2d2: 6102                 | 	subq %rax,%rdx
+0x2d4: 75f002000000000000   | 	jge checkm
+0x2dd: 30f0cccc000000000000 | 	irmovq $0xcccc,%rax  # Failed test #2
+0x2e7: 70f003000000000000   | 	jmp cdone
+0x2f0:                      | checkm:
+0x2f0: 30f2480a000000000000 | 	irmovq dest, %rdx # Pointer to next destination location
+0x2fa: 30f3f803000000000000 | 	irmovq src,%rbx   # Pointer to next source location
+0x304: 30f7c800000000000000 | 	irmovq $200,%rdi  # Count
+0x30e: 6277                 | 	andq %rdi,%rdi
+0x310: 736e03000000000000   | 	je checkpre         # Skip check if count = 0
+0x319:                      | mcloop:
+0x319: 50020000000000000000 | 	mrmovq (%rdx),%rax
+0x323: 50630000000000000000 | 	mrmovq (%rbx),%rsi
+0x32d: 6160                 | 	subq %rsi,%rax
+0x32f: 734b03000000000000   | 	je  mok
+0x338: 30f0dddd000000000000 | 	irmovq $0xdddd,%rax # Failed test #3
+0x342: 70f003000000000000   | 	jmp cdone
+0x34b:                      | mok:
+0x34b: 30f00800000000000000 | 	irmovq $8,%rax
+0x355: 6002                 | 	addq %rax,%rdx	  # dest ++
+0x357: 6003                 | 	addq %rax,%rbx    # src++
+0x359: 30f00100000000000000 | 	irmovq $1,%rax
+0x363: 6107                 | 	subq %rax,%rdi    # cnt--
+0x365: 761903000000000000   | 	jg mcloop
+0x36e:                      | checkpre:
+                            | 	# Check for corruption
+0x36e: 30f2400a000000000000 | 	irmovq Predest,%rdx
+0x378: 50020000000000000000 | 	mrmovq (%rdx), %rax  # Get word before destination
+0x382: 30f2fadebc0000000000 | 	irmovq $0xbcdefa, %rdx
+0x38c: 6120                 | 	subq %rdx,%rax
+0x38e: 73aa03000000000000   | 	je checkpost
+0x397: 30f0eeee000000000000 | 	irmovq $0xeeee,%rax  # Failed test #4
+0x3a1: 70f003000000000000   | 	jmp cdone
+0x3aa:                      | checkpost:
+                            | 	# Check for corruption
+0x3aa: 30f28810000000000000 | 	irmovq Postdest,%rdx
+0x3b4: 50020000000000000000 | 	mrmovq (%rdx), %rax  # Get word after destination
+0x3be: 30f2bcfade0000000000 | 	irmovq $0xdefabc, %rdx
+0x3c8: 6120                 | 	subq %rdx,%rax
+0x3ca: 73e603000000000000   | 	je checkok
+0x3d3: 30f0eeee000000000000 | 	irmovq $0xeeee,%rax # Failed test #4
+0x3dd: 70f003000000000000   | 	jmp cdone
+0x3e6:                      | checkok:
+                            | 	# Successful checks
+0x3e6: 30f0aaaa000000000000 | 	irmovq $0xaaaa,%rax
+0x3f0:                      | cdone:
+0x3f0: 90                   | 	ret
+                            | 
+                            | ###############################
+                            | # Source and destination blocks 
+                            | ###############################
+0x3f8:                      | 	.align 8
+0x3f8:                      | src:
+0x3f8: 0100000000000000     | 	.quad 1
+0x400: 0200000000000000     | 	.quad 2
+0x408: fdffffffffffffff     | 	.quad -3
+0x410: 0400000000000000     | 	.quad 4
+0x418: fbffffffffffffff     | 	.quad -5
+0x420: faffffffffffffff     | 	.quad -6
+0x428: 0700000000000000     | 	.quad 7
+0x430: 0800000000000000     | 	.quad 8
+0x438: f7ffffffffffffff     | 	.quad -9
+0x440: 0a00000000000000     | 	.quad 10
+0x448: f5ffffffffffffff     | 	.quad -11
+0x450: 0c00000000000000     | 	.quad 12
+0x458: f3ffffffffffffff     | 	.quad -13
+0x460: f2ffffffffffffff     | 	.quad -14
+0x468: f1ffffffffffffff     | 	.quad -15
+0x470: 1000000000000000     | 	.quad 16
+0x478: efffffffffffffff     | 	.quad -17
+0x480: 1200000000000000     | 	.quad 18
+0x488: 1300000000000000     | 	.quad 19
+0x490: 1400000000000000     | 	.quad 20
+0x498: 1500000000000000     | 	.quad 21
+0x4a0: eaffffffffffffff     | 	.quad -22
+0x4a8: e9ffffffffffffff     | 	.quad -23
+0x4b0: e8ffffffffffffff     | 	.quad -24
+0x4b8: 1900000000000000     | 	.quad 25
+0x4c0: e6ffffffffffffff     | 	.quad -26
+0x4c8: 1b00000000000000     | 	.quad 27
+0x4d0: e4ffffffffffffff     | 	.quad -28
+0x4d8: e3ffffffffffffff     | 	.quad -29
+0x4e0: 1e00000000000000     | 	.quad 30
+0x4e8: e1ffffffffffffff     | 	.quad -31
+0x4f0: e0ffffffffffffff     | 	.quad -32
+0x4f8: 2100000000000000     | 	.quad 33
+0x500: 2200000000000000     | 	.quad 34
+0x508: 2300000000000000     | 	.quad 35
+0x510: dcffffffffffffff     | 	.quad -36
+0x518: dbffffffffffffff     | 	.quad -37
+0x520: daffffffffffffff     | 	.quad -38
+0x528: d9ffffffffffffff     | 	.quad -39
+0x530: d8ffffffffffffff     | 	.quad -40
+0x538: 2900000000000000     | 	.quad 41
+0x540: 2a00000000000000     | 	.quad 42
+0x548: d5ffffffffffffff     | 	.quad -43
+0x550: d4ffffffffffffff     | 	.quad -44
+0x558: 2d00000000000000     | 	.quad 45
+0x560: d2ffffffffffffff     | 	.quad -46
+0x568: 2f00000000000000     | 	.quad 47
+0x570: d0ffffffffffffff     | 	.quad -48
+0x578: 3100000000000000     | 	.quad 49
+0x580: 3200000000000000     | 	.quad 50
+0x588: cdffffffffffffff     | 	.quad -51
+0x590: ccffffffffffffff     | 	.quad -52
+0x598: 3500000000000000     | 	.quad 53
+0x5a0: 3600000000000000     | 	.quad 54
+0x5a8: c9ffffffffffffff     | 	.quad -55
+0x5b0: 3800000000000000     | 	.quad 56
+0x5b8: c7ffffffffffffff     | 	.quad -57
+0x5c0: c6ffffffffffffff     | 	.quad -58
+0x5c8: c5ffffffffffffff     | 	.quad -59
+0x5d0: c4ffffffffffffff     | 	.quad -60
+0x5d8: c3ffffffffffffff     | 	.quad -61
+0x5e0: c2ffffffffffffff     | 	.quad -62
+0x5e8: c1ffffffffffffff     | 	.quad -63
+0x5f0: c0ffffffffffffff     | 	.quad -64
+0x5f8: bfffffffffffffff     | 	.quad -65
+0x600: 4200000000000000     | 	.quad 66
+0x608: bdffffffffffffff     | 	.quad -67
+0x610: bcffffffffffffff     | 	.quad -68
+0x618: 4500000000000000     | 	.quad 69
+0x620: 4600000000000000     | 	.quad 70
+0x628: b9ffffffffffffff     | 	.quad -71
+0x630: 4800000000000000     | 	.quad 72
+0x638: b7ffffffffffffff     | 	.quad -73
+0x640: b6ffffffffffffff     | 	.quad -74
+0x648: b5ffffffffffffff     | 	.quad -75
+0x650: 4c00000000000000     | 	.quad 76
+0x658: b3ffffffffffffff     | 	.quad -77
+0x660: b2ffffffffffffff     | 	.quad -78
+0x668: b1ffffffffffffff     | 	.quad -79
+0x670: b0ffffffffffffff     | 	.quad -80
+0x678: afffffffffffffff     | 	.quad -81
+0x680: 5200000000000000     | 	.quad 82
+0x688: 5300000000000000     | 	.quad 83
+0x690: 5400000000000000     | 	.quad 84
+0x698: 5500000000000000     | 	.quad 85
+0x6a0: 5600000000000000     | 	.quad 86
+0x6a8: 5700000000000000     | 	.quad 87
+0x6b0: a8ffffffffffffff     | 	.quad -88
+0x6b8: 5900000000000000     | 	.quad 89
+0x6c0: a6ffffffffffffff     | 	.quad -90
+0x6c8: 5b00000000000000     | 	.quad 91
+0x6d0: a4ffffffffffffff     | 	.quad -92
+0x6d8: 5d00000000000000     | 	.quad 93
+0x6e0: 5e00000000000000     | 	.quad 94
+0x6e8: a1ffffffffffffff     | 	.quad -95
+0x6f0: a0ffffffffffffff     | 	.quad -96
+0x6f8: 6100000000000000     | 	.quad 97
+0x700: 6200000000000000     | 	.quad 98
+0x708: 9dffffffffffffff     | 	.quad -99
+0x710: 9cffffffffffffff     | 	.quad -100
+0x718: 6500000000000000     | 	.quad 101
+0x720: 9affffffffffffff     | 	.quad -102
+0x728: 6700000000000000     | 	.quad 103
+0x730: 98ffffffffffffff     | 	.quad -104
+0x738: 97ffffffffffffff     | 	.quad -105
+0x740: 96ffffffffffffff     | 	.quad -106
+0x748: 6b00000000000000     | 	.quad 107
+0x750: 6c00000000000000     | 	.quad 108
+0x758: 93ffffffffffffff     | 	.quad -109
+0x760: 92ffffffffffffff     | 	.quad -110
+0x768: 6f00000000000000     | 	.quad 111
+0x770: 7000000000000000     | 	.quad 112
+0x778: 8fffffffffffffff     | 	.quad -113
+0x780: 7200000000000000     | 	.quad 114
+0x788: 7300000000000000     | 	.quad 115
+0x790: 8cffffffffffffff     | 	.quad -116
+0x798: 7500000000000000     | 	.quad 117
+0x7a0: 8affffffffffffff     | 	.quad -118
+0x7a8: 7700000000000000     | 	.quad 119
+0x7b0: 7800000000000000     | 	.quad 120
+0x7b8: 7900000000000000     | 	.quad 121
+0x7c0: 7a00000000000000     | 	.quad 122
+0x7c8: 7b00000000000000     | 	.quad 123
+0x7d0: 84ffffffffffffff     | 	.quad -124
+0x7d8: 83ffffffffffffff     | 	.quad -125
+0x7e0: 7e00000000000000     | 	.quad 126
+0x7e8: 81ffffffffffffff     | 	.quad -127
+0x7f0: 8000000000000000     | 	.quad 128
+0x7f8: 8100000000000000     | 	.quad 129
+0x800: 8200000000000000     | 	.quad 130
+0x808: 7dffffffffffffff     | 	.quad -131
+0x810: 7cffffffffffffff     | 	.quad -132
+0x818: 8500000000000000     | 	.quad 133
+0x820: 8600000000000000     | 	.quad 134
+0x828: 79ffffffffffffff     | 	.quad -135
+0x830: 78ffffffffffffff     | 	.quad -136
+0x838: 8900000000000000     | 	.quad 137
+0x840: 76ffffffffffffff     | 	.quad -138
+0x848: 8b00000000000000     | 	.quad 139
+0x850: 8c00000000000000     | 	.quad 140
+0x858: 73ffffffffffffff     | 	.quad -141
+0x860: 72ffffffffffffff     | 	.quad -142
+0x868: 8f00000000000000     | 	.quad 143
+0x870: 9000000000000000     | 	.quad 144
+0x878: 9100000000000000     | 	.quad 145
+0x880: 6effffffffffffff     | 	.quad -146
+0x888: 6dffffffffffffff     | 	.quad -147
+0x890: 9400000000000000     | 	.quad 148
+0x898: 9500000000000000     | 	.quad 149
+0x8a0: 9600000000000000     | 	.quad 150
+0x8a8: 9700000000000000     | 	.quad 151
+0x8b0: 68ffffffffffffff     | 	.quad -152
+0x8b8: 9900000000000000     | 	.quad 153
+0x8c0: 66ffffffffffffff     | 	.quad -154
+0x8c8: 65ffffffffffffff     | 	.quad -155
+0x8d0: 9c00000000000000     | 	.quad 156
+0x8d8: 63ffffffffffffff     | 	.quad -157
+0x8e0: 62ffffffffffffff     | 	.quad -158
+0x8e8: 61ffffffffffffff     | 	.quad -159
+0x8f0: a000000000000000     | 	.quad 160
+0x8f8: 5fffffffffffffff     | 	.quad -161
+0x900: a200000000000000     | 	.quad 162
+0x908: a300000000000000     | 	.quad 163
+0x910: a400000000000000     | 	.quad 164
+0x918: a500000000000000     | 	.quad 165
+0x920: 5affffffffffffff     | 	.quad -166
+0x928: 59ffffffffffffff     | 	.quad -167
+0x930: 58ffffffffffffff     | 	.quad -168
+0x938: 57ffffffffffffff     | 	.quad -169
+0x940: aa00000000000000     | 	.quad 170
+0x948: ab00000000000000     | 	.quad 171
+0x950: ac00000000000000     | 	.quad 172
+0x958: ad00000000000000     | 	.quad 173
+0x960: ae00000000000000     | 	.quad 174
+0x968: af00000000000000     | 	.quad 175
+0x970: 50ffffffffffffff     | 	.quad -176
+0x978: b100000000000000     | 	.quad 177
+0x980: 4effffffffffffff     | 	.quad -178
+0x988: 4dffffffffffffff     | 	.quad -179
+0x990: 4cffffffffffffff     | 	.quad -180
+0x998: 4bffffffffffffff     | 	.quad -181
+0x9a0: 4affffffffffffff     | 	.quad -182
+0x9a8: b700000000000000     | 	.quad 183
+0x9b0: 48ffffffffffffff     | 	.quad -184
+0x9b8: b900000000000000     | 	.quad 185
+0x9c0: ba00000000000000     | 	.quad 186
+0x9c8: 45ffffffffffffff     | 	.quad -187
+0x9d0: bc00000000000000     | 	.quad 188
+0x9d8: 43ffffffffffffff     | 	.quad -189
+0x9e0: be00000000000000     | 	.quad 190
+0x9e8: bf00000000000000     | 	.quad 191
+0x9f0: 40ffffffffffffff     | 	.quad -192
+0x9f8: c100000000000000     | 	.quad 193
+0xa00: 3effffffffffffff     | 	.quad -194
+0xa08: c300000000000000     | 	.quad 195
+0xa10: c400000000000000     | 	.quad 196
+0xa18: c500000000000000     | 	.quad 197
+0xa20: c600000000000000     | 	.quad 198
+0xa28: c700000000000000     | 	.quad 199
+0xa30: 38ffffffffffffff     | 	.quad -200
+0xa38: fadebc0000000000     | 	.quad 0xbcdefa # This shouldn't get moved
+                            | 
+0xa40:                      | 	.align 16
+0xa40:                      | Predest:
+0xa40: fadebc0000000000     | 	.quad 0xbcdefa
+0xa48:                      | dest:
+0xa48: abefcd0000000000     | 	.quad 0xcdefab
+0xa50: abefcd0000000000     | 	.quad 0xcdefab
+0xa58: abefcd0000000000     | 	.quad 0xcdefab
+0xa60: abefcd0000000000     | 	.quad 0xcdefab
+0xa68: abefcd0000000000     | 	.quad 0xcdefab
+0xa70: abefcd0000000000     | 	.quad 0xcdefab
+0xa78: abefcd0000000000     | 	.quad 0xcdefab
+0xa80: abefcd0000000000     | 	.quad 0xcdefab
+0xa88: abefcd0000000000     | 	.quad 0xcdefab
+0xa90: abefcd0000000000     | 	.quad 0xcdefab
+0xa98: abefcd0000000000     | 	.quad 0xcdefab
+0xaa0: abefcd0000000000     | 	.quad 0xcdefab
+0xaa8: abefcd0000000000     | 	.quad 0xcdefab
+0xab0: abefcd0000000000     | 	.quad 0xcdefab
+0xab8: abefcd0000000000     | 	.quad 0xcdefab
+0xac0: abefcd0000000000     | 	.quad 0xcdefab
+0xac8: abefcd0000000000     | 	.quad 0xcdefab
+0xad0: abefcd0000000000     | 	.quad 0xcdefab
+0xad8: abefcd0000000000     | 	.quad 0xcdefab
+0xae0: abefcd0000000000     | 	.quad 0xcdefab
+0xae8: abefcd0000000000     | 	.quad 0xcdefab
+0xaf0: abefcd0000000000     | 	.quad 0xcdefab
+0xaf8: abefcd0000000000     | 	.quad 0xcdefab
+0xb00: abefcd0000000000     | 	.quad 0xcdefab
+0xb08: abefcd0000000000     | 	.quad 0xcdefab
+0xb10: abefcd0000000000     | 	.quad 0xcdefab
+0xb18: abefcd0000000000     | 	.quad 0xcdefab
+0xb20: abefcd0000000000     | 	.quad 0xcdefab
+0xb28: abefcd0000000000     | 	.quad 0xcdefab
+0xb30: abefcd0000000000     | 	.quad 0xcdefab
+0xb38: abefcd0000000000     | 	.quad 0xcdefab
+0xb40: abefcd0000000000     | 	.quad 0xcdefab
+0xb48: abefcd0000000000     | 	.quad 0xcdefab
+0xb50: abefcd0000000000     | 	.quad 0xcdefab
+0xb58: abefcd0000000000     | 	.quad 0xcdefab
+0xb60: abefcd0000000000     | 	.quad 0xcdefab
+0xb68: abefcd0000000000     | 	.quad 0xcdefab
+0xb70: abefcd0000000000     | 	.quad 0xcdefab
+0xb78: abefcd0000000000     | 	.quad 0xcdefab
+0xb80: abefcd0000000000     | 	.quad 0xcdefab
+0xb88: abefcd0000000000     | 	.quad 0xcdefab
+0xb90: abefcd0000000000     | 	.quad 0xcdefab
+0xb98: abefcd0000000000     | 	.quad 0xcdefab
+0xba0: abefcd0000000000     | 	.quad 0xcdefab
+0xba8: abefcd0000000000     | 	.quad 0xcdefab
+0xbb0: abefcd0000000000     | 	.quad 0xcdefab
+0xbb8: abefcd0000000000     | 	.quad 0xcdefab
+0xbc0: abefcd0000000000     | 	.quad 0xcdefab
+0xbc8: abefcd0000000000     | 	.quad 0xcdefab
+0xbd0: abefcd0000000000     | 	.quad 0xcdefab
+0xbd8: abefcd0000000000     | 	.quad 0xcdefab
+0xbe0: abefcd0000000000     | 	.quad 0xcdefab
+0xbe8: abefcd0000000000     | 	.quad 0xcdefab
+0xbf0: abefcd0000000000     | 	.quad 0xcdefab
+0xbf8: abefcd0000000000     | 	.quad 0xcdefab
+0xc00: abefcd0000000000     | 	.quad 0xcdefab
+0xc08: abefcd0000000000     | 	.quad 0xcdefab
+0xc10: abefcd0000000000     | 	.quad 0xcdefab
+0xc18: abefcd0000000000     | 	.quad 0xcdefab
+0xc20: abefcd0000000000     | 	.quad 0xcdefab
+0xc28: abefcd0000000000     | 	.quad 0xcdefab
+0xc30: abefcd0000000000     | 	.quad 0xcdefab
+0xc38: abefcd0000000000     | 	.quad 0xcdefab
+0xc40: abefcd0000000000     | 	.quad 0xcdefab
+0xc48: abefcd0000000000     | 	.quad 0xcdefab
+0xc50: abefcd0000000000     | 	.quad 0xcdefab
+0xc58: abefcd0000000000     | 	.quad 0xcdefab
+0xc60: abefcd0000000000     | 	.quad 0xcdefab
+0xc68: abefcd0000000000     | 	.quad 0xcdefab
+0xc70: abefcd0000000000     | 	.quad 0xcdefab
+0xc78: abefcd0000000000     | 	.quad 0xcdefab
+0xc80: abefcd0000000000     | 	.quad 0xcdefab
+0xc88: abefcd0000000000     | 	.quad 0xcdefab
+0xc90: abefcd0000000000     | 	.quad 0xcdefab
+0xc98: abefcd0000000000     | 	.quad 0xcdefab
+0xca0: abefcd0000000000     | 	.quad 0xcdefab
+0xca8: abefcd0000000000     | 	.quad 0xcdefab
+0xcb0: abefcd0000000000     | 	.quad 0xcdefab
+0xcb8: abefcd0000000000     | 	.quad 0xcdefab
+0xcc0: abefcd0000000000     | 	.quad 0xcdefab
+0xcc8: abefcd0000000000     | 	.quad 0xcdefab
+0xcd0: abefcd0000000000     | 	.quad 0xcdefab
+0xcd8: abefcd0000000000     | 	.quad 0xcdefab
+0xce0: abefcd0000000000     | 	.quad 0xcdefab
+0xce8: abefcd0000000000     | 	.quad 0xcdefab
+0xcf0: abefcd0000000000     | 	.quad 0xcdefab
+0xcf8: abefcd0000000000     | 	.quad 0xcdefab
+0xd00: abefcd0000000000     | 	.quad 0xcdefab
+0xd08: abefcd0000000000     | 	.quad 0xcdefab
+0xd10: abefcd0000000000     | 	.quad 0xcdefab
+0xd18: abefcd0000000000     | 	.quad 0xcdefab
+0xd20: abefcd0000000000     | 	.quad 0xcdefab
+0xd28: abefcd0000000000     | 	.quad 0xcdefab
+0xd30: abefcd0000000000     | 	.quad 0xcdefab
+0xd38: abefcd0000000000     | 	.quad 0xcdefab
+0xd40: abefcd0000000000     | 	.quad 0xcdefab
+0xd48: abefcd0000000000     | 	.quad 0xcdefab
+0xd50: abefcd0000000000     | 	.quad 0xcdefab
+0xd58: abefcd0000000000     | 	.quad 0xcdefab
+0xd60: abefcd0000000000     | 	.quad 0xcdefab
+0xd68: abefcd0000000000     | 	.quad 0xcdefab
+0xd70: abefcd0000000000     | 	.quad 0xcdefab
+0xd78: abefcd0000000000     | 	.quad 0xcdefab
+0xd80: abefcd0000000000     | 	.quad 0xcdefab
+0xd88: abefcd0000000000     | 	.quad 0xcdefab
+0xd90: abefcd0000000000     | 	.quad 0xcdefab
+0xd98: abefcd0000000000     | 	.quad 0xcdefab
+0xda0: abefcd0000000000     | 	.quad 0xcdefab
+0xda8: abefcd0000000000     | 	.quad 0xcdefab
+0xdb0: abefcd0000000000     | 	.quad 0xcdefab
+0xdb8: abefcd0000000000     | 	.quad 0xcdefab
+0xdc0: abefcd0000000000     | 	.quad 0xcdefab
+0xdc8: abefcd0000000000     | 	.quad 0xcdefab
+0xdd0: abefcd0000000000     | 	.quad 0xcdefab
+0xdd8: abefcd0000000000     | 	.quad 0xcdefab
+0xde0: abefcd0000000000     | 	.quad 0xcdefab
+0xde8: abefcd0000000000     | 	.quad 0xcdefab
+0xdf0: abefcd0000000000     | 	.quad 0xcdefab
+0xdf8: abefcd0000000000     | 	.quad 0xcdefab
+0xe00: abefcd0000000000     | 	.quad 0xcdefab
+0xe08: abefcd0000000000     | 	.quad 0xcdefab
+0xe10: abefcd0000000000     | 	.quad 0xcdefab
+0xe18: abefcd0000000000     | 	.quad 0xcdefab
+0xe20: abefcd0000000000     | 	.quad 0xcdefab
+0xe28: abefcd0000000000     | 	.quad 0xcdefab
+0xe30: abefcd0000000000     | 	.quad 0xcdefab
+0xe38: abefcd0000000000     | 	.quad 0xcdefab
+0xe40: abefcd0000000000     | 	.quad 0xcdefab
+0xe48: abefcd0000000000     | 	.quad 0xcdefab
+0xe50: abefcd0000000000     | 	.quad 0xcdefab
+0xe58: abefcd0000000000     | 	.quad 0xcdefab
+0xe60: abefcd0000000000     | 	.quad 0xcdefab
+0xe68: abefcd0000000000     | 	.quad 0xcdefab
+0xe70: abefcd0000000000     | 	.quad 0xcdefab
+0xe78: abefcd0000000000     | 	.quad 0xcdefab
+0xe80: abefcd0000000000     | 	.quad 0xcdefab
+0xe88: abefcd0000000000     | 	.quad 0xcdefab
+0xe90: abefcd0000000000     | 	.quad 0xcdefab
+0xe98: abefcd0000000000     | 	.quad 0xcdefab
+0xea0: abefcd0000000000     | 	.quad 0xcdefab
+0xea8: abefcd0000000000     | 	.quad 0xcdefab
+0xeb0: abefcd0000000000     | 	.quad 0xcdefab
+0xeb8: abefcd0000000000     | 	.quad 0xcdefab
+0xec0: abefcd0000000000     | 	.quad 0xcdefab
+0xec8: abefcd0000000000     | 	.quad 0xcdefab
+0xed0: abefcd0000000000     | 	.quad 0xcdefab
+0xed8: abefcd0000000000     | 	.quad 0xcdefab
+0xee0: abefcd0000000000     | 	.quad 0xcdefab
+0xee8: abefcd0000000000     | 	.quad 0xcdefab
+0xef0: abefcd0000000000     | 	.quad 0xcdefab
+0xef8: abefcd0000000000     | 	.quad 0xcdefab
+0xf00: abefcd0000000000     | 	.quad 0xcdefab
+0xf08: abefcd0000000000     | 	.quad 0xcdefab
+0xf10: abefcd0000000000     | 	.quad 0xcdefab
+0xf18: abefcd0000000000     | 	.quad 0xcdefab
+0xf20: abefcd0000000000     | 	.quad 0xcdefab
+0xf28: abefcd0000000000     | 	.quad 0xcdefab
+0xf30: abefcd0000000000     | 	.quad 0xcdefab
+0xf38: abefcd0000000000     | 	.quad 0xcdefab
+0xf40: abefcd0000000000     | 	.quad 0xcdefab
+0xf48: abefcd0000000000     | 	.quad 0xcdefab
+0xf50: abefcd0000000000     | 	.quad 0xcdefab
+0xf58: abefcd0000000000     | 	.quad 0xcdefab
+0xf60: abefcd0000000000     | 	.quad 0xcdefab
+0xf68: abefcd0000000000     | 	.quad 0xcdefab
+0xf70: abefcd0000000000     | 	.quad 0xcdefab
+0xf78: abefcd0000000000     | 	.quad 0xcdefab
+0xf80: abefcd0000000000     | 	.quad 0xcdefab
+0xf88: abefcd0000000000     | 	.quad 0xcdefab
+0xf90: abefcd0000000000     | 	.quad 0xcdefab
+0xf98: abefcd0000000000     | 	.quad 0xcdefab
+0xfa0: abefcd0000000000     | 	.quad 0xcdefab
+0xfa8: abefcd0000000000     | 	.quad 0xcdefab
+0xfb0: abefcd0000000000     | 	.quad 0xcdefab
+0xfb8: abefcd0000000000     | 	.quad 0xcdefab
+0xfc0: abefcd0000000000     | 	.quad 0xcdefab
+0xfc8: abefcd0000000000     | 	.quad 0xcdefab
+0xfd0: abefcd0000000000     | 	.quad 0xcdefab
+0xfd8: abefcd0000000000     | 	.quad 0xcdefab
+0xfe0: abefcd0000000000     | 	.quad 0xcdefab
+0xfe8: abefcd0000000000     | 	.quad 0xcdefab
+0xff0: abefcd0000000000     | 	.quad 0xcdefab
+0xff8: abefcd0000000000     | 	.quad 0xcdefab
+0x1000:abefcd0000000000      | 	.quad 0xcdefab
+0x1008:abefcd0000000000      | 	.quad 0xcdefab
+0x1010:abefcd0000000000      | 	.quad 0xcdefab
+0x1018:abefcd0000000000      | 	.quad 0xcdefab
+0x1020:abefcd0000000000      | 	.quad 0xcdefab
+0x1028:abefcd0000000000      | 	.quad 0xcdefab
+0x1030:abefcd0000000000      | 	.quad 0xcdefab
+0x1038:abefcd0000000000      | 	.quad 0xcdefab
+0x1040:abefcd0000000000      | 	.quad 0xcdefab
+0x1048:abefcd0000000000      | 	.quad 0xcdefab
+0x1050:abefcd0000000000      | 	.quad 0xcdefab
+0x1058:abefcd0000000000      | 	.quad 0xcdefab
+0x1060:abefcd0000000000      | 	.quad 0xcdefab
+0x1068:abefcd0000000000      | 	.quad 0xcdefab
+0x1070:abefcd0000000000      | 	.quad 0xcdefab
+0x1078:abefcd0000000000      | 	.quad 0xcdefab
+0x1080:abefcd0000000000      | 	.quad 0xcdefab
+0x1088:                      | Postdest:
+0x1088:bcfade0000000000      | 	.quad 0xdefabc
+                             | 
+0x1090:                      | .align 8
+                             | # Run time stack
+0x1090:0000000000000000      | 	.quad 0
+0x1098:0000000000000000      | 	.quad 0
+0x10a0:0000000000000000      | 	.quad 0
+0x10a8:0000000000000000      | 	.quad 0
+0x10b0:0000000000000000      | 	.quad 0
+0x10b8:0000000000000000      | 	.quad 0
+0x10c0:0000000000000000      | 	.quad 0
+0x10c8:0000000000000000      | 	.quad 0
+0x10d0:0000000000000000      | 	.quad 0
+0x10d8:0000000000000000      | 	.quad 0
+0x10e0:0000000000000000      | 	.quad 0
+0x10e8:0000000000000000      | 	.quad 0
+0x10f0:0000000000000000      | 	.quad 0
+0x10f8:0000000000000000      | 	.quad 0
+0x1100:0000000000000000      | 	.quad 0
+0x1108:0000000000000000      | 	.quad 0
+                             | 
+0x1110:                      | Stack:

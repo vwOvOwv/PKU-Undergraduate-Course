@@ -1,0 +1,11 @@
+#
+# trace25.txt - nohup (builtin_cmd)
+#
+
+./myhup
+NEXT
+nohup ./myhup
+NEXT
+
+quit
+

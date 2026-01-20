@@ -1,0 +1,6 @@
+add $8,%rsp
+movl $0x37373133,0x100(%rsp)
+movl $0x31306564,0x104(%rsp)
+movl $0,0x105(%rsp)
+lea 0x100(%rsp),%rdi
+mov 

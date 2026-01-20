@@ -1,0 +1,171 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+# 刘沛雨 2100012289
+# Describe how and why you modified the baseline code.
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	iaddq $-10,%rdx
+	jl endHandler
+Loop1:
+	mrmovq (%rdi),%rcx
+	mrmovq 8(%rdi),%r8
+	andq %rcx,%rcx
+	mrmovq 16(%rdi),%r9
+	mrmovq 24(%rdi),%r10
+	jle Npos0
+	iaddq $1,%rax
+Npos0:
+	andq %r8,%r8
+	mrmovq 32(%rdi),%r11
+	mrmovq 40(%rdi),%r12
+	jle Npos1
+	iaddq $1,%rax
+Npos1:
+	andq %r9,%r9
+	mrmovq 48(%rdi),%r13
+	mrmovq 56(%rdi),%r14
+	jle Npos2
+	iaddq $1,%rax
+Npos2:
+	andq %r10,%r10
+	rmmovq %rcx,(%rsi)
+	rmmovq %r8,8(%rsi)
+	jle Npos3
+	iaddq $1,%rax
+Npos3:
+	andq %r11,%r11
+	rmmovq %r9,16(%rsi)
+	rmmovq %r10,24(%rsi)
+	jle Npos4
+	iaddq $1,%rax
+Npos4:
+	andq %r12,%r12
+	rmmovq %r11,32(%rsi)
+	rmmovq %r12,40(%rsi)
+	jle Npos5
+	iaddq $1,%rax
+Npos5:
+	andq %r13,%r13
+	rmmovq %r13,48(%rsi)
+	rmmovq %r14,56(%rsi)
+	jle Npos6
+	iaddq $1,%rax
+Npos6:
+	andq %r14,%r14
+	mrmovq 64(%rdi),%r8
+	mrmovq 72(%rdi),%r9
+	jle Npos7
+	iaddq $1,%rax
+Npos7:
+	andq %r8,%r8
+	rmmovq %r8,64(%rsi)
+	rmmovq %r9,72(%rsi)
+	jle Npos8
+	iaddq $1,%rax
+Npos8:
+	andq %r9,%r9
+	jle Npos9
+	iaddq $1,%rax
+Npos9:
+	iaddq $80,%rdi
+	iaddq $80,%rsi
+	iaddq $-10,%rdx
+	jge Loop1
+
+endHandler:
+	iaddq $7,%rdx
+	jg endHandler4_9
+	jl endHandler0_2
+	jmp endHandler3
+endHandler0_2:
+	iaddq $2,%rdx
+	jl Done
+	je endHandler1
+	jmp endHandler2
+endHandler4_6:
+	iaddq $2,%rdx
+	jl endHandler4
+	je endHandler5
+	jmp endHandler6
+endHandler4_9:
+	iaddq $-4,%rdx
+	jl endHandler4_6
+	je endHandler7
+endHandler8_9:
+	iaddq $-2,%rdx
+	jl endHandler8
+endHandler9:
+	mrmovq 64(%rdi),%r8
+	rmmovq %r8,64(%rsi)
+	andq %r8,%r8
+	jle endHandler8
+	iaddq $1,%rax
+endHandler8:
+	mrmovq 56(%rdi),%r9
+	rmmovq %r9,56(%rsi)
+	andq %r9,%r9
+	jle endHandler7
+	iaddq $1,%rax
+endHandler7:
+	mrmovq 48(%rdi),%r10
+	rmmovq %r10,48(%rsi)
+	andq %r10,%r10
+	jle endHandler6
+	iaddq $1,%rax
+endHandler6:
+	mrmovq 40(%rdi),%r11
+	rmmovq %r11,40(%rsi)
+	andq %r11,%r11
+	jle endHandler5
+	iaddq $1,%rax
+endHandler5:
+	mrmovq 32(%rdi),%r12
+	rmmovq %r12,32(%rsi)
+	andq %r12,%r12
+	jle endHandler4
+	iaddq $1,%rax
+endHandler4:
+	mrmovq 24(%rdi),%r13
+	rmmovq %r13,24(%rsi)
+	andq %r13,%r13
+	jle endHandler3
+	iaddq $1,%rax
+endHandler3:
+	mrmovq 16(%rdi),%r14
+	rmmovq %r14,16(%rsi)
+	andq %r14,%r14
+	jle endHandler2
+	iaddq $1,%rax
+endHandler2:
+	mrmovq 8(%rdi),%r8
+	rmmovq %r8,8(%rsi)
+	andq %r8,%r8
+	jle endHandler1
+	iaddq $1,%rax
+endHandler1:
+	mrmovq (%rdi),%r9
+	rmmovq %r9,(%rsi)
+	andq %r9,%r9
+	jle Done
+	iaddq $1,%rax
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

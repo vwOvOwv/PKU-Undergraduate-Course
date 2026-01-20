@@ -1,0 +1,17 @@
+#
+# trace30.txt - kill process group(builtin_cmd)
+#
+
+/bin/echo -e tsh\076 ./myterm3 \046
+NEXT
+./myterm3 &
+NEXT
+WAIT
+SIGNAL
+
+kill %-1
+WAIT
+SIGNAL
+
+quit
+

@@ -1,0 +1,51 @@
+******************
+Tshlab Rubric (v7)
+******************
+
+*********************************
+Style deductions (saturate at -10)
+*********************************
+* Missing or non-descriptive program header comment: -2 pts
+* Missing or non-descriptive function header comments: -1 pt each,
+  saturate at -2 pts
+* Inconsistent indentation in the student code: -1 pt each, saturate at -2
+  Ignore single-space indents that might be added by Autolab.
+* Poor use of white space: -1
+* Lines in student code *greatly* exceeding 80 chars: -1 pt each,
+  saturate at -2 pts
+* Lines in provided code *greatly* exceeding 80 chars: give a warning,
+  -0 pts
+* Magic numbers (note: that dup2(3,4) and 0 instead of NULL is OK): -1
+* Dead code: -1
+* Poor modularity: -2
+* Not checking syscall return values:  -1 pt each, saturate at -2
+* Any other egregious readability issue(s): -2 pts
+
+**********************
+Correctness deductions 
+Notes: Appply each deduction at most once, saturate at -15,
+Don't deduct if the autograder already found errors
+**********************
+* waitfg spin loop with ; or sleep() instead of sigsuspend: -2
+* Terminating shell if file passed to Open doesn't exist: -2
+
+* Undetected race conditions, such as:
+  * Allowing deletejob in handler to run before addjob in main: -3
+  * waitfg spin loop with pause: -3
+  * Not protecting accesses to global data structs that are shared with handlers: -3
+  * Unblocking before sigsuspend: -3
+  * Modifying jobs list in multiple handlers -3
+  * Not waiting for the FG job in the builtins -3
+  * Unblocking before printf (when running process in bg) -3
+  * Not blocking around builtins
+  * Using printf instead of sio routines in handlers: -3
+      (printf is OK if it's in the body of an "if (verbose) statement)
+  * Not saving and restoring errno in handlers: -1
+* Memory leak(s): -2 pts
+* Not handling SIGCHLD (don't double count w/race): -3
+
+
+
+
+
+

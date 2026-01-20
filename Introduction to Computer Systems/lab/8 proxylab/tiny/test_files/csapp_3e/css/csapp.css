@@ -1,0 +1,252 @@
+/*
+ * CS:APP page style
+ * Dave O'Hallaron, Carnegie Mellon University
+ */
+
+
+/*
+ * General style definitions
+ */
+html {
+	overflow: scroll;
+}
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 70%;
+	color: #333333;
+	background-color: white;
+	margin: 0px;
+	padding-top: 10px;
+	line-height: 135%;
+}
+
+/* 
+ * Blog entries
+ */
+#sidebar {
+	position: absolute;
+  	top: 130px;
+	left: 800px;
+	max-width: 250px;
+	min-width: 250px;
+	background-color: AliceBlue;
+}
+#sidebar h2 {
+	font:78%/1.4em "Trebuchet MS",Trebuchet,Arial,Verdana,Sans-serif;
+	text-transform:uppercase;
+	letter-spacing:.2em;
+	color:#999;
+}
+#sidebar ul {
+	margin:0 0 1.5em;
+	padding:0 0 1.5em;
+	border-bottom:1px dotted #ccc;
+	list-style:none;
+}
+#sidebar li {
+	margin:0;
+	padding:0 0 .25em 15px;
+	text-indent:-15px;
+	line-height:135%;
+}
+#sidebar p {
+	color:#666;
+	line-height:135%;
+}
+
+/* Feedburner-derived rules */
+div.feedburnerFeedBlock p.date {
+	font-size: .88em;
+	display: inline;
+	margin-left: 10px;
+}
+div.feedburnerFeedBlock ul li div {
+	display: inline;
+}
+div.feedburnerFeedBlock span.headline {
+	font-weight: regular;
+/*	text-transform: uppercase;*/
+	display: block;
+	text-indent: 0;
+}
+div.feedburnerFeedBlock ul li {
+	margin-bottom: 2em;
+	padding-left: 0 !important;
+	text-indent: 0 !important;
+}
+
+
+/*
+ * Table on courses page
+ */
+#course_table {
+	border-collapse: collapse;
+}
+
+#course_table td, #course_table th {
+	font-size:1em;
+	border:1px solid #0075bd;
+	padding:3px 7px 2px 7px;
+}
+
+#course_table th {
+	text-align: left;
+	font-size:1.1em;
+	padding-top:5px;
+	padding-bottom:4px;
+	background-color: #0075bd;
+	color:#ffffff;
+}
+
+#course_table tr.alt td {
+	color:#000000;
+	background-color: LightBlue;
+}
+
+th.course_hdr {
+	width: 50px;
+}
+
+/*
+ * Book cover in the header
+ */
+#cover_box { 
+	float: left;
+	background-color: white;
+	margin: 5px 5px 2px 10px;
+}
+#cover_box img {border: none}
+
+/*
+ * Book title in the header
+ */
+#title_box { 
+	position: absolute;
+	left: 85px;
+	background-color: white;
+	margin: 5px 5px 5px 5px;
+}
+#title_box a:link {color: #333333; text-decoration: underline; }
+
+p.title {
+	padding-top: 0px;
+	margin-left: 0px;
+	margin-top: 10px;
+	margin-bottom: 8px;
+	font-size: 19px;
+	line-height: 19px;
+}
+p.author {
+	padding-top: 0px;
+	margin-top: 0px;
+	margin-left: 0px;
+	font-size: 12px;
+	line-height: 12px;
+}
+
+/*
+ * Top navigation bar
+ */
+#top_nav_box {
+	clear: both;
+	background-color: #CCCCCC;
+	margin: 0px 10px 0px 10px;
+	height: 14px;
+	font-size: 80%;
+}
+
+#top_nav_box ul {
+	float: right;
+	padding: 0px;
+	margin: 0px 10px 0px 0px;
+	list-style-type: none; 
+	text-transform: uppercase;
+	font-size: 95%;
+}
+
+#top_nav_box li {
+	float right;
+	display: inline;
+	margin-left: 20px;
+}
+
+#top_nav_box li a:link{	color: #222222; text-decoration: none;}
+#top_nav_box li a:visited {text-decoration: none;}
+#top_nav_box li a:hover {text-decoration: underline;color: #222222;}
+
+/*
+ * Left navigation box
+ */
+#left_nav_box {
+	position: absolute;
+	top: 115px;
+	left: 0px;
+	background-color: AliceBlue;
+	padding: 10px;
+	margin: 20px 10px 10px 10px;
+}
+#left_nav_box ul {
+	list-style-type: none;
+	line-height: 175%;
+	margin: 0;
+	padding: 0;
+}
+
+/*
+ * Main content box and styles for elements used there
+ */
+#content_box {
+	position: absolute;
+	top: 125px;
+	left: 160px;
+	background-color: white;
+	margin: 5px 5px 5px 5px;
+	padding: 0px 0px 10px 0px;
+	max-width: 600px;
+	min-width: 600px;
+}
+p.footer {
+	font-size: 75%;
+	padding: 10px 0px 0px 0px;
+}
+
+ul.flushlist {
+	list-style-type: disc;
+	padding-left: 0px;
+	margin-left: 10px;
+}
+
+kbd {
+	font-size: 130%;
+}
+
+pre {
+	font-size: 130%;
+}
+
+hr {
+	max-width: 700px;
+	padding: 0px;
+	margin: 0px;
+	height: 2px;
+	clear: both;
+	border-top-width: 0;
+	border-right-width: 0;
+	border-bottom-width: 2px;
+	border-left-width: 0;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: solid;
+	border-left-style: none;
+	border-bottom-color: #0075bd;
+}
+
+h1 {color: #0075bd; font-size: 20px; line-height: 20px}
+h2 {color: #0075bd; font-size: 15px; }
+h3 {color: #0075bd; font-size: 13px; }
+
+a:link {color: #3366BB; text-decoration: none;}
+a:visited {color: #3366BB; text-decoration: none;}
+a:hover {text-decoration: underline; color: #6699AA;}
+
