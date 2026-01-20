@@ -122,7 +122,7 @@ html_template = """
         .btn:hover:not(:disabled) { background-color: #2c974b; }
 
         /* === 侧边栏树 === */
-        .sidebar-title { padding: 15px 20px; font-size: 14px; font-weight: 600; color: #24292e; border-bottom: 1px solid #eaecef; }
+        .sidebar-title { padding: 15px 20px; font-size: 18px; font-weight: 600; color: #24292e; border-bottom: 1px solid #eaecef; }
         .tree-container { flex-grow: 1; overflow-y: auto; overflow-x: auto; padding: 10px 0; }
         .tree-item { padding: 6px 15px 6px 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; font-size: 14px; color: #444; user-select: none; }
         .tree-item:hover { background-color: var(--hover); }
@@ -264,20 +264,21 @@ html_template = """
                 div.style.paddingLeft = (level * 18 + 10) + 'px';
                 div.onclick = (e) => { e.stopPropagation(); openFolder(node.id); };
 
-                const hasSubs = node.children && node.children.some(c => c.type === 'folder');
+                const showChildren = level < 1; 
+                const hasSubs = showChildren && node.children && node.children.some(c => c.type === 'folder');
                 
                 const toggle = document.createElement('span');
                 toggle.className = 'tree-toggle ' + (hasSubs ? '' : 'invisible');
                 toggle.innerText = '▶';
                 
-                const icon = document.createElement('span');
-                icon.className = 'tree-icon';
-                icon.innerText = '📁';
+                // const icon = document.createElement('span');
+                // icon.className = 'tree-icon';
+                // icon.innerText = '📁';
 
                 const name = document.createElement('span');
                 name.innerText = node.name;
 
-                div.append(toggle, icon, name);
+                div.append(toggle, name);
                 container.appendChild(div);
 
                 if (hasSubs) {
