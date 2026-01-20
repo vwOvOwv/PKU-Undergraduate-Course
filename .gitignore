@@ -1,69 +1,15 @@
-/计算机网络(Computer Networks)/课件
-/计算机组织与体系结构(Computer Architectures)/课件
-神经科学的计算基础(Neuroscience and Computing Fundamentals for Neural Networks)/课件
-信息学中的概率统计(Probability Theory and Statistics)/课件
-计算机视觉导论(Introduction to Computer Vision)/slides
-神经网络的计算基础(Neuroscience and Computing Fundamentals for Neural Networks)/课件
 *.DS_Store
-生物信息学实验(Bioinformatics Lab.)/Week2/slides
-遗传学(Genetics)/
-数字逻辑设计(Design of Digital Logic)/课件
-微生物学(Microbiology)/课件
-生物信息学实验(Bioinformatics Lab.)/Week3
-信息学中的概率统计(Probability Theory and Statistics)/.DS_Store
-生物信息学实验(Bioinformatics Lab.)/
-生物信息学(Bioinformatics)/
-信息学中的概率统计(Probability Theory and Statistics)/总结/chap2.pptx
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/assignment4_ans/data
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/assignment4_ans/PointNet/__pycache__
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/assignment4_ans/PointNet/exps
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/MaskRCNN/intro2cv_maskrcnn_pretrained.pth
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn_0.pth
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn_1.pth
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn_2.pth
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/PointNet/__pycache__
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/PointNet/exps
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/RNN/__pycache__
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/RNN/datasets/coco
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/RNN/datasets/coco_captioning.zip
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/RNN/utils/__pycache__
-计算机视觉导论(Introduction to Computer Vision)/assignments/HW4/full_ans/data/shapenetcore_partanno_segmentation_benchmark_v0
-NeuroAI-从脑科学到类脑智能(NeuroAI-From Brain Science to Brain-Inspired Intelligence)/课件
-信息安全引论(Introduction to Information Security)/课件
-编译原理(Compiler Principles)/课件
-强化学习(Reinforment Learning)/课件
-强化学习(Reinforment Learning)/RLbook2020.pdf
-强化学习(Reinforment Learning)/作业/HW2/hw2-gridworld/gridworld_random_time_diff.txt
-强化学习(Reinforment Learning)/作业/HW2/hw2-gridworld/gridworld_random_time_diff.cpp
-强化学习(Reinforment Learning)/作业/HW1/.vscode/settings.json
-信息安全引论(Introduction to Information Security)/作业/2100012289刘沛雨第*次作业.zip
-强化学习(Reinforment Learning)/作业/.vscode
-多模态学习(Multimodal Learning)/课件
-生物化学(Biochemistry)/课件
-分子生物学实验(Molecular Biology Lab.)/Week2/课件
-分子生物学实验(Molecular Biology Lab.)/Week3/课件
-分子生物学实验(Molecular Biology Lab.)/Week4/课件
-编译原理(Compiler Principles)/编译原理 第二版 (Alfred V. Aho,Monica S.Lam, Ravi Sethi etc.) (Z-Library).pdf
-强化学习(Reinforment Learning)/作业/HW*/2100012289_刘沛雨_作业*.zip
-分子生物学实验(Molecular Biology Lab.)/Week8/课件
-强化学习(Reinforment Learning)/作业/HW7/hw7-cartpole/q_tables*/*.npy
-多模态学习(Multimodal Learning)/作业/HW2/glove.6B.100d.txt
-多模态学习(Multimodal Learning)/作业/HW2/glove.6B.200d.txt
-多模态学习(Multimodal Learning)/作业/HW2/glove.6B.300d.txt
-多模态学习(Multimodal Learning)/作业/HW2/glove.6B.50d.txt
-多模态学习(Multimodal Learning)/作业/HW2/glove.6B.zip
-多模态学习(Multimodal Learning)/作业/HW2/glove.6B.zip.1
-强化学习(Reinforment Learning)/作业/HW7/.vscode/settings.json
-分子生物学实验(Molecular Biology Lab.)
-强化学习(Reinforment Learning)/作业/HW8
-编译原理(Compiler Principles)/Lab/Lv1/sysy-make-template/debug
-编译原理(Compiler Principles)/Lab/Lv1/sysy-make-template/build
-编译原理(Compiler Principles)/Lab/Lv2/sysy-make-template/build
-编译原理(Compiler Principles)/Lab/Lv2/sysy-make-template/debug
-编译原理(Compiler Principles)/Lab/Lv3/sysy-make-template/build
-编译原理(Compiler Principles)/Lab/Lv3/sysy-make-template/debug
-多模态学习(Multimodal Learning)/作业/HW3/utils/__pycache__
-多模态学习(Multimodal Learning)/作业/HW3/datasets/__pycache__
-多模态学习(Multimodal Learning)/作业/HW3/handin/visualizations
-多模态学习(Multimodal Learning)/作业/HW3/visualizations
+*slides
+*.ipynb_checkpoints
+*__pycache__
+*sysy-make-template*
+*.pth
+Introduction to Computer Vision/assignments/HW4/assignment4_ans/data
+Introduction to Computer Vision/assignments/HW4/assignment4_ans/PointNet/exps
+Introduction to Computer Vision/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn
+Introduction to Computer Vision/assignments/HW4/full_ans/PointNet/exps
+Introduction to Computer Vision/assignments/HW4/full_ans/RNN/datasets/coco
+Introduction to Computer Vision/assignments/HW4/full_ans/RNN/datasets/coco_captioning.zip
+Introduction to Computer Vision/assignments/HW4/full_ans/data/shapenetcore_partanno_segmentation_benchmark_v0
+Multimodal Learning/assignment/HW3/handin
+Multimodal Learning/assignment/HW3/visualizations
