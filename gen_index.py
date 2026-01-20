@@ -240,21 +240,27 @@ html_template = """
         let allFiles = []; // 搜索索引
         let selectedFiles = new Set();
 
-        // === 1. 初始化索引 ===
+        // === 1. 初始化索引 (修改版：同时索引文件夹) ===
+        let allFiles = []; // 搜索索引（包含文件和文件夹）
+
         function indexData(nodes, parentPath = []) {
             if (!nodes) return;
             nodes.forEach(node => {
                 node.parent = parentPath;
                 
-                // 存储文件夹引用
+                // 1. 存入 Map 供 ID 查找
                 if (node.type === 'folder') {
                     if (node.id) folderMap.set(node.id, node);
+                    // 递归处理子节点
                     if (node.children) indexData(node.children, [...parentPath, node]);
                 } 
-                // 收集文件用于搜索
-                else if (node.type === 'file') {
-                    allFiles.push(node);
+                
+                // 2. 存入搜索索引 (文件和文件夹都加进去)
+                // 此时我们要为文件夹动态生成一个 path 字符串，方便搜索显示
+                if (!node.relPath && node.parent) {
+                    node.relPath = node.parent.map(p => p.name).join('/') + '/' + node.name;
                 }
+                allFiles.push(node);
             });
         }
         
@@ -317,7 +323,7 @@ html_template = """
             });
         }
 
-        // === 3. 渲染右侧列表 ===
+        // === 3. 渲染右侧列表 (修改版：支持搜索跳转) ===
         function renderList(items, isSearch = false) {
             const tbody = document.getElementById('file-table-body');
             tbody.innerHTML = '';
@@ -344,7 +350,19 @@ html_template = """
             items.forEach(item => {
                 const tr = document.createElement('tr');
                 
-                // Checkbox
+                // --- 行为逻辑：点击跳转 ---
+                // 定义点击行的行为
+                const handleRowClick = () => {
+                    if (isSearch) {
+                        // 搜索模式下：点击即跳转
+                        jumpTo(item);
+                    } else {
+                        // 普通模式下：文件夹进入，文件无动作(或选框)
+                        if (item.type === 'folder') openFolder(item.id);
+                    }
+                };
+
+                // 1. Checkbox 列
                 const tdCheck = document.createElement('td');
                 tdCheck.className = 'col-check';
                 const cb = document.createElement('input');
@@ -353,31 +371,41 @@ html_template = """
                 if (item.type === 'file') {
                     cb.checked = selectedFiles.has(item);
                     cb.onchange = (e) => toggleSelection(item, e.target.checked);
-                    tr.onclick = (e) => { if(e.target !== cb) cb.click(); };
+                    // 点击行时，如果是搜索模式则跳转，否则切换选中
+                    tr.onclick = (e) => { 
+                        if (e.target !== cb) {
+                            if (isSearch) jumpTo(item); 
+                            else cb.click(); 
+                        }
+                    };
                     if (cb.checked) tr.classList.add('selected');
                 } else {
+                    // 文件夹没有 Checkbox，点击行只触发跳转/进入
                     cb.disabled = true;
                     cb.style.opacity = 0.3;
-                    tr.onclick = () => openFolder(item.id);
+                    tr.onclick = handleRowClick;
                 }
                 tdCheck.appendChild(cb);
 
-                // Icon
+                // 2. Icon 列
                 const tdIcon = document.createElement('td');
                 tdIcon.className = 'col-icon';
                 tdIcon.innerText = item.type === 'folder' ? '📁' : '📄';
 
-                // Name (Search模式下显示路径)
+                // 3. Name 列
                 const tdName = document.createElement('td');
                 tdName.className = 'col-name';
                 
                 if (isSearch) {
-                    tdName.innerHTML = `<div>${item.name}</div><span class="path-hint">${item.relPath}</span>`;
+                    // 搜索模式：显示路径提示
+                    // 移除开头多余的斜杠或根路径显示，只保留父级路径
+                    const parentPath = item.parent ? item.parent.map(p => p.name).join('/') : '';
+                    tdName.innerHTML = `<div>${item.name}</div><span class="path-hint">${parentPath}</span>`;
                 } else {
                     tdName.innerText = item.name;
                 }
 
-                // Size
+                // 4. Size 列
                 const tdSize = document.createElement('td');
                 tdSize.className = 'col-size';
                 tdSize.innerText = item.type === 'folder' ? '-' : item.size + ' KB';
@@ -387,6 +415,38 @@ html_template = """
             });
             
             updateBtnState();
+        }
+
+        // === 新增：跳转逻辑 ===
+        function jumpTo(item) {
+            // 1. 清空搜索状态
+            document.getElementById('search-input').value = '';
+            isSearchMode = false;
+
+            // 2. 决定要打开哪个文件夹 ID
+            let targetFolderId = null;
+
+            if (item.type === 'folder') {
+                // 如果搜索到的是文件夹，直接打开它
+                targetFolderId = item.id;
+            } else {
+                // 如果搜索到的是文件，打开它的父文件夹
+                if (item.parent && item.parent.length > 0) {
+                    targetFolderId = item.parent[item.parent.length - 1].id;
+                } else {
+                    // 极其罕见的根目录文件情况
+                    if (rawData[0]) targetFolderId = rawData[0].id;
+                }
+            }
+
+            // 3. 执行打开
+            if (targetFolderId) {
+                openFolder(targetFolderId);
+                
+                // 可选：如果是文件，可以加一点高亮效果（这里简单实现为滚动到顶部）
+                // 实际生产中可能需要用 ID 锚点定位
+                document.querySelector('.file-list').scrollTop = 0; 
+            }
         }
 
         function openFolder(id) {
