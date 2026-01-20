@@ -199,7 +199,7 @@ html_template = """
             <div class="header-right">
                 <div class="search-wrapper">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-box" id="search-input" placeholder="Search files..." oninput="handleSearch(this.value)">
+                    <input type="text" class="search-box" id="search-input" placeholder="Search folders or files..." oninput="handleSearch(this.value)">
                 </div>
                 <button class="btn" id="download-btn" onclick="downloadSelected()" disabled>
                     <span>⬇</span> Download
