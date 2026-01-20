@@ -95,7 +95,7 @@ html_template = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peiyu's Course Hub</title>
+    <title>Peiyu's Course Zoo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
@@ -108,6 +108,10 @@ html_template = """
         .main-view { flex-grow: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
 
         /* === 顶部栏 === */
+        /* 1. 这是右侧顶部栏 (你之前不小心删掉的) */
+        .header { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
+        
+        /* 2. 这是左侧顶部栏 (与右侧对齐) */
         .sidebar-title { 
             height: 60px; /* 关键：与右侧 .header 高度一致 */
             display: flex; 
@@ -182,14 +186,14 @@ html_template = """
 </head>
 <body>
     <div class="sidebar">
-        <div class="sidebar-title">Peiyu's Course Hub</div>
+        <div class="sidebar-title">Peiyu's Course Zoo</div>
         <div class="tree-container" id="folder-tree"></div>
     </div>
 
     <div class="main-view">
         <div class="header">
             <div class="header-left">
-                <h1 id="view-title">Course Hub</h1>
+                <h1 id="view-title">Course Zoo</h1>
                 <div class="search-wrapper">
                     <span class="search-icon">🔍</span>
                     <input type="text" class="search-box" id="search-input" placeholder="Search files..." oninput="handleSearch(this.value)">
