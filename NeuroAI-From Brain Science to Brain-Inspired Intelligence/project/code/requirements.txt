@@ -1,0 +1,9 @@
+numpy==1.23.5
+PyYAML==6.0.3
+spikingjelly==0.0.0.0.14
+torch==2.9.1
+torchinfo==1.8.0
+torchtoolbox==0.1.8.2
+torchvision==0.24.1
+tqdm==4.67.1
+wandb==0.23.1
