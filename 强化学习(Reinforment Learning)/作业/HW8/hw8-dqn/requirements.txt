@@ -1,5 +1,0 @@
-tqdm
-matplotlib
-numpy
-torch
-gym[atari,accept-rom-license]
