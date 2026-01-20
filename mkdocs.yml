@@ -1,0 +1,37 @@
+site_name: Peiyu's Course Hub
+site_url: https://vwOvOwv.github.io/PKU-Undergraduate-Course/
+repo_url: https://github.com/vwOvOwv/PKU-Undergraduate-Course/
+repo_name: PKU-Undergraduate-Course
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+  palette: 
+    scheme: default
+
+plugins:
+  - search
+  - awesome-pages:
+      collapse_single_pages: true
+
+nav:
+  - Home: index.md
+  - Computer Science: computer-science/
+  - Life Science: life-science/
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

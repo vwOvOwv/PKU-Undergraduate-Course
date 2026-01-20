@@ -1,0 +1,54 @@
+name: Deploy Course Site
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Config
+        uses: actions/checkout@v4
+
+      - name: Checkout CS Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ComputerScience
+          path: docs/computer-science
+          sparse-checkout: |
+            .
+            /*
+            !.*
+
+      - name: Checkout LS Branch
+        uses: actions/checkout@v4
+        with:
+          ref: LifeScience
+          path: docs/life-science
+          sparse-checkout: |
+            .
+            /*
+            !.*
+
+      - name: Create Index
+        run: |
+          echo "# Welcome to Peiyu's Course Hub" > docs/index.md
+          echo "Select a department from the navigation bar above to browse course materials." >> docs/index.md
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Install Dependencies
+        run: |
+          pip install mkdocs-material mkdocs-awesome-pages-plugin
+
+      - name: Build and Deploy
+        run: |
+          mkdocs gh-deploy --force
