@@ -241,7 +241,6 @@ html_template = """
         let selectedFiles = new Set();
 
         // === 1. 初始化索引 (修改版：同时索引文件夹) ===
-        let allFiles = []; // 搜索索引（包含文件和文件夹）
 
         function indexData(nodes, parentPath = []) {
             if (!nodes) return;
