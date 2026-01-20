@@ -108,9 +108,18 @@ html_template = """
         .main-view { flex-grow: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
 
         /* === 顶部栏 === */
-        .header { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
-        .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
-        .header h1 { font-size: 18px; margin: 0; white-space: nowrap; }
+        .sidebar-title { 
+            height: 60px; /* 关键：与右侧 .header 高度一致 */
+            display: flex; 
+            align-items: center; 
+            padding: 0 20px; 
+            font-size: 18px; /* 字体大小与右侧 h1 保持一致 */
+            font-weight: bold; 
+            color: #24292e; 
+            border-bottom: 1px solid var(--border); 
+            background: #fcfcfc;
+            flex-shrink: 0;
+        }
         
         .search-wrapper { flex-grow: 1; max-width: 400px; position: relative; }
         .search-box { width: 100%; padding: 8px 12px 8px 30px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #f6f8fa; transition: .2s; }
