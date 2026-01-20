@@ -335,7 +335,16 @@ html_template = """
                 document.getElementById('view-title').innerText = `Search Results (${items.length})`;
                 document.getElementById('breadcrumbs').innerHTML = '<span class="crumb" onclick="exitSearch()">Back to Folders</span> <span class="crumb-sep">/</span> <span class="crumb current">Search</span>';
             } else {
-                document.getElementById('view-title').innerText = currentFolder ? currentFolder.name : 'Root';
+                let mainTitle = 'Course Zoo'; // 默认兜底
+                if (currentFolder) {
+                    // 逻辑：如果当前文件夹有父级列表且不为空，取第一个父级（即根节点）；
+                    // 否则，说明当前文件夹本身就是根节点 (如 Computer Science)
+                    const rootNode = (currentFolder.parent && currentFolder.parent.length > 0) 
+                                     ? currentFolder.parent[0] 
+                                     : currentFolder;
+                    mainTitle = rootNode.name;
+                }
+                document.getElementById('view-title').innerText = mainTitle;
                 updateBreadcrumbs(currentFolder);
             }
 
