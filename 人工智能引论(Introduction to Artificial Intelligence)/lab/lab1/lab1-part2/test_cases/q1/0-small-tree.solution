@@ -1,3 +1,0 @@
-# This is the solution file for test_cases/q2/0-small-tree.test.
-action: "pacLeft"
-generated: "A B C D deeper minLeft minRight root"

@@ -1,3 +1,0 @@
-a=tanh()
-b=relu()
-c=sigmoid()

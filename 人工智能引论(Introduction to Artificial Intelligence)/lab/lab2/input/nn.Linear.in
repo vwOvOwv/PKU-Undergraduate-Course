@@ -1,4 +1,0 @@
-y=randint(0, 3, (100))
-l1=Linear(10, 3)
-ls=LogSoftmax()
-L=NLLLoss(y)
