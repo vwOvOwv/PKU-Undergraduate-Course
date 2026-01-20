@@ -405,8 +405,8 @@ html_template = """
                     <span id="cart-total-size">~0 KB</span>
                 </div>
                 <div class="cart-actions">
-                    <button class="btn-cart btn-cart-clear" onclick="clearCart()">Clear All</button>
-                    <button class="btn-cart btn-cart-download" id="cart-download-btn" onclick="downloadCart()" disabled>Download All</button>
+                    <button class="btn-cart btn-cart-clear" onclick="clearCart()">🗑 Clear All</button>
+                    <button class="btn-cart btn-cart-download" id="cart-download-btn" onclick="downloadCart()" disabled>⬇ Download All</button>
                 </div>
             </div>
         </div>
@@ -423,9 +423,6 @@ html_template = """
                 </div>
                 <button class="btn btn-add-cart" id="add-cart-btn" onclick="addToCart()" disabled>
                     <span>🛒</span> Add to Cart
-                </button>
-                <button class="btn" id="download-btn" onclick="downloadSelected()" disabled>
-                    <span>⬇</span> Download
                 </button>
             </div>
         </div>
