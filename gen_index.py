@@ -184,12 +184,232 @@ html_template = """
             .header-left { gap: 10px; }
             .search-wrapper { max-width: 150px; }
         }
+
+        /* === Download Cart 样式 === */
+        .download-cart {
+            border-top: 1px solid var(--border);
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            display: flex;
+            flex-direction: column;
+            max-height: 45%;
+            min-height: 60px;
+            transition: max-height 0.3s ease;
+        }
+        .download-cart.collapsed {
+            max-height: 48px;
+            min-height: 48px;
+        }
+        .cart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+        .cart-header:hover {
+            background: var(--hover);
+        }
+        .cart-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #24292e;
+        }
+        .cart-badge {
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+        .cart-badge.empty {
+            background: #94a3b8;
+        }
+        .cart-toggle {
+            font-size: 12px;
+            color: #64748b;
+            transition: transform 0.2s;
+        }
+        .download-cart.collapsed .cart-toggle {
+            transform: rotate(180deg);
+        }
+        .cart-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .download-cart.collapsed .cart-body,
+        .download-cart.collapsed .cart-footer {
+            display: none;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            gap: 10px;
+            font-size: 13px;
+            color: #334155;
+            transition: background 0.15s;
+        }
+        .cart-item:hover {
+            background: var(--hover);
+        }
+        .cart-item-icon {
+            flex-shrink: 0;
+        }
+        .cart-item-name {
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .cart-item-size {
+            font-size: 11px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+        .cart-item-remove {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.15s;
+        }
+        .cart-item-remove:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .cart-empty {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .cart-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .cart-stats {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+        }
+        .cart-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-cart {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-cart-clear {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+        .btn-cart-clear:hover {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+        .btn-cart-download {
+            background: linear-gradient(135deg, #2ea44f 0%, #22863a 100%);
+            border: none;
+            color: white;
+        }
+        .btn-cart-download:hover {
+            background: linear-gradient(135deg, #22863a 0%, #176f2c 100%);
+            box-shadow: 0 2px 8px rgba(34, 134, 58, 0.3);
+        }
+        .btn-cart-download:disabled {
+            background: #94d3a2;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn-add-cart {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .btn-add-cart:hover:not(:disabled) {
+            background: #bfdbfe;
+        }
+        .btn-add-cart:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+        }
+
+        /* 动画 */
+        @keyframes cartItemAdd {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .cart-item {
+            animation: cartItemAdd 0.2s ease;
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="sidebar-title">Peiyu's Course Zoo</div>
         <div class="tree-container" id="folder-tree"></div>
+        
+        <!-- Download Cart Panel -->
+        <div class="download-cart" id="download-cart">
+            <div class="cart-header" onclick="toggleCartPanel()">
+                <div class="cart-title">
+                    <span>🛒</span>
+                    <span>Download Cart</span>
+                    <span class="cart-badge empty" id="cart-badge">0</span>
+                </div>
+                <span class="cart-toggle">▼</span>
+            </div>
+            <div class="cart-body" id="cart-body">
+                <div class="cart-empty" id="cart-empty">No items in cart</div>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-stats">
+                    <span id="cart-file-count">0 files</span>
+                    <span id="cart-total-size">~0 KB</span>
+                </div>
+                <div class="cart-actions">
+                    <button class="btn-cart btn-cart-clear" onclick="clearCart()">Clear All</button>
+                    <button class="btn-cart btn-cart-download" id="cart-download-btn" onclick="downloadCart()" disabled>Download All</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="main-view">
@@ -201,6 +421,9 @@ html_template = """
                     <span class="search-icon">🔍</span>
                     <input type="text" class="search-box" id="search-input" placeholder="Search folders or files..." oninput="handleSearch(this.value)">
                 </div>
+                <button class="btn btn-add-cart" id="add-cart-btn" onclick="addToCart()" disabled>
+                    <span>🛒</span> Add to Cart
+                </button>
                 <button class="btn" id="download-btn" onclick="downloadSelected()" disabled>
                     <span>⬇</span> Download
                 </button>
@@ -239,6 +462,7 @@ html_template = """
         let folderMap = new Map();
         let allFiles = []; // 搜索索引
         let selectedFiles = new Set();
+        let cartItems = new Map(); // Download Cart storage
 
         // === 1. 初始化索引 (修改版：同时索引文件夹) ===
 
@@ -541,10 +765,248 @@ html_template = """
 
         function updateBtnState() {
             const btn = document.getElementById('download-btn');
+            const addCartBtn = document.getElementById('add-cart-btn');
             const count = selectedFiles.size;
             btn.disabled = count === 0;
             btn.innerHTML = count > 0 ? `<span>⬇</span> Download (${count})` : `<span>⬇</span> Download`;
+            addCartBtn.disabled = count === 0;
+            addCartBtn.innerHTML = count > 0 ? `<span>🛒</span> Add to Cart (${count})` : `<span>🛒</span> Add to Cart`;
         }
+
+        // === Download Cart Functions ===
+        
+        function toggleCartPanel() {
+            const cart = document.getElementById('download-cart');
+            cart.classList.toggle('collapsed');
+        }
+
+        function addToCart() {
+            if (selectedFiles.size === 0) return;
+            
+            selectedFiles.forEach(item => {
+                if (!cartItems.has(item.id)) {
+                    cartItems.set(item.id, item);
+                }
+            });
+            
+            // Clear selection after adding
+            selectedFiles.clear();
+            if (currentFolder) {
+                renderList(currentFolder.children || [], false);
+            }
+            
+            updateCartUI();
+            saveCartToStorage();
+            
+            // Expand cart panel if collapsed
+            const cart = document.getElementById('download-cart');
+            if (cart.classList.contains('collapsed')) {
+                cart.classList.remove('collapsed');
+            }
+        }
+
+        function removeFromCart(itemId) {
+            cartItems.delete(itemId);
+            updateCartUI();
+            saveCartToStorage();
+        }
+
+        function clearCart() {
+            if (cartItems.size === 0) return;
+            if (!confirm('Clear all items from the cart?')) return;
+            cartItems.clear();
+            updateCartUI();
+            saveCartToStorage();
+        }
+
+        function getAllFilesRecursive(node) {
+            let files = [];
+            if (node.type === 'file') {
+                files.push(node);
+            } else if (node.type === 'folder' && node.children) {
+                node.children.forEach(child => {
+                    files = files.concat(getAllFilesRecursive(child));
+                });
+            }
+            return files;
+        }
+
+        function calculateTotalSize() {
+            let totalKB = 0;
+            cartItems.forEach(item => {
+                if (item.type === 'file') {
+                    totalKB += item.size || 0;
+                } else {
+                    // Recursively calculate folder size
+                    const files = getAllFilesRecursive(item);
+                    files.forEach(f => totalKB += f.size || 0);
+                }
+            });
+            return totalKB;
+        }
+
+        function countFiles() {
+            let count = 0;
+            cartItems.forEach(item => {
+                if (item.type === 'file') {
+                    count++;
+                } else {
+                    count += getAllFilesRecursive(item).length;
+                }
+            });
+            return count;
+        }
+
+        function updateCartUI() {
+            const body = document.getElementById('cart-body');
+            const badge = document.getElementById('cart-badge');
+            const emptyMsg = document.getElementById('cart-empty');
+            const downloadBtn = document.getElementById('cart-download-btn');
+            const fileCountEl = document.getElementById('cart-file-count');
+            const totalSizeEl = document.getElementById('cart-total-size');
+            
+            // Update badge
+            const itemCount = cartItems.size;
+            badge.textContent = itemCount;
+            badge.classList.toggle('empty', itemCount === 0);
+            
+            // Update stats
+            const fileCount = countFiles();
+            const totalSize = calculateTotalSize();
+            fileCountEl.textContent = fileCount === 1 ? '1 file' : `${fileCount} files`;
+            totalSizeEl.textContent = totalSize >= 1024 ? `~${(totalSize / 1024).toFixed(1)} MB` : `~${totalSize.toFixed(0)} KB`;
+            
+            // Update download button
+            downloadBtn.disabled = itemCount === 0;
+            
+            // Clear and rebuild body
+            body.innerHTML = '';
+            
+            if (itemCount === 0) {
+                body.innerHTML = '<div class="cart-empty">No items in cart</div>';
+                return;
+            }
+            
+            cartItems.forEach((item, id) => {
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                
+                const icon = document.createElement('span');
+                icon.className = 'cart-item-icon';
+                icon.textContent = item.type === 'folder' ? '📁' : '📄';
+                
+                const name = document.createElement('span');
+                name.className = 'cart-item-name';
+                name.textContent = item.name;
+                name.title = item.name;
+                
+                const size = document.createElement('span');
+                size.className = 'cart-item-size';
+                if (item.type === 'file') {
+                    size.textContent = item.size + ' KB';
+                } else {
+                    const folderFiles = getAllFilesRecursive(item);
+                    size.textContent = `${folderFiles.length} files`;
+                }
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'cart-item-remove';
+                removeBtn.textContent = '✕';
+                removeBtn.title = 'Remove from cart';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFromCart(id);
+                };
+                
+                div.append(icon, name, size, removeBtn);
+                body.appendChild(div);
+            });
+        }
+
+        async function downloadCart() {
+            if (cartItems.size === 0) return;
+            
+            const overlay = document.getElementById('loading-overlay');
+            const text = document.getElementById('loading-text');
+            overlay.style.display = 'flex';
+            
+            // Collect all files (flatten folders)
+            let allCartFiles = [];
+            cartItems.forEach(item => {
+                if (item.type === 'file') {
+                    allCartFiles.push({ file: item, path: item.name });
+                } else {
+                    // For folders, preserve directory structure
+                    const files = getAllFilesRecursive(item);
+                    files.forEach(f => {
+                        // Build relative path within the folder
+                        const folderPath = item.name;
+                        const filePath = f.relPath.replace(item.relPath + '/', '').replace(item.relPath, '');
+                        allCartFiles.push({ file: f, path: folderPath + '/' + (filePath || f.name) });
+                    });
+                }
+            });
+            
+            const zip = new JSZip();
+            let count = 0;
+            
+            try {
+                for (const {file, path} of allCartFiles) {
+                    text.innerText = `Fetching ${count + 1}/${allCartFiles.length}: ${file.name}`;
+                    
+                    const parts = file.urlPath.split('/');
+                    const encodedPath = parts.map(p => encodeURIComponent(p)).join('/');
+                    const url = `${BASE_URL}/${encodedPath}`;
+                    
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`HTTP ${res.status} for ${file.name}`);
+                    zip.file(path, await res.blob());
+                    count++;
+                }
+                
+                text.innerText = 'Zipping...';
+                const content = await zip.generateAsync({type:'blob'});
+                saveAs(content, 'PKU_Materials.zip');
+                
+            } catch (err) {
+                alert('Download failed: ' + err.message);
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        // === LocalStorage Persistence ===
+        
+        function saveCartToStorage() {
+            try {
+                const ids = Array.from(cartItems.keys());
+                localStorage.setItem('downloadCart', JSON.stringify(ids));
+            } catch (e) {
+                console.warn('Failed to save cart to localStorage:', e);
+            }
+        }
+
+        function loadCartFromStorage() {
+            try {
+                const saved = localStorage.getItem('downloadCart');
+                if (!saved) return;
+                
+                const ids = JSON.parse(saved);
+                ids.forEach(id => {
+                    // Find item by ID in allFiles
+                    const item = allFiles.find(f => f.id === id);
+                    if (item) {
+                        cartItems.set(id, item);
+                    }
+                });
+                updateCartUI();
+            } catch (e) {
+                console.warn('Failed to load cart from localStorage:', e);
+            }
+        }
+
+        // Load cart on page load
+        loadCartFromStorage();
 
         // === 6. 下载逻辑 ===
         async function downloadSelected() {
