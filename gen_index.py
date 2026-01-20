@@ -273,7 +273,7 @@ html_template = """
                 const div = document.createElement('div');
                 div.className = 'tree-item';
                 div.dataset.id = node.id;
-                div.style.paddingLeft = (level * 18 + 10) + 'px';
+                div.style.paddingLeft = '15px';
                 div.onclick = (e) => { e.stopPropagation(); openFolder(node.id); };
 
                 const showChildren = level < 1; 
