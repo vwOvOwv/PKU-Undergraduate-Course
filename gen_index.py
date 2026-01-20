@@ -95,7 +95,7 @@ html_template = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PKU Course Hub</title>
+    <title>Peiyu's Course Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
@@ -104,7 +104,7 @@ html_template = """
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; margin: 0; color: #24292e; display: flex; height: 100vh; overflow: hidden; background: #fff; }
         
         /* === 布局 === */
-        .sidebar { width: 400px; border-right: 1px solid var(--border); background: #fcfcfc; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar { width: 450px; border-right: 1px solid var(--border); background: #fcfcfc; display: flex; flex-direction: column; flex-shrink: 0; }
         .main-view { flex-grow: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
 
         /* === 顶部栏 === */
