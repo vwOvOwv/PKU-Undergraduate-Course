@@ -104,7 +104,7 @@ html_template = """
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; margin: 0; color: #24292e; display: flex; height: 100vh; overflow: hidden; background: #fff; }
         
         /* === 布局 === */
-        .sidebar { width: 300px; border-right: 1px solid var(--border); background: #fcfcfc; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar { width: 400px; border-right: 1px solid var(--border); background: #fcfcfc; display: flex; flex-direction: column; flex-shrink: 0; }
         .main-view { flex-grow: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
 
         /* === 顶部栏 === */
@@ -123,8 +123,8 @@ html_template = """
 
         /* === 侧边栏树 === */
         .sidebar-title { padding: 15px 20px; font-size: 14px; font-weight: 600; color: #24292e; border-bottom: 1px solid #eaecef; }
-        .tree-container { flex-grow: 1; overflow-y: auto; padding: 10px 0; }
-        .tree-item { padding: 6px 15px 6px 10px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; font-size: 14px; color: #444; user-select: none; }
+        .tree-container { flex-grow: 1; overflow-y: auto; overflow-x: auto; padding: 10px 0; }
+        .tree-item { padding: 6px 15px 6px 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; font-size: 14px; color: #444; user-select: none; }
         .tree-item:hover { background-color: var(--hover); }
         .tree-item.active { background-color: var(--selected); color: var(--primary); font-weight: 500; }
         .tree-toggle { width: 20px; text-align: center; color: #999; font-size: 10px; transition: transform 0.15s; margin-right: 4px; display: inline-flex; justify-content: center; }
@@ -173,7 +173,7 @@ html_template = """
 </head>
 <body>
     <div class="sidebar">
-        <div class="sidebar-title">📁 Course Explorer</div>
+        <div class="sidebar-title">Peiyu's Course Hub</div>
         <div class="tree-container" id="folder-tree"></div>
     </div>
 
