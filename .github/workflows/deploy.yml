@@ -20,20 +20,12 @@ jobs:
         with:
           ref: ComputerScience
           path: docs/computer-science
-          sparse-checkout: |
-            .
-            /*
-            !.*
 
       - name: Checkout LS Branch
         uses: actions/checkout@v4
         with:
           ref: LifeScience
           path: docs/life-science
-          sparse-checkout: |
-            .
-            /*
-            !.*
 
       - name: Create Index
         run: |
