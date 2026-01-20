@@ -2,18 +2,3 @@
 *slides
 *.ipynb_checkpoints
 *__pycache__
-*build
-*debug
-*.pth
-*.pt
-*code
-Introduction to Computer Vision/assignments/HW4/assignment4_ans/data
-Introduction to Computer Vision/assignments/HW4/assignment4_ans/PointNet/exps
-Introduction to Computer Vision/assignments/HW4/full_ans/MaskRCNN/results/maskrcnn
-Introduction to Computer Vision/assignments/HW4/full_ans/PointNet/exps
-Introduction to Computer Vision/assignments/HW4/full_ans/RNN/datasets/coco
-Introduction to Computer Vision/assignments/HW4/full_ans/RNN/datasets/coco_captioning.zip
-Introduction to Computer Vision/assignments/HW4/full_ans/data/shapenetcore_partanno_segmentation_benchmark_v0
-Multimodal Learning/assignment/HW3/handin
-Multimodal Learning/assignment/HW3/visualizations
-.gitmodules
