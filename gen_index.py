@@ -14,6 +14,19 @@ def get_next_id():
     id_counter += 1
     return f"n{id_counter}"
 
+def get_folder_size(path):
+    """递归计算文件夹大小（KB）"""
+    total = 0
+    try:
+        for entry in os.scandir(path):
+            if entry.is_file():
+                total += entry.stat().st_size
+            elif entry.is_dir():
+                total += get_folder_size(entry.path) * 1024  # 转回字节
+    except OSError:
+        pass
+    return round(total / 1024, 2)  # 返回 KB
+
 def build_tree(path):
     """递归构建文件树"""
     tree = {"name": os.path.basename(path), "type": "folder", "children": []}
@@ -31,6 +44,7 @@ def build_tree(path):
     # 排序：文件夹在前，文件名忽略大小写排序
     items.sort(key=lambda x: (not os.path.isdir(os.path.join(path, x)), x.lower()))
 
+    folder_size = 0
     for item in items:
         # 过滤规则
         if item.startswith(".") or item in ["index.html", "gen_index.py", "CNAME", "README.md", "__pycache__"]:
@@ -40,14 +54,19 @@ def build_tree(path):
         
         if os.path.isdir(full_path):
             child_tree = build_tree(full_path)
+            folder_size += child_tree.get("size", 0)
             tree["children"].append(child_tree)
         else:
+            file_size = round(os.path.getsize(full_path) / 1024, 2)
+            folder_size += file_size
             tree["children"].append({
                 "name": item,
                 "type": "file",
                 "path": full_path, 
-                "size": round(os.path.getsize(full_path) / 1024, 2)
+                "size": file_size
             })
+    
+    tree["size"] = round(folder_size, 2)
     return tree
 
 def process_branch_root(local_path, branch_name):
@@ -83,9 +102,16 @@ def process_branch_root(local_path, branch_name):
 data_cs = process_branch_root("docs/computer-science", "ComputerScience")
 data_ls = process_branch_root("docs/life-science", "LifeScience")
 
+# 计算根目录大小
+def calculate_folder_size(children):
+    total = 0
+    for item in children:
+        total += item.get("size", 0)
+    return round(total, 2)
+
 full_data = [
-    {"name": "Computer Science", "type": "folder", "children": data_cs, "id": "root_cs"},
-    {"name": "Life Science", "type": "folder", "children": data_ls, "id": "root_ls"}
+    {"name": "Computer Science", "type": "folder", "children": data_cs, "id": "root_cs", "size": calculate_folder_size(data_cs)},
+    {"name": "Life Science", "type": "folder", "children": data_ls, "id": "root_ls", "size": calculate_folder_size(data_ls)}
 ]
 
 # HTML 模板
@@ -151,18 +177,28 @@ html_template = """
         .file-list { flex-grow: 1; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th { text-align: left; padding: 10px 15px; border-bottom: 1px solid var(--border); background: #fafbfc; color: #586069; font-size: 13px; font-weight: 600; position: sticky; top: 0; z-index: 10; }
-        td { padding: 8px 15px; border-bottom: 1px solid #eaecef; font-size: 14px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #24292e; }
+        td { padding: 8px 15px; border-bottom: 1px solid #eaecef; font-size: 14px; vertical-align: middle; white-space: nowrap; color: #24292e; }
+        td.col-name { overflow: hidden; text-overflow: ellipsis; }
         tr { cursor: default; }
         tr:hover { background-color: var(--hover); }
         tr.selected { background-color: var(--selected); }
 
-        .col-check { width: 40px; text-align: center; }
+        .col-check { width: 40px; text-align: center; overflow: visible; }
         .col-icon { width: 36px; text-align: center; font-size: 16px; }
         .col-name { width: auto; }
         .col-size { width: auto; text-align: right;}
         
         .path-hint { display: block; font-size: 11px; color: #888; margin-top: 2px; }
+        .path-hint .path-crumb { color: #0366d6; cursor: pointer; }
+        .path-hint .path-crumb:hover { text-decoration: underline; }
         .match-highlight { background-color: #fff5b1; border-radius: 2px; }
+        
+        /* 搜索结果行样式 */
+        tr.search-result { cursor: pointer; }
+        tr.search-result:hover { background-color: #dbeafe; }
+        tr.search-result td.col-name::after { content: ''; }
+        tr.search-result:hover td.col-name::after { opacity: 1; }
+        .jump-hint { font-size: 11px; color: #0366d6; margin-left: 8px; opacity: 0.7; }
 
         /* 面包屑 */
         .breadcrumbs { padding: 8px 20px; font-size: 13px; color: #586069; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; overflow-x: auto; white-space: nowrap; background: #fff; min-height: 36px; }
@@ -461,6 +497,15 @@ html_template = """
         let selectedFiles = new Set();
         let cartItems = new Map(); // Download Cart storage
 
+        // === 辅助函数：格式化文件大小 ===
+        function formatSize(sizeKB) {
+            if (sizeKB == null || sizeKB === 0) return '-';
+            if (sizeKB >= 1024) {
+                return (sizeKB / 1024).toFixed(1) + ' MB';
+            }
+            return sizeKB.toFixed(1) + ' KB';
+        }
+
         // === 1. 初始化索引 (修改版：同时索引文件夹) ===
 
         function indexData(nodes, parentPath = []) {
@@ -578,6 +623,7 @@ html_template = """
 
             items.forEach(item => {
                 const tr = document.createElement('tr');
+                if (isSearch) tr.classList.add('search-result');
                 
                 // --- 行为逻辑：点击跳转 ---
                 // 定义点击行的行为
@@ -597,23 +643,30 @@ html_template = """
                 const cb = document.createElement('input');
                 cb.type = 'checkbox';
                 
-                if (item.type === 'file') {
-                    cb.checked = selectedFiles.has(item);
-                    cb.onchange = (e) => toggleSelection(item, e.target.checked);
-                    // 点击行时，如果是搜索模式则跳转，否则切换选中
-                    tr.onclick = (e) => { 
-                        if (e.target !== cb) {
-                            if (isSearch) jumpTo(item); 
-                            else cb.click(); 
+                // 文件和文件夹都可以被选中
+                cb.checked = selectedFiles.has(item);
+                cb.onchange = (e) => {
+                    e.stopPropagation();
+                    toggleSelection(item, e.target.checked);
+                };
+                cb.onclick = (e) => e.stopPropagation();
+                
+                // 点击行的行为
+                tr.onclick = (e) => { 
+                    if (e.target !== cb) {
+                        if (isSearch) {
+                            jumpTo(item);
+                        } else if (item.type === 'folder') {
+                            // 文件夹：双击进入，单击选中
+                            openFolder(item.id);
+                        } else {
+                            // 文件：点击切换选中
+                            cb.click();
                         }
-                    };
-                    if (cb.checked) tr.classList.add('selected');
-                } else {
-                    // 文件夹没有 Checkbox，点击行只触发跳转/进入
-                    cb.disabled = true;
-                    cb.style.opacity = 0.3;
-                    tr.onclick = handleRowClick;
-                }
+                    }
+                };
+                
+                if (cb.checked) tr.classList.add('selected');
                 tdCheck.appendChild(cb);
 
                 // 2. Icon 列
@@ -626,10 +679,41 @@ html_template = """
                 tdName.className = 'col-name';
                 
                 if (isSearch) {
-                    // 搜索模式：显示路径提示
-                    // 移除开头多余的斜杠或根路径显示，只保留父级路径
-                    const parentPath = item.parent ? item.parent.map(p => p.name).join('/') : '';
-                    tdName.innerHTML = `<div>${item.name}</div><span class="path-hint">${parentPath}</span>`;
+                    // 搜索模式：显示可点击的路径面包屑
+                    const searchVal = document.getElementById('search-input').value.toLowerCase();
+                    
+                    // 高亮匹配的关键词
+                    let displayName = item.name;
+                    if (searchVal) {
+                        const regex = new RegExp(`(${searchVal.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')})`, 'gi');
+                        displayName = item.name.replace(regex, '<span class="match-highlight">$1</span>');
+                    }
+                    
+                    // 构建可点击的路径面包屑
+                    let pathHtml = '';
+                    if (item.parent && item.parent.length > 0) {
+                        const crumbs = item.parent.map((p, idx) => 
+                            `<span class="path-crumb" data-folder-id="${p.id}">${p.name}</span>`
+                        ).join(' / ');
+                        pathHtml = `<span class="path-hint">${crumbs}</span>`;
+                    }
+                    
+                    tdName.innerHTML = `<div>${displayName}<span class="jump-hint">Go to folder</span></div>${pathHtml}`;
+                    
+                    // 为路径面包屑添加点击事件
+                    setTimeout(() => {
+                        tdName.querySelectorAll('.path-crumb').forEach(crumb => {
+                            crumb.onclick = (e) => {
+                                e.stopPropagation();
+                                const folderId = crumb.dataset.folderId;
+                                if (folderId) {
+                                    document.getElementById('search-input').value = '';
+                                    isSearchMode = false;
+                                    openFolder(folderId);
+                                }
+                            };
+                        });
+                    }, 0);
                 } else {
                     tdName.innerText = item.name;
                 }
@@ -637,7 +721,7 @@ html_template = """
                 // 4. Size 列
                 const tdSize = document.createElement('td');
                 tdSize.className = 'col-size';
-                tdSize.innerText = item.type === 'folder' ? '-' : item.size + ' KB';
+                tdSize.innerText = formatSize(item.size);
 
                 tr.append(tdCheck, tdIcon, tdName, tdSize);
                 tbody.appendChild(tr);
@@ -752,10 +836,9 @@ html_template = """
                 : (currentFolder ? currentFolder.children : []);
 
             currentItems.forEach(item => {
-                if (item.type === 'file') {
-                    if (isChecked) selectedFiles.add(item);
-                    else selectedFiles.delete(item);
-                }
+                // 文件和文件夹都可以被选中
+                if (isChecked) selectedFiles.add(item);
+                else selectedFiles.delete(item);
             });
             renderList(currentItems, isSearchMode);
         }
