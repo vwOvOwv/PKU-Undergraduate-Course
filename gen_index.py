@@ -780,12 +780,12 @@ html_template = """
             
             if (['pdf'].includes(ext)) return '📕';
             if (['doc', 'docx'].includes(ext)) return '📘';
-            if (['ppt', 'pptx'].includes(ext)) return '📊';
+            if (['ppt', 'pptx'].includes(ext)) return '🔖';
             if (['xls', 'xlsx'].includes(ext)) return '📊';
-            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's'].includes(ext)) return '💻';
+            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's', 'rs', 'mlx'].includes(ext)) return '💻';
             if (['md', 'markdown', 'txt', 'rst'].includes(ext)) return '📝';
             if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '📦';
-            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'].includes(ext)) return '🖼️';
+            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico', 'fig'].includes(ext)) return '🏞️';
             if (['mp4', 'avi', 'mov', 'mkv', 'wmv', 'flv', 'webm'].includes(ext)) return '🎬';
             if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma'].includes(ext)) return '🎵';
             
