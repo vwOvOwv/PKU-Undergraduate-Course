@@ -1182,36 +1182,108 @@ html_template = """
             return fileIds;
         }
 
+        // Helper: Check if node A is a descendant of node B (recursive check)
+        // Since we don't have parent pointers in all objects or a full tree traversal here easily,
+        // we can check if B's recursive file list contains A (if A is file) or A's children.
+        // Better yet, we can use the `parent` path attribute if available, or just check ID containment if we had a flat map.
+        // Given existing structure, let's stick to checking if item is inside an existing cart folder.
+        
+        // Expanded Helper: Check if item is inside any folder currently in cart
+        function isInsideCartFolder(item, cartFolders) {
+            // Check if item's ID is in the file list of any cart folder
+            // This works well for files. For folders, we need to check if all its files are in a cart folder?
+            // Or simpler: check if the item is a child/descendant of a cart folder.
+            // Since we have `getAllFilesRecursive`, we can check if item (or its content) is covered.
+            
+            for (const folder of cartFolders) {
+                if (folder.id === item.id) return true; // Exact match
+                
+                // Get all IDs inside the cart folder
+                const descIds = new Set(getAllFilesRecursive(folder).map(f => f.id));
+                
+                if (item.type === 'file') {
+                    if (descIds.has(item.id)) return true;
+                } else {
+                    // If item is a folder, check if IT is fully contained in 'folder'
+                    // For now, let's simplify: if any file of 'item' is in 'folder', 
+                    // and 'item' itself isn't 'folder', it implies 'item' might be a subfolder.
+                    // But 'getAllFilesRecursive' returns files. 
+                    // Correct approach: recursively check children.
+                    
+                    // Optimization: We built `getCartFolderFileIds` which returns ALL file IDs in cart folders.
+                    // If item is a folder, we check if ALL its files are already in cart folders?
+                    // No, "folder in folder" means the parent folder is in cart.
+                    // If parent folder is in cart, then ALL its children are implicitly in cart.
+                    
+                    // Let's rely on the file-based check for simplicity and robustness:
+                    // If a folder is "inside" another, all its files are inside.
+                    const itemFiles = getAllFilesRecursive(item);
+                    if (itemFiles.length > 0 && itemFiles.every(f => descIds.has(f.id))) {
+                        return true;
+                    }
+                    // Handle empty folders? (Edge case, maybe ignore or check ID paths if available)
+                }
+            }
+            return false;
+        }
+
         function addToCart() {
             if (selectedFiles.size === 0) return;
             
-            // 获取当前购物车中所有文件夹包含的文件 ID
-            let cartFolderFileIds = getCartFolderFileIds();
             let skippedCount = 0;
             let addedCount = 0;
-            let mergedCount = 0; // 被合并的文件数
+            let mergedCount = 0;
             
+            // Snapshot of current cart items
+            const currentCartItems = Array.from(cartItems.values());
+            const cartFolders = currentCartItems.filter(i => i.type === 'folder');
+            const cartFolderFileIds = getCartFolderFileIds(); // All file IDs currently covered by folders in cart
+
             selectedFiles.forEach(item => {
+                // 1. Check if item is already in cart (direct match)
                 if (cartItems.has(item.id)) {
-                    // 已经在购物车中
                     skippedCount++;
-                } else if (item.type === 'file' && cartFolderFileIds.has(item.id)) {
-                    // 文件已经在购物车中的某个文件夹里
-                    skippedCount++;
-                } else {
-                    // 如果添加的是文件夹，移除购物车中该文件夹内的单独文件
-                    if (item.type === 'folder') {
-                        const folderFiles = getAllFilesRecursive(item);
-                        folderFiles.forEach(f => {
-                            if (cartItems.has(f.id)) {
-                                cartItems.delete(f.id);
-                                mergedCount++;
-                            }
-                        });
-                    }
-                    cartItems.set(item.id, item);
-                    addedCount++;
+                    return;
                 }
+
+                // 2. Check if item is already covered by a folder in cart
+                // (Files inside folders, or subfolders inside folders)
+                if (isInsideCartFolder(item, cartFolders)) {
+                     skippedCount++;
+                     return;
+                }
+                
+                // 3. If adding a folder, check if it "swallows" existing cart items
+                // (i.e. we are adding a parent folder, so we should remove its children from cart)
+                if (item.type === 'folder') {
+                    const newItemFileIds = new Set(getAllFilesRecursive(item).map(f => f.id));
+                    const toRemove = [];
+                    
+                    cartItems.forEach(existing => {
+                        // If existing item (file or folder) is completely inside the new item
+                        if (existing.type === 'file') {
+                            if (newItemFileIds.has(existing.id)) {
+                                toRemove.push(existing.id);
+                            }
+                        } else {
+                            // If existing folder is inside new folder
+                            // Check if all its files are in new folder
+                            const existingFiles = getAllFilesRecursive(existing);
+                            if (existingFiles.length > 0 && existingFiles.every(f => newItemFileIds.has(f.id))) {
+                                toRemove.push(existing.id);
+                            }
+                        }
+                    });
+                    
+                    if (toRemove.length > 0) {
+                        toRemove.forEach(id => cartItems.delete(id));
+                        mergedCount += toRemove.length;
+                    }
+                }
+
+                // Add the item
+                cartItems.set(item.id, item);
+                addedCount++;
             });
             
             // Clear selection after adding
@@ -1233,7 +1305,7 @@ html_template = """
             let msg = `Added ${addedCount} item${addedCount !== 1 ? 's' : ''}`;
             let msgParts = [];
             if (skippedCount > 0) msgParts.push(`${skippedCount} duplicate${skippedCount !== 1 ? 's' : ''} skipped`);
-            if (mergedCount > 0) msgParts.push(`${mergedCount} file${mergedCount !== 1 ? 's' : ''} merged into folder`);
+            if (mergedCount > 0) msgParts.push(`${mergedCount} existing item${mergedCount !== 1 ? 's' : ''} merged`);
             if (msgParts.length > 0) msg += ' (' + msgParts.join(', ') + ')';
             
             if (addedCount > 0 || skippedCount > 0 || mergedCount > 0) {
