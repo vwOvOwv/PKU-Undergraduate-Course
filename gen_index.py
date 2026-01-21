@@ -1539,7 +1539,7 @@ html_template = """
                     if (!res.ok) throw new Error(`HTTP ${res.status} for ${file.name}`);
                     
                     // Use stream to track progress
-                    constreader = res.body.getReader();
+                    const reader = res.body.getReader();
                     const chunks = [];
                     while(true) {
                         const {done, value} = await reader.read();
