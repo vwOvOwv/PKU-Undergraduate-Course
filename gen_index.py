@@ -200,6 +200,98 @@ html_template = """
         tr.search-result:hover td.col-name::after { opacity: 1; }
         .jump-hint { font-size: 11px; color: #0366d6; margin-left: 8px; opacity: 0.7; }
 
+        /* 搜索框 */
+        .search-wrapper {
+            flex-grow: 1;
+            max-width: 350px;
+            position: relative;
+        }
+        .search-box {
+            width: 100%;
+            padding: 8px 12px 8px 30px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: #f6f8fa;
+            transition: .2s;
+        }
+        .search-box:focus {
+            background: #fff;
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(3,102,214,0.1);
+        }
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        /* 始终可见的筛选栏 */
+        .filter-bar {
+            padding: 8px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .filter-bar-label {
+            color: #64748b;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .filter-bar-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .filter-bar-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: white;
+            color: #64748b;
+            user-select: none;
+        }
+        .filter-bar-chip:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+        .filter-bar-chip.selected {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+        .filter-bar-chip input {
+            display: none;
+        }
+        .filter-reset-btn {
+            background: none;
+            border: none;
+            color: #0366d6;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .filter-reset-btn:hover {
+            background: #dbeafe;
+        }
+
         /* 面包屑 */
         .breadcrumbs { padding: 8px 20px; font-size: 13px; color: #586069; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; overflow-x: auto; white-space: nowrap; background: #fff; min-height: 36px; }
         .crumb { cursor: pointer; color: var(--primary); }
@@ -477,9 +569,9 @@ html_template = """
             <h1 id="view-title">Course Zoo</h1>
             
             <div class="header-right">
-                <div class="search-wrapper">
+                <div class="search-wrapper" id="search-wrapper">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-box" id="search-input" placeholder="Search folders or files..." oninput="handleSearch(this.value)">
+                    <input type="text" class="search-box" id="search-input" placeholder="Search files..." oninput="handleSearch(this.value)">
                 </div>
                 <button class="btn btn-add-cart" id="add-cart-btn" onclick="addToCart()" disabled>
                     <span>🛒</span> Add to Cart
@@ -488,6 +580,46 @@ html_template = """
         </div>
         
         <div class="breadcrumbs" id="breadcrumbs"></div>
+        
+        <!-- 始终可见的筛选栏 -->
+        <div class="filter-bar" id="filter-bar">
+            <span class="filter-bar-label">Show:</span>
+            <div class="filter-bar-chips">
+                <label class="filter-bar-chip selected" id="chip-folder">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>📁</span> Folders
+                </label>
+                <label class="filter-bar-chip selected" id="chip-pdf">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>📕</span> PDF
+                </label>
+                <label class="filter-bar-chip selected" id="chip-doc">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>📘</span> Word
+                </label>
+                <label class="filter-bar-chip selected" id="chip-ppt">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>📊</span> PPT
+                </label>
+                <label class="filter-bar-chip selected" id="chip-code">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>💻</span> Code
+                </label>
+                <label class="filter-bar-chip selected" id="chip-md">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>📝</span> Markdown
+                </label>
+                <label class="filter-bar-chip selected" id="chip-zip">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>📦</span> Archives
+                </label>
+                <label class="filter-bar-chip selected" id="chip-other">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>📄</span> Other
+                </label>
+            </div>
+            <button class="filter-reset-btn" id="filter-reset-btn" onclick="resetFilters()" style="display:none">↺ Reset</button>
+        </div>
 
         <div class="file-list">
             <table>
@@ -532,6 +664,132 @@ html_template = """
             setTimeout(() => {
                 toast.classList.remove('show');
             }, duration);
+        }
+
+        // === 文件类型筛选器 ===
+        let activeFilters = {
+            folder: true,
+            pdf: true,
+            doc: true,
+            ppt: true,
+            code: true,
+            md: true,
+            zip: true,
+            other: true
+        };
+
+
+        function toggleFilterMenu(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('filter-menu');
+            const toggle = document.getElementById('filter-toggle');
+            menu.classList.toggle('show');
+            toggle.classList.toggle('open', menu.classList.contains('show'));
+        }
+
+        function onSearchFocus() {
+            // 可以在这里添加搜索聚焦时的行为
+        }
+
+        // 筛选类型的显示名称和图标
+        const filterLabels = {
+            folder: { name: 'Folders', icon: '📁' },
+            pdf: { name: 'PDF', icon: '📕' },
+            doc: { name: 'Word', icon: '📘' },
+            ppt: { name: 'PPT', icon: '📊' },
+            code: { name: 'Code', icon: '💻' },
+            md: { name: 'Markdown', icon: '📝' },
+            zip: { name: 'Archives', icon: '📦' },
+            other: { name: 'Other', icon: '📄' }
+        };
+
+        function updateFilters() {
+            // 从 chip 元素读取状态
+            const chipIds = ['folder', 'pdf', 'doc', 'ppt', 'code', 'md', 'zip', 'other'];
+            chipIds.forEach(id => {
+                const chip = document.getElementById('chip-' + id);
+                const checkbox = chip.querySelector('input');
+                activeFilters[id] = checkbox.checked;
+                chip.classList.toggle('selected', checkbox.checked);
+            });
+            
+            // 显示/隐藏 Reset 按钮
+            const allChecked = Object.values(activeFilters).every(v => v);
+            const resetBtn = document.getElementById('filter-reset-btn');
+            resetBtn.style.display = allChecked ? 'none' : 'block';
+            
+            // 刷新显示
+            const searchVal = document.getElementById('search-input').value;
+            if (searchVal || isSearchMode) {
+                handleSearch(searchVal);
+            } else if (currentFolder) {
+                // 非搜索模式下也刷新文件列表
+                const filteredItems = (currentFolder.children || []).filter(item => matchesFilter(item));
+                renderList(filteredItems);
+            }
+        }
+
+        function resetFilters() {
+            const chipIds = ['folder', 'pdf', 'doc', 'ppt', 'code', 'md', 'zip', 'other'];
+            chipIds.forEach(id => {
+                const chip = document.getElementById('chip-' + id);
+                const checkbox = chip.querySelector('input');
+                checkbox.checked = true;
+                activeFilters[id] = true;
+                chip.classList.add('selected');
+            });
+            
+            document.getElementById('filter-reset-btn').style.display = 'none';
+            
+            // 刷新显示
+            const searchVal = document.getElementById('search-input').value;
+            if (searchVal || isSearchMode) {
+                handleSearch(searchVal);
+            } else if (currentFolder) {
+                renderList(currentFolder.children || []);
+            }
+            
+            showToast('Filters reset', 'success');
+        }
+
+        function getFileExtension(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            return ext === filename.toLowerCase() ? '' : ext;
+        }
+
+        function matchesFilter(item) {
+            if (item.type === 'folder') return activeFilters.folder;
+            
+            const ext = getFileExtension(item.name);
+            
+            if (['pdf'].includes(ext)) return activeFilters.pdf;
+            if (['doc', 'docx'].includes(ext)) return activeFilters.doc;
+            if (['ppt', 'pptx'].includes(ext)) return activeFilters.ppt;
+            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's'].includes(ext)) return activeFilters.code;
+            if (['md', 'markdown', 'txt', 'rst'].includes(ext)) return activeFilters.md;
+            if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return activeFilters.zip;
+            
+            return activeFilters.other;
+        }
+
+        // 根据文件类型获取图标
+        function getFileIcon(item) {
+            if (item.type === 'folder') return '📁';
+            
+            const ext = getFileExtension(item.name);
+            
+            if (['pdf'].includes(ext)) return '📕';
+            if (['doc', 'docx'].includes(ext)) return '📘';
+            if (['ppt', 'pptx'].includes(ext)) return '📊';
+            if (['xls', 'xlsx'].includes(ext)) return '📊';
+            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's'].includes(ext)) return '💻';
+            if (['md', 'markdown', 'txt', 'rst'].includes(ext)) return '📝';
+            if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '📦';
+            if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'].includes(ext)) return '🖼️';
+            if (['mp4', 'avi', 'mov', 'mkv', 'wmv', 'flv', 'webm'].includes(ext)) return '🎬';
+            if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma'].includes(ext)) return '🎵';
+            
+            return '📄';
         }
 
         // === 辅助函数：格式化文件大小 ===
@@ -709,7 +967,7 @@ html_template = """
                 // 2. Icon 列
                 const tdIcon = document.createElement('td');
                 tdIcon.className = 'col-icon';
-                tdIcon.innerText = item.type === 'folder' ? '📁' : '📄';
+                tdIcon.innerText = getFileIcon(item);
 
                 // 3. Name 列
                 const tdName = document.createElement('td');
@@ -811,7 +1069,9 @@ html_template = """
             const activeItem = document.querySelector(`.tree-item[data-id="${id}"]`);
             if (activeItem) activeItem.classList.add('active');
 
-            renderList(node.children || []);
+            // 应用筛选器
+            const filteredItems = (node.children || []).filter(item => matchesFilter(item));
+            renderList(filteredItems);
         }
 
         // === 4. 搜索功能 ===
@@ -823,8 +1083,10 @@ html_template = """
             }
             
             isSearchMode = true;
-            // 搜索算法：匹配文件名
-            const results = allFiles.filter(f => f.name.toLowerCase().includes(val));
+            // 搜索算法：匹配文件名 + 应用类型筛选器
+            const results = allFiles.filter(f => 
+                f.name.toLowerCase().includes(val) && matchesFilter(f)
+            );
             renderList(results, true);
         }
 
