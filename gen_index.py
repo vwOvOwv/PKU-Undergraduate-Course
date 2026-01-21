@@ -778,7 +778,7 @@ html_template = """
             if (['doc', 'docx'].includes(ext)) return activeFilters.doc;
             if (['ppt', 'pptx'].includes(ext)) return activeFilters.ppt;
             if (['xls', 'xlsx', 'csv'].includes(ext)) return activeFilters.list;
-            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's'].includes(ext)) return activeFilters.code;
+            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's', 'ipynb'].includes(ext)) return activeFilters.code;
             if (['md', 'markdown', 'txt', 'rst'].includes(ext)) return activeFilters.md;
             if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return activeFilters.zip;
             
@@ -795,7 +795,7 @@ html_template = """
             if (['doc', 'docx'].includes(ext)) return '📘';
             if (['ppt', 'pptx'].includes(ext)) return '🔖';
             if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊';
-            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's', 'rs', 'mlx'].includes(ext)) return '💻';
+            if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's', 'rs', 'mlx', 'ipynb'].includes(ext)) return '💻';
             if (['md', 'markdown', 'txt', 'rst'].includes(ext)) return '📝';
             if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '📦';
             if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico', 'fig'].includes(ext)) return '🏞️';
@@ -1501,7 +1501,7 @@ html_template = """
             
             try {
                 for (const {file, path} of allCartFiles) {
-                    text.innerText = `Fetching ${count + 1}/${allCartFiles.length}: ${file.name}`;
+                    text.innerText = `Downloading ${count + 1}/${allCartFiles.length}: ${file.name}`;
                     
                     const parts = file.urlPath.split('/');
                     const branch = parts[0];
@@ -1519,7 +1519,7 @@ html_template = """
                 
                 text.innerText = 'Zipping...';
                 const content = await zip.generateAsync({type:'blob'});
-                saveAs(content, 'PKU_Materials.zip');
+                saveAs(content, 'PKU_undergrad_course_materials.zip');
                 
             } catch (err) {
                 alert('Download failed: ' + err.message);
@@ -1574,7 +1574,7 @@ html_template = """
             
             try {
                 for (const file of selectedFiles) {
-                    text.innerText = `Fetching ${count + 1}/${selectedFiles.size}: ${file.name}`;
+                    text.innerText = `Downloading ${count + 1}/${selectedFiles.size}: ${file.name}`;
                     
                     // URL Encode
                     const parts = file.urlPath.split('/');
