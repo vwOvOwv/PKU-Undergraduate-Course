@@ -1254,11 +1254,17 @@ html_template = """
             }
             
             isSearchMode = true;
-            // 搜索算法：匹配文件名 + 应用类型筛选器
-            const results = allFiles.filter(f => 
-                f.name.toLowerCase().includes(val) && matchesFilter(f)
-            );
-            renderList(results, true);
+            
+            // 1. First find all items that match the search query (ignoring type filters first)
+            // This is needed to know which type filters should be visible
+            const searchMatches = allFiles.filter(f => f.name.toLowerCase().includes(val));
+            
+            // 2. Update filter visibility based on search results
+            updateFilterVisibility(searchMatches);
+            
+            // 3. Apply current type filters to render
+            const finalResults = searchMatches.filter(f => matchesFilter(f));
+            renderList(finalResults, true);
         }
 
         function exitSearch() {
