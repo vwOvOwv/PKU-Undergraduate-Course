@@ -128,6 +128,7 @@ html_template = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peiyu's Course Zoo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
@@ -297,7 +298,22 @@ html_template = """
         .filter-reset-btn:hover {
             background: #dbeafe;
         }
-
+        
+        /* GitHub 链接 */
+        .github-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            color: #24292e;
+            transition: all 0.15s;
+        }
+        .github-link:hover {
+            background: var(--hover);
+            color: var(--primary);
+        }
         /* 面包屑 */
         .breadcrumbs { padding: 8px 20px; font-size: 13px; color: #586069; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; overflow-x: auto; white-space: nowrap; background: #fff; min-height: 36px; }
         .crumb { cursor: pointer; color: var(--primary); }
@@ -541,7 +557,12 @@ html_template = """
 </head>
 <body>
     <div class="sidebar">
-        <div class="sidebar-title">Peiyu's Course Zoo</div>
+        <div class="sidebar-title">
+            <a href="https://github.com/vwOvOwv/PKU-Undergraduate-Course" target="_blank" class="github-link" title="View on GitHub" style="margin-right: 10px;">
+                <svg height="24" viewBox="0 0 16 16" width="24" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+            </a>
+            Peiyu's Course Zoo
+        </div>
         <div class="tree-container" id="folder-tree"></div>
         
         <!-- Download Cart Panel -->
@@ -717,6 +738,44 @@ html_template = """
             zip: { name: 'Archive', icon: '📦' },
             other: { name: 'Other', icon: '📄' }
         };
+        
+        // 获取当前项目列表中存在的文件类型
+        function getActiveFileTypes(items) {
+            const types = new Set();
+            items.forEach(item => {
+                if (item.type === 'folder') {
+                    types.add('folder');
+                } else {
+                    const ext = getFileExtension(item.name);
+                    if (['pdf'].includes(ext)) types.add('pdf');
+                    else if (['doc', 'docx'].includes(ext)) types.add('doc');
+                    else if (['ppt', 'pptx'].includes(ext)) types.add('ppt');
+                    else if (['xls', 'xlsx', 'csv'].includes(ext)) types.add('list');
+                    else if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's', 'ipynb'].includes(ext)) types.add('code');
+                    else if (['md', 'markdown', 'txt', 'rst'].includes(ext)) types.add('md');
+                    else if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) types.add('zip');
+                    else types.add('other');
+                }
+            });
+            return types;
+        }
+        
+        // 根据当前文件夹内容更新筛选器可见性
+        function updateFilterVisibility(items) {
+            const activeTypes = getActiveFileTypes(items);
+            const chipIds = ['folder', 'pdf', 'doc', 'ppt', 'list', 'md', 'code', 'zip', 'other'];
+            
+            chipIds.forEach(id => {
+                const chip = document.getElementById('chip-' + id);
+                if (chip) {
+                    if (activeTypes.has(id)) {
+                        chip.style.display = 'flex';
+                    } else {
+                        chip.style.display = 'none';
+                    }
+                }
+            });
+        }
 
         function updateFilters() {
             // 从 chip 元素读取状态
@@ -1085,6 +1144,9 @@ html_template = """
             const activeItem = document.querySelector(`.tree-item[data-id="${id}"]`);
             if (activeItem) activeItem.classList.add('active');
 
+            // 更新筛选器可见性
+            updateFilterVisibility(node.children || []);
+            
             // 应用筛选器
             const filteredItems = (node.children || []).filter(item => matchesFilter(item));
             renderList(filteredItems);
@@ -1646,7 +1708,7 @@ html_template = """
                         speedEl.innerText = '';
                         text.innerText = `Download cancelled. Saving ${count} downloaded files...`;
                         const content = await zip.generateAsync({type:'blob'});
-                        saveAs(content, 'PKU_partial_download.zip');
+                        saveAs(content, 'PKU_undergrad_course_materials_partial_download.zip');
                         showToast(`Partial download saved (${count}/${allCartFiles.length} files)`, 'warning');
                     } else {
                         showToast('Download cancelled', 'warning');
@@ -1668,7 +1730,7 @@ html_template = """
                     if (count > 0) {
                         text.innerText = `Cancelled. Saving ${count} downloaded files...`;
                         const content = await zip.generateAsync({type:'blob'});
-                        saveAs(content, 'PKU_partial_download.zip');
+                        saveAs(content, 'PKU_undergrad_course_materials_partial_download.zip');
                         showToast(`Partial download saved (${count}/${allCartFiles.length} files)`, 'warning');
                     } else {
                         showToast('Download cancelled', 'warning');
@@ -1680,7 +1742,7 @@ html_template = """
                         if (savePartial) {
                             text.innerText = `Saving ${count} downloaded files...`;
                             const content = await zip.generateAsync({type:'blob'});
-                            saveAs(content, 'PKU_partial_download.zip');
+                            saveAs(content, 'PKU_undergrad_course_materials_partial_download.zip');
                         }
                     } else {
                         alert('Download failed: ' + err.message);
