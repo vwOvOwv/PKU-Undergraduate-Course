@@ -142,7 +142,7 @@ html_template = """
 
         /* === 顶部栏 === */
         /* 1. 这是右侧顶部栏 (你之前不小心删掉的) */
-        .header { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
+        .header { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; flex-shrink: 0; }
         .header h1 { font-size: 18px; margin: 0; white-space: nowrap; font-weight: bold; }
         .header-right { display: flex; align-items: center; gap: 15px; }
         .search-wrapper { position: relative; width: 250px; }
