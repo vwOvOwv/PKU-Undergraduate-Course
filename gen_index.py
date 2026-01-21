@@ -1512,13 +1512,25 @@ html_template = """
                 }
                 return bytesPerSec.toFixed(0) + ' B/s';
             }
+            // Real-time speed tracking
+            let lastBytes = 0;
+            let lastTime = Date.now();
+            
+            const speedInterval = setInterval(() => {
+                const now = Date.now();
+                const diffTime = (now - lastTime) / 1000;
+                if (diffTime >= 0.5) {
+                    const diffBytes = totalBytesDownloaded - lastBytes;
+                    const speedBytesPerSec = diffBytes / diffTime;
+                    speedEl.innerText = formatSpeed(speedBytesPerSec);
+                    lastBytes = totalBytesDownloaded;
+                    lastTime = now;
+                }
+            }, 500);
             
             try {
                 for (const {file, path} of allCartFiles) {
-                    const elapsedSec = (Date.now() - startTime) / 1000 || 0.001;
-                    const speed = totalBytesDownloaded / elapsedSec;
                     text.innerText = `Downloading ${count + 1}/${allCartFiles.length}: ${file.name}`;
-                    speedEl.innerText = formatSpeed(speed);
                     
                     const parts = file.urlPath.split('/');
                     const branch = parts[0];
@@ -1530,17 +1542,30 @@ html_template = """
                     
                     const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status} for ${file.name}`);
-                    const blob = await res.blob();
-                    totalBytesDownloaded += blob.size;
+                    
+                    // Use stream to track real-time progress
+                    const reader = res.body.getReader();
+                    const chunks = [];
+                    while (true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+                        chunks.push(value);
+                        totalBytesDownloaded += value.length;
+                    }
+                    
+                    const blob = new Blob(chunks);
                     zip.file(path, blob);
                     count++;
                 }
                 
+                clearInterval(speedInterval);
+                speedEl.innerText = '';
                 text.innerText = 'Zipping...';
                 const content = await zip.generateAsync({type:'blob'});
                 saveAs(content, 'PKU_undergrad_course_materials.zip');
                 
             } catch (err) {
+                clearInterval(speedInterval);
                 alert('Download failed: ' + err.message);
             } finally {
                 overlay.style.display = 'none';
