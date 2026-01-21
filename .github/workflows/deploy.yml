@@ -3,6 +3,11 @@ on:
   push:
     branches:
       - main
+      - Web
+      - ComputerScience
+      - LifeScience
+  schedule:
+    - cron: '0,30 * * * *'  # 每30分钟自动检查更新
   workflow_dispatch:
 
 permissions:
