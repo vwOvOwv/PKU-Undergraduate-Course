@@ -343,13 +343,13 @@ html_template = """
             background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
             display: flex;
             flex-direction: column;
-            max-height: 45%;
-            min-height: 60px;
-            transition: max-height 0.3s ease;
+            height: 300px;
+            transition: height 0.3s ease;
+            flex-shrink: 0;
         }
         .download-cart.collapsed {
-            max-height: 48px;
-            min-height: 48px;
+            height: 48px;
+            overflow: hidden;
         }
         .cart-header {
             display: flex;
