@@ -587,7 +587,7 @@ html_template = """
             <div class="filter-bar-chips">
                 <label class="filter-bar-chip selected" id="chip-folder">
                     <input type="checkbox" checked onchange="updateFilters()">
-                    <span>📁</span> Folders
+                    <span>📁</span> Folder
                 </label>
                 <label class="filter-bar-chip selected" id="chip-pdf">
                     <input type="checkbox" checked onchange="updateFilters()">
@@ -599,19 +599,23 @@ html_template = """
                 </label>
                 <label class="filter-bar-chip selected" id="chip-ppt">
                     <input type="checkbox" checked onchange="updateFilters()">
-                    <span>📊</span> PPT
+                    <span>🔖</span> PPT
                 </label>
-                <label class="filter-bar-chip selected" id="chip-code">
+                <label class="filter-bar-chip selected" id="chip-list">
                     <input type="checkbox" checked onchange="updateFilters()">
-                    <span>💻</span> Code
+                    <span>📊</span> List
                 </label>
                 <label class="filter-bar-chip selected" id="chip-md">
                     <input type="checkbox" checked onchange="updateFilters()">
                     <span>📝</span> Markdown
                 </label>
+                <label class="filter-bar-chip selected" id="chip-code">
+                    <input type="checkbox" checked onchange="updateFilters()">
+                    <span>💻</span> Code
+                </label>
                 <label class="filter-bar-chip selected" id="chip-zip">
                     <input type="checkbox" checked onchange="updateFilters()">
-                    <span>📦</span> Archives
+                    <span>📦</span> Archive
                 </label>
                 <label class="filter-bar-chip selected" id="chip-other">
                     <input type="checkbox" checked onchange="updateFilters()">
@@ -672,8 +676,9 @@ html_template = """
             pdf: true,
             doc: true,
             ppt: true,
-            code: true,
+            list: true,
             md: true,
+            code: true,
             zip: true,
             other: true
         };
@@ -693,19 +698,20 @@ html_template = """
 
         // 筛选类型的显示名称和图标
         const filterLabels = {
-            folder: { name: 'Folders', icon: '📁' },
+            folder: { name: 'Folder', icon: '📁' },
             pdf: { name: 'PDF', icon: '📕' },
             doc: { name: 'Word', icon: '📘' },
-            ppt: { name: 'PPT', icon: '📊' },
-            code: { name: 'Code', icon: '💻' },
+            ppt: { name: 'PPT', icon: '🔖' },
+            list: { name: 'List', icon: '📊' },
             md: { name: 'Markdown', icon: '📝' },
-            zip: { name: 'Archives', icon: '📦' },
+            code: { name: 'Code', icon: '💻' },
+            zip: { name: 'Archive', icon: '📦' },
             other: { name: 'Other', icon: '📄' }
         };
 
         function updateFilters() {
             // 从 chip 元素读取状态
-            const chipIds = ['folder', 'pdf', 'doc', 'ppt', 'code', 'md', 'zip', 'other'];
+            const chipIds = ['folder', 'pdf', 'doc', 'ppt', 'list', 'md', 'code', 'zip', 'other'];
             chipIds.forEach(id => {
                 const chip = document.getElementById('chip-' + id);
                 const checkbox = chip.querySelector('input');
@@ -730,7 +736,7 @@ html_template = """
         }
 
         function resetFilters() {
-            const chipIds = ['folder', 'pdf', 'doc', 'ppt', 'code', 'md', 'zip', 'other'];
+            const chipIds = ['folder', 'pdf', 'doc', 'ppt', 'list', 'md', 'code', 'zip', 'other'];
             chipIds.forEach(id => {
                 const chip = document.getElementById('chip-' + id);
                 const checkbox = chip.querySelector('input');
@@ -765,6 +771,7 @@ html_template = """
             if (['pdf'].includes(ext)) return activeFilters.pdf;
             if (['doc', 'docx'].includes(ext)) return activeFilters.doc;
             if (['ppt', 'pptx'].includes(ext)) return activeFilters.ppt;
+            if (['xls', 'xlsx', 'csv'].includes(ext)) return activeFilters.list;
             if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's'].includes(ext)) return activeFilters.code;
             if (['md', 'markdown', 'txt', 'rst'].includes(ext)) return activeFilters.md;
             if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return activeFilters.zip;
@@ -781,7 +788,7 @@ html_template = """
             if (['pdf'].includes(ext)) return '📕';
             if (['doc', 'docx'].includes(ext)) return '📘';
             if (['ppt', 'pptx'].includes(ext)) return '🔖';
-            if (['xls', 'xlsx'].includes(ext)) return '📊';
+            if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊';
             if (['py', 'js', 'ts', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'scala', 'sh', 'bash', 'zsh', 'json', 'xml', 'yaml', 'yml', 'html', 'css', 'sql', 'r', 'lua', 'perl', 'asm', 's', 'rs', 'mlx'].includes(ext)) return '💻';
             if (['md', 'markdown', 'txt', 'rst'].includes(ext)) return '📝';
             if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '📦';
