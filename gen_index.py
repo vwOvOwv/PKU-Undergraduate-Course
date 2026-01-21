@@ -353,10 +353,93 @@ html_template = """
 
         /* 移动端适配 */
         @media (max-width: 768px) {
+            /* 隐藏侧边栏 */
             .sidebar { display: none; }
+            
+            /* 主视图全屏 */
+            .main-view { width: 100%; }
+            
+            /* 简化头部 */
+            .header { 
+                padding: 0 12px; 
+                height: 50px;
+            }
+            .header h1 { font-size: 15px; }
+            .header-right { gap: 8px; }
+            .search-wrapper { 
+                max-width: none; 
+                flex: 1;
+            }
+            .search-box { 
+                padding: 6px 10px 6px 28px; 
+                font-size: 13px;
+            }
+            .search-icon { font-size: 12px; }
+            
+            /* 隐藏桌面端按钮 */
+            .btn-add-cart { display: none; }
+            
+            /* 面包屑紧凑 */
+            .breadcrumbs { 
+                padding: 6px 12px; 
+                font-size: 12px;
+                min-height: 30px;
+            }
+            
+            /* 筛选器横向滚动 */
+            .filter-bar {
+                padding: 8px 12px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .filter-bar-chips { 
+                flex-wrap: nowrap; 
+                gap: 6px;
+            }
+            .filter-bar-chip { 
+                padding: 4px 10px; 
+                font-size: 11px;
+                flex-shrink: 0;
+            }
+            .filter-bar-label { display: none; }
+            
+            /* 表格紧凑 */
             .col-size { display: none; }
-            .header-left { gap: 10px; }
-            .search-wrapper { max-width: 150px; }
+            .col-check { width: 32px; }
+            .col-icon { width: 28px; font-size: 14px; }
+            td { padding: 10px 8px; font-size: 13px; }
+            th { padding: 8px; font-size: 12px; }
+            
+            /* 搜索结果路径提示 */
+            .path-hint { font-size: 10px; }
+            .jump-hint { display: none; }
+            
+            /* 底部固定操作栏 */
+            .mobile-actions {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border-top: 1px solid var(--border);
+                padding: 10px 16px;
+                gap: 10px;
+                z-index: 50;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            }
+            .mobile-actions .btn {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            /* 给内容留出底部空间 */
+            .file-list { padding-bottom: 70px; }
+        }
+        
+        /* 桌面端隐藏移动端元素 */
+        @media (min-width: 769px) {
+            .mobile-actions { display: none; }
         }
 
         /* === Download Cart 样式 === */
@@ -665,6 +748,16 @@ html_template = """
                 <tbody id="file-table-body"></tbody>
             </table>
             <div id="empty-msg" class="empty-state" style="display:none;">This folder is empty.</div>
+        </div>
+        
+        <!-- 移动端底部操作栏 -->
+        <div class="mobile-actions">
+            <button class="btn btn-add-cart" id="mobile-add-cart-btn" onclick="addToCart()" disabled>
+                <span>🛒</span> Add to Cart (<span id="mobile-select-count">0</span>)
+            </button>
+            <button class="btn" onclick="showMobileCart()" style="background: var(--primary);">
+                📦 Cart (<span id="mobile-cart-count">0</span>)
+            </button>
         </div>
     </div>
 
@@ -1232,9 +1325,50 @@ html_template = """
 
         function updateBtnState() {
             const addCartBtn = document.getElementById('add-cart-btn');
+            const mobileAddCartBtn = document.getElementById('mobile-add-cart-btn');
+            const mobileSelectCount = document.getElementById('mobile-select-count');
             const count = selectedFiles.size;
+            
+            // Desktop button
             addCartBtn.disabled = count === 0;
             addCartBtn.innerHTML = count > 0 ? `<span>🛒</span> Add to Cart (${count})` : `<span>🛒</span> Add to Cart`;
+            
+            // Mobile button
+            if (mobileAddCartBtn) {
+                mobileAddCartBtn.disabled = count === 0;
+            }
+            if (mobileSelectCount) {
+                mobileSelectCount.textContent = count;
+            }
+        }
+        
+        function updateMobileCartCount() {
+            const mobileCartCount = document.getElementById('mobile-cart-count');
+            if (mobileCartCount) {
+                mobileCartCount.textContent = cartItems.size;
+            }
+        }
+        
+        function showMobileCart() {
+            // 在移动端显示购物车信息
+            if (cartItems.size === 0) {
+                alert('Cart is empty');
+                return;
+            }
+            
+            let msg = 'Download Cart:\\n\\n';
+            let totalSize = 0;
+            cartItems.forEach(item => {
+                const size = item.size || 0;
+                totalSize += size;
+                msg += `• ${item.name} (${size >= 1024 ? (size/1024).toFixed(1) + ' MB' : size.toFixed(0) + ' KB'})\\n`;
+            });
+            msg += `\\nTotal: ${totalSize >= 1024 ? (totalSize/1024).toFixed(1) + ' MB' : totalSize.toFixed(0) + ' KB'}`;
+            msg += '\\n\\nDownload all items?';
+            
+            if (confirm(msg)) {
+                downloadCart();
+            }
         }
 
         // === Download Cart Functions ===
@@ -1456,6 +1590,9 @@ html_template = """
             const itemCount = cartItems.size;
             badge.textContent = itemCount;
             badge.classList.toggle('empty', itemCount === 0);
+            
+            // Update mobile cart count
+            updateMobileCartCount();
             
             // Update stats
             const fileCount = countFiles();
