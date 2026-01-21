@@ -1500,22 +1500,74 @@ html_template = """
             let count = 0;
             
             try {
-                for (const {file, path} of allCartFiles) {
-                    text.innerText = `Downloading ${count + 1}/${allCartFiles.length}: ${file.name}`;
-                    
+                // Concurrency control
+                const CONCURRENCY = 5;
+                const queue = [...allCartFiles];
+                let completedCount = 0;
+                let totalBytesDownloaded = 0;
+                
+                // Speed tracking
+                let lastBytes = 0;
+                let lastTime = Date.now();
+                text.innerText = `Preparing download...`;
+
+                const speedInterval = setInterval(() => {
+                    const now = Date.now();
+                    const diffTime = (now - lastTime) / 1000; // seconds
+                    if (diffTime >= 0.5) { // update every 500ms
+                         const diffBytes = totalBytesDownloaded - lastBytes;
+                         const speedBytesPerSec = diffBytes / diffTime;
+                         const speedKB = speedBytesPerSec / 1024;
+                         const speedStr = formatSize(speedKB) + '/s';
+                         
+                         text.innerText = `Downloading ${completedCount}/${allCartFiles.length} files (${speedStr})`;
+                         
+                         lastBytes = totalBytesDownloaded;
+                         lastTime = now;
+                    }
+                }, 500);
+
+                const processFile = async ({file, path}) => {
                     const parts = file.urlPath.split('/');
                     const branch = parts[0];
                     const filePathParts = parts.slice(1);
                     const encodedPath = filePathParts.map(p => encodeURIComponent(p)).join('/');
                     
-                    // Correct jsDelivr format: .../gh/user/repo@branch/path
                     const url = `${BASE_URL}@${branch}/${encodedPath}`;
                     
                     const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status} for ${file.name}`);
-                    zip.file(path, await res.blob());
-                    count++;
-                }
+                    
+                    // Use stream to track progress
+                    constreader = res.body.getReader();
+                    const chunks = [];
+                    while(true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+                        chunks.push(value);
+                        totalBytesDownloaded += value.length;
+                    }
+                    
+                    const blob = new Blob(chunks);
+                    zip.file(path, blob);
+                    completedCount++;
+                };
+
+                const workers = Array(Math.min(CONCURRENCY, queue.length)).fill(null).map(async () => {
+                    while (queue.length > 0) {
+                        const item = queue.shift();
+                        try {
+                            await processFile(item);
+                        } catch (err) {
+                             // If error occurs, we might want to stop or continue?
+                             // Throwing stops the worker. Promise.all will reject.
+                             throw err; 
+                        }
+                    }
+                });
+
+                await Promise.all(workers);
+                clearInterval(speedInterval);
                 
                 text.innerText = 'Zipping...';
                 const content = await zip.generateAsync({type:'blob'});
