@@ -213,6 +213,30 @@ html_template = """
         .spinner { width: 30px; height: 30px; border: 3px solid #eee; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Toast 通知 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.info { background: #0ea5e9; }
+        .toast.success { background: #22c55e; }
+        .toast.warning { background: #f59e0b; }
+
         /* 移动端适配 */
         @media (max-width: 768px) {
             .sidebar { display: none; }
@@ -486,6 +510,8 @@ html_template = """
         <div id="loading-text" style="margin-top: 15px; font-size: 14px; font-weight: 500;">Processing...</div>
     </div>
 
+    <div id="toast" class="toast"></div>
+
     <script>
         const rawData = __DATA_JSON__;
         const BASE_URL = "__BASE_URL__";
@@ -496,6 +522,17 @@ html_template = """
         let allFiles = []; // 搜索索引
         let selectedFiles = new Set();
         let cartItems = new Map(); // Download Cart storage
+
+        // === Toast 通知函数 ===
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
 
         // === 辅助函数：格式化文件大小 ===
         function formatSize(sizeKB) {
@@ -805,7 +842,12 @@ html_template = """
 
             const path = [...(node.parent || []), node];
             path.forEach((crumb, index) => {
-                if (index > 0) container.innerHTML += '<span class="crumb-sep">/</span>';
+                if (index > 0) {
+                    const sep = document.createElement('span');
+                    sep.className = 'crumb-sep';
+                    sep.innerText = '/';
+                    container.appendChild(sep);
+                }
                 const span = document.createElement('span');
                 span.className = 'crumb' + (index === path.length - 1 ? ' current' : '');
                 span.innerText = crumb.name;
@@ -827,8 +869,8 @@ html_template = """
         }
         
         function toggleSelectAll() {
-            const isChecked = document.getElementById('select-all').checked;
-            const rows = document.querySelectorAll('#file-table-body tr');
+            const selectAllCb = document.getElementById('select-all');
+            const isChecked = selectAllCb.checked;
             
             // 获取当前显示的列表数据
             let currentItems = isSearchMode ? 
@@ -841,6 +883,9 @@ html_template = """
                 else selectedFiles.delete(item);
             });
             renderList(currentItems, isSearchMode);
+            
+            // 保持 select-all 复选框状态
+            selectAllCb.checked = isChecked;
         }
 
         function updateBtnState() {
@@ -857,12 +902,44 @@ html_template = """
             cart.classList.toggle('collapsed');
         }
 
+        // 获取购物车中所有文件夹包含的文件 ID 集合
+        function getCartFolderFileIds() {
+            const fileIds = new Set();
+            cartItems.forEach(item => {
+                if (item.type === 'folder') {
+                    getAllFilesRecursive(item).forEach(f => fileIds.add(f.id));
+                }
+            });
+            return fileIds;
+        }
+
         function addToCart() {
             if (selectedFiles.size === 0) return;
             
+            // 获取当前购物车中所有文件夹包含的文件 ID
+            let cartFolderFileIds = getCartFolderFileIds();
+            let skippedCount = 0;
+            let addedCount = 0;
+            
             selectedFiles.forEach(item => {
-                if (!cartItems.has(item.id)) {
+                if (cartItems.has(item.id)) {
+                    // 已经在购物车中
+                    skippedCount++;
+                } else if (item.type === 'file' && cartFolderFileIds.has(item.id)) {
+                    // 文件已经在购物车中的某个文件夹里
+                    skippedCount++;
+                } else {
+                    // 如果添加的是文件夹，移除购物车中该文件夹内的单独文件
+                    if (item.type === 'folder') {
+                        const folderFiles = getAllFilesRecursive(item);
+                        folderFiles.forEach(f => {
+                            if (cartItems.has(f.id)) {
+                                cartItems.delete(f.id);
+                            }
+                        });
+                    }
                     cartItems.set(item.id, item);
+                    addedCount++;
                 }
             });
             
@@ -879,6 +956,13 @@ html_template = """
             const cart = document.getElementById('download-cart');
             if (cart.classList.contains('collapsed')) {
                 cart.classList.remove('collapsed');
+            }
+            
+            // 显示提示信息
+            if (skippedCount > 0) {
+                showToast(`Added ${addedCount} items, ${skippedCount} duplicates skipped`, 'info');
+            } else if (addedCount > 0) {
+                showToast(`Added ${addedCount} items to cart`, 'success');
             }
         }
 
