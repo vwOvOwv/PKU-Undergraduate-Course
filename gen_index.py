@@ -1504,8 +1504,12 @@ html_template = """
                     text.innerText = `Fetching ${count + 1}/${allCartFiles.length}: ${file.name}`;
                     
                     const parts = file.urlPath.split('/');
-                    const encodedPath = parts.map(p => encodeURIComponent(p)).join('/');
-                    const url = `${BASE_URL}/${encodedPath}`;
+                    const branch = parts[0];
+                    const filePathParts = parts.slice(1);
+                    const encodedPath = filePathParts.map(p => encodeURIComponent(p)).join('/');
+                    
+                    // Correct jsDelivr format: .../gh/user/repo@branch/path
+                    const url = `${BASE_URL}@${branch}/${encodedPath}`;
                     
                     const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status} for ${file.name}`);
