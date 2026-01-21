@@ -161,7 +161,7 @@ git clone -b LifeScience --single-branch git@github.com:vwOvOwv/PKU-Undergraduat
 
 This repository is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-**Copyright**: Slides and handouts belong to instructors or PKU.
+**Copyright**: Slides and handouts belong to instructors and PKU.
 
 **Usage**: Original work (notes, code) is for reference/self-study only. Please respect academic integrity.
 
