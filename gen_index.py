@@ -648,6 +648,7 @@ html_template = """
     </div>
 
     <div id="loading-overlay">
+        <div id="loading-speed" style="margin-bottom: 15px; font-size: 13px; color: #94a3b8;"></div>
         <div class="spinner"></div>
         <div id="loading-text" style="margin-top: 15px; font-size: 14px; font-weight: 500;">Processing...</div>
     </div>
@@ -1477,7 +1478,9 @@ html_template = """
             
             const overlay = document.getElementById('loading-overlay');
             const text = document.getElementById('loading-text');
+            const speedEl = document.getElementById('loading-speed');
             overlay.style.display = 'flex';
+            speedEl.innerText = '';
             
             // Collect all files (flatten folders)
             let allCartFiles = [];
@@ -1498,76 +1501,40 @@ html_template = """
             
             const zip = new JSZip();
             let count = 0;
+            let totalBytesDownloaded = 0;
+            let startTime = Date.now();
+            
+            function formatSpeed(bytesPerSec) {
+                if (bytesPerSec >= 1024 * 1024) {
+                    return (bytesPerSec / (1024 * 1024)).toFixed(1) + ' MB/s';
+                } else if (bytesPerSec >= 1024) {
+                    return (bytesPerSec / 1024).toFixed(1) + ' KB/s';
+                }
+                return bytesPerSec.toFixed(0) + ' B/s';
+            }
             
             try {
-                // Concurrency control
-                const CONCURRENCY = 5;
-                const queue = [...allCartFiles];
-                let completedCount = 0;
-                let totalBytesDownloaded = 0;
-                
-                // Speed tracking
-                let lastBytes = 0;
-                let lastTime = Date.now();
-                text.innerText = `Preparing download...`;
-
-                const speedInterval = setInterval(() => {
-                    const now = Date.now();
-                    const diffTime = (now - lastTime) / 1000; // seconds
-                    if (diffTime >= 0.5) { // update every 500ms
-                         const diffBytes = totalBytesDownloaded - lastBytes;
-                         const speedBytesPerSec = diffBytes / diffTime;
-                         const speedKB = speedBytesPerSec / 1024;
-                         const speedStr = formatSize(speedKB) + '/s';
-                         
-                         text.innerText = `Downloading ${completedCount}/${allCartFiles.length} files (${speedStr})`;
-                         
-                         lastBytes = totalBytesDownloaded;
-                         lastTime = now;
-                    }
-                }, 500);
-
-                const processFile = async ({file, path}) => {
+                for (const {file, path} of allCartFiles) {
+                    const elapsedSec = (Date.now() - startTime) / 1000 || 0.001;
+                    const speed = totalBytesDownloaded / elapsedSec;
+                    text.innerText = `Downloading ${count + 1}/${allCartFiles.length}: ${file.name}`;
+                    speedEl.innerText = formatSpeed(speed);
+                    
                     const parts = file.urlPath.split('/');
                     const branch = parts[0];
                     const filePathParts = parts.slice(1);
                     const encodedPath = filePathParts.map(p => encodeURIComponent(p)).join('/');
                     
+                    // Correct jsDelivr format: .../gh/user/repo@branch/path
                     const url = `${BASE_URL}@${branch}/${encodedPath}`;
                     
                     const res = await fetch(url);
                     if (!res.ok) throw new Error(`HTTP ${res.status} for ${file.name}`);
-                    
-                    // Use stream to track progress
-                    const reader = res.body.getReader();
-                    const chunks = [];
-                    while(true) {
-                        const {done, value} = await reader.read();
-                        if (done) break;
-                        chunks.push(value);
-                        totalBytesDownloaded += value.length;
-                    }
-                    
-                    const blob = new Blob(chunks);
+                    const blob = await res.blob();
+                    totalBytesDownloaded += blob.size;
                     zip.file(path, blob);
-                    completedCount++;
-                };
-
-                const workers = Array(Math.min(CONCURRENCY, queue.length)).fill(null).map(async () => {
-                    while (queue.length > 0) {
-                        const item = queue.shift();
-                        try {
-                            await processFile(item);
-                        } catch (err) {
-                             // If error occurs, we might want to stop or continue?
-                             // Throwing stops the worker. Promise.all will reject.
-                             throw err; 
-                        }
-                    }
-                });
-
-                await Promise.all(workers);
-                clearInterval(speedInterval);
+                    count++;
+                }
                 
                 text.innerText = 'Zipping...';
                 const content = await zip.generateAsync({type:'blob'});
@@ -1647,8 +1614,8 @@ html_template = """
                 alert("Download failed: " + err.message);
             } finally {
                 overlay.style.display = 'none';
-                // selectedFiles.clear(); // 可选：下载后是否清空
-                // updateBtnState();
+                selectedFiles.clear(); // 可选：下载后是否清空
+                updateBtnState();
             }
         }
     </script>
