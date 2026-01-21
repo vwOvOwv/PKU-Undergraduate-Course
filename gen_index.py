@@ -29,7 +29,7 @@ def get_folder_size(path):
 
 def build_tree(path):
     """递归构建文件树"""
-    tree = {"name": os.path.basename(path), "type": "folder", "children": []}
+    tree = {"name": os.path.basename(path), "type": "folder", "children": [], "path": path}
     
     if not os.path.exists(path):
         print(f"⚠️ Warning: Path not found: {path}")
@@ -83,15 +83,21 @@ def process_branch_root(local_path, branch_name):
     def process_node(node):
         node["id"] = get_next_id()
         
-        if node["type"] == "file":
+        # 计算路径 (无论文件还是文件夹)
+        if "path" in node:
             rel_path = os.path.relpath(node["path"], local_path)
             # 统一路径分隔符
             safe_rel_path = "/".join(rel_path.split(os.sep))
-            # 暂存相对路径供前端搜索显示用
-            node["relPath"] = safe_rel_path 
-            node["urlPath"] = f"{branch_name}/{safe_rel_path}"
+            
+            # 根目录 rel_path 为 "."，跳过
+            if safe_rel_path != ".":
+                # 暂存相对路径供前端搜索显示用
+                node["relPath"] = safe_rel_path 
+                node["urlPath"] = f"{branch_name}/{safe_rel_path}"
+            
             del node["path"]
-        else:
+            
+        if node["type"] == "folder":
             for child in node["children"]:
                 process_node(child)
 
@@ -1406,20 +1412,36 @@ html_template = """
                 
                 const icon = document.createElement('span');
                 icon.className = 'cart-item-icon';
-                icon.textContent = item.type === 'folder' ? '📁' : '📄';
+                icon.textContent = item.type === 'folder' ? '📁' : getFileIcon(item);
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.style.flexGrow = '1';
+                infoDiv.style.display = 'flex';
+                infoDiv.style.flexDirection = 'column';
+                infoDiv.style.overflow = 'hidden';
                 
                 const name = document.createElement('span');
                 name.className = 'cart-item-name';
                 name.textContent = item.name;
                 name.title = item.name;
                 
+                const course = document.createElement('span');
+                course.style.fontSize = '11px';
+                course.style.color = '#94a3b8';
+                course.textContent = getCourseName(item);
+                
+                infoDiv.appendChild(name);
+                infoDiv.appendChild(course);
+                
                 const size = document.createElement('span');
                 size.className = 'cart-item-size';
                 if (item.type === 'file') {
-                    size.textContent = item.size + ' KB';
+                    size.textContent = formatSize(item.size);
                 } else {
                     const folderFiles = getAllFilesRecursive(item);
-                    size.textContent = `${folderFiles.length} files`;
+                    // Use item.size if available, otherwise calculate from children
+                    const folderSize = item.size || 0;
+                    size.textContent = `${folderFiles.length} files, ${formatSize(folderSize)}`;
                 }
                 
                 const removeBtn = document.createElement('button');
@@ -1431,9 +1453,23 @@ html_template = """
                     removeFromCart(id);
                 };
                 
-                div.append(icon, name, size, removeBtn);
+                div.appendChild(icon);
+                div.appendChild(infoDiv);
+                div.appendChild(size);
+                div.appendChild(removeBtn);
+                
                 body.appendChild(div);
             });
+        }
+        
+        function getCourseName(item) {
+            // Path structure: Branch/CourseName/...
+            // e.g. ComputerScience/DataStructure/notes.pdf
+            const parts = (item.urlPath || '').split('/');
+            if (parts.length >= 2) {
+                return parts[1];
+            }
+            return '';
         }
 
         async function downloadCart() {
