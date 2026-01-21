@@ -920,6 +920,7 @@ html_template = """
             let cartFolderFileIds = getCartFolderFileIds();
             let skippedCount = 0;
             let addedCount = 0;
+            let mergedCount = 0; // 被合并的文件数
             
             selectedFiles.forEach(item => {
                 if (cartItems.has(item.id)) {
@@ -935,6 +936,7 @@ html_template = """
                         folderFiles.forEach(f => {
                             if (cartItems.has(f.id)) {
                                 cartItems.delete(f.id);
+                                mergedCount++;
                             }
                         });
                     }
@@ -959,25 +961,34 @@ html_template = """
             }
             
             // 显示提示信息
-            if (skippedCount > 0) {
-                showToast(`Added ${addedCount} items, ${skippedCount} duplicates skipped`, 'info');
-            } else if (addedCount > 0) {
-                showToast(`Added ${addedCount} items to cart`, 'success');
+            let msg = `Added ${addedCount} item${addedCount !== 1 ? 's' : ''}`;
+            let msgParts = [];
+            if (skippedCount > 0) msgParts.push(`${skippedCount} duplicate${skippedCount !== 1 ? 's' : ''} skipped`);
+            if (mergedCount > 0) msgParts.push(`${mergedCount} file${mergedCount !== 1 ? 's' : ''} merged into folder`);
+            if (msgParts.length > 0) msg += ' (' + msgParts.join(', ') + ')';
+            
+            if (addedCount > 0 || skippedCount > 0 || mergedCount > 0) {
+                showToast(msg, (skippedCount > 0 || mergedCount > 0) ? 'info' : 'success');
             }
         }
 
         function removeFromCart(itemId) {
+            const item = cartItems.get(itemId);
+            const itemName = item ? item.name : 'Item';
             cartItems.delete(itemId);
             updateCartUI();
             saveCartToStorage();
+            showToast(`Removed "${itemName}" from cart`, 'info');
         }
 
         function clearCart() {
             if (cartItems.size === 0) return;
             if (!confirm('Clear all items from the cart?')) return;
+            const count = cartItems.size;
             cartItems.clear();
             updateCartUI();
             saveCartToStorage();
+            showToast(`Cleared ${count} item${count !== 1 ? 's' : ''} from cart`, 'warning');
         }
 
         function getAllFilesRecursive(node) {
