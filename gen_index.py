@@ -1529,6 +1529,9 @@ html_template = """
             }, 500);
             
             try {
+                const SIZE_THRESHOLD_KB = 20 * 1024; // 20MB threshold
+                const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/vwOvOwv/PKU-Undergraduate-Course';
+                
                 for (const {file, path} of allCartFiles) {
                     text.innerText = `Downloading ${count + 1}/${allCartFiles.length}: ${file.name}`;
                     
@@ -1537,11 +1540,25 @@ html_template = """
                     const filePathParts = parts.slice(1);
                     const encodedPath = filePathParts.map(p => encodeURIComponent(p)).join('/');
                     
-                    // Correct jsDelivr format: .../gh/user/repo@branch/path
-                    const url = `${BASE_URL}@${branch}/${encodedPath}`;
+                    // Decide which CDN to use based on file size
+                    const useRaw = file.size > SIZE_THRESHOLD_KB;
+                    let url = useRaw 
+                        ? `${GITHUB_RAW_BASE}/${branch}/${encodedPath}`
+                        : `${BASE_URL}@${branch}/${encodedPath}`;
                     
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`HTTP ${res.status} for ${file.name}`);
+                    let res = await fetch(url);
+                    
+                    // Fallback to GitHub Raw if jsDelivr fails
+                    if (!res.ok && !useRaw) {
+                        console.warn(`jsDelivr failed for ${file.name}, trying GitHub Raw...`);
+                        url = `${GITHUB_RAW_BASE}/${branch}/${encodedPath}`;
+                        res = await fetch(url);
+                    }
+                    
+                    if (!res.ok) {
+                        console.error('Download failed URL:', url);
+                        throw new Error(`HTTP ${res.status} for ${file.name}`);
+                    }
                     
                     // Use stream to track real-time progress
                     const reader = res.body.getReader();
