@@ -651,6 +651,8 @@ html_template = """
         <div id="loading-speed" style="margin-bottom: 15px; font-size: 13px; color: #94a3b8;"></div>
         <div class="spinner"></div>
         <div id="loading-text" style="margin-top: 15px; font-size: 14px; font-weight: 500;">Processing...</div>
+        <div id="loading-eta" style="margin-top: 8px; font-size: 12px; color: #64748b;"></div>
+        <button id="cancel-download-btn" onclick="cancelDownload()" style="margin-top: 20px; padding: 8px 20px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; display: none;">Cancel Download</button>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -1148,16 +1150,18 @@ html_template = """
             const selectAllCb = document.getElementById('select-all');
             const isChecked = selectAllCb.checked;
             
-            // 获取当前显示的列表数据
+            // 获取当前显示的列表数据（应用筛选器）
             let currentItems = isSearchMode ? 
-                allFiles.filter(f => f.name.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase())) 
-                : (currentFolder ? currentFolder.children : []);
+                allFiles.filter(f => f.name.toLowerCase().includes(document.getElementById('search-input').value.toLowerCase()) && matchesFilter(f)) 
+                : (currentFolder ? currentFolder.children.filter(item => matchesFilter(item)) : []);
 
             currentItems.forEach(item => {
                 // 文件和文件夹都可以被选中
                 if (isChecked) selectedFiles.add(item);
                 else selectedFiles.delete(item);
             });
+            
+            // 只渲染筛选后的列表，不改变筛选状态
             renderList(currentItems, isSearchMode);
             
             // 保持 select-all 复选框状态
@@ -1296,7 +1300,8 @@ html_template = """
             // Clear selection after adding
             selectedFiles.clear();
             if (currentFolder) {
-                renderList(currentFolder.children || [], false);
+                const filteredItems = (currentFolder.children || []).filter(item => matchesFilter(item));
+                renderList(filteredItems, false);
             }
             
             updateCartUI();
@@ -1473,14 +1478,45 @@ html_template = """
             return '';
         }
 
+        // Global abort controller for download cancellation
+        let downloadAbortController = null;
+        
+        function cancelDownload() {
+            if (downloadAbortController) {
+                downloadAbortController.abort();
+            }
+        }
+        
+        function formatETA(seconds) {
+            if (!isFinite(seconds) || seconds <= 0) return 'Calculating...';
+            if (seconds < 60) return `~${Math.ceil(seconds)}s remaining`;
+            if (seconds < 3600) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.ceil(seconds % 60);
+                return `~${mins}m ${secs}s remaining`;
+            }
+            const hours = Math.floor(seconds / 3600);
+            const mins = Math.ceil((seconds % 3600) / 60);
+            return `~${hours}h ${mins}m remaining`;
+        }
+
         async function downloadCart() {
             if (cartItems.size === 0) return;
             
             const overlay = document.getElementById('loading-overlay');
             const text = document.getElementById('loading-text');
             const speedEl = document.getElementById('loading-speed');
+            const etaEl = document.getElementById('loading-eta');
+            const cancelBtn = document.getElementById('cancel-download-btn');
+            
             overlay.style.display = 'flex';
             speedEl.innerText = '';
+            etaEl.innerText = 'Calculating...';
+            cancelBtn.style.display = 'inline-block';
+            
+            // Create abort controller
+            downloadAbortController = new AbortController();
+            const signal = downloadAbortController.signal;
             
             // Collect all files (flatten folders)
             let allCartFiles = [];
@@ -1499,6 +1535,9 @@ html_template = """
                 }
             });
             
+            // Calculate total expected size (in KB from data, convert to bytes)
+            const totalExpectedBytes = allCartFiles.reduce((sum, item) => sum + (item.file.size || 0) * 1024, 0);
+            
             const zip = new JSZip();
             let count = 0;
             let totalBytesDownloaded = 0;
@@ -1512,27 +1551,43 @@ html_template = """
                 }
                 return bytesPerSec.toFixed(0) + ' B/s';
             }
+            
             // Real-time speed tracking
             let lastBytes = 0;
             let lastTime = Date.now();
+            let currentSpeed = 0;
             
             const speedInterval = setInterval(() => {
                 const now = Date.now();
                 const diffTime = (now - lastTime) / 1000;
                 if (diffTime >= 0.5) {
                     const diffBytes = totalBytesDownloaded - lastBytes;
-                    const speedBytesPerSec = diffBytes / diffTime;
-                    speedEl.innerText = formatSpeed(speedBytesPerSec);
+                    currentSpeed = diffBytes / diffTime;
+                    speedEl.innerText = formatSpeed(currentSpeed);
+                    
+                    // Calculate ETA
+                    const bytesRemaining = totalExpectedBytes - totalBytesDownloaded;
+                    const etaSeconds = currentSpeed > 0 ? bytesRemaining / currentSpeed : 0;
+                    etaEl.innerText = formatETA(etaSeconds);
+                    
                     lastBytes = totalBytesDownloaded;
                     lastTime = now;
                 }
             }, 500);
+            
+            let interrupted = false;
             
             try {
                 const SIZE_THRESHOLD_KB = 20 * 1024; // 20MB threshold
                 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/vwOvOwv/PKU-Undergraduate-Course';
                 
                 for (const {file, path} of allCartFiles) {
+                    // Check if aborted
+                    if (signal.aborted) {
+                        interrupted = true;
+                        break;
+                    }
+                    
                     text.innerText = `Downloading ${count + 1}/${allCartFiles.length}: ${file.name}`;
                     
                     const parts = file.urlPath.split('/');
@@ -1546,13 +1601,13 @@ html_template = """
                         ? `${GITHUB_RAW_BASE}/${branch}/${encodedPath}`
                         : `${BASE_URL}@${branch}/${encodedPath}`;
                     
-                    let res = await fetch(url);
+                    let res = await fetch(url, { signal });
                     
                     // Fallback to GitHub Raw if jsDelivr fails
                     if (!res.ok && !useRaw) {
                         console.warn(`jsDelivr failed for ${file.name}, trying GitHub Raw...`);
                         url = `${GITHUB_RAW_BASE}/${branch}/${encodedPath}`;
-                        res = await fetch(url);
+                        res = await fetch(url, { signal });
                     }
                     
                     if (!res.ok) {
@@ -1566,9 +1621,15 @@ html_template = """
                     while (true) {
                         const {done, value} = await reader.read();
                         if (done) break;
+                        if (signal.aborted) {
+                            interrupted = true;
+                            break;
+                        }
                         chunks.push(value);
                         totalBytesDownloaded += value.length;
                     }
+                    
+                    if (interrupted) break;
                     
                     const blob = new Blob(chunks);
                     zip.file(path, blob);
@@ -1576,16 +1637,58 @@ html_template = """
                 }
                 
                 clearInterval(speedInterval);
-                speedEl.innerText = '';
-                text.innerText = 'Zipping...';
-                const content = await zip.generateAsync({type:'blob'});
-                saveAs(content, 'PKU_undergrad_course_materials.zip');
+                cancelBtn.style.display = 'none';
+                
+                if (interrupted) {
+                    // Offer partial download
+                    if (count > 0) {
+                        etaEl.innerText = '';
+                        speedEl.innerText = '';
+                        text.innerText = `Download cancelled. Saving ${count} downloaded files...`;
+                        const content = await zip.generateAsync({type:'blob'});
+                        saveAs(content, 'PKU_partial_download.zip');
+                        showToast(`Partial download saved (${count}/${allCartFiles.length} files)`, 'warning');
+                    } else {
+                        showToast('Download cancelled', 'warning');
+                    }
+                } else {
+                    speedEl.innerText = '';
+                    etaEl.innerText = '';
+                    text.innerText = 'Zipping...';
+                    const content = await zip.generateAsync({type:'blob'});
+                    saveAs(content, 'PKU_undergrad_course_materials.zip');
+                }
                 
             } catch (err) {
                 clearInterval(speedInterval);
-                alert('Download failed: ' + err.message);
+                cancelBtn.style.display = 'none';
+                
+                if (err.name === 'AbortError') {
+                    // User cancelled
+                    if (count > 0) {
+                        text.innerText = `Cancelled. Saving ${count} downloaded files...`;
+                        const content = await zip.generateAsync({type:'blob'});
+                        saveAs(content, 'PKU_partial_download.zip');
+                        showToast(`Partial download saved (${count}/${allCartFiles.length} files)`, 'warning');
+                    } else {
+                        showToast('Download cancelled', 'warning');
+                    }
+                } else {
+                    // Other error - also offer partial download
+                    if (count > 0) {
+                        const savePartial = confirm(`Download failed: ${err.message}\n\n${count} files were already downloaded. Save partial download?`);
+                        if (savePartial) {
+                            text.innerText = `Saving ${count} downloaded files...`;
+                            const content = await zip.generateAsync({type:'blob'});
+                            saveAs(content, 'PKU_partial_download.zip');
+                        }
+                    } else {
+                        alert('Download failed: ' + err.message);
+                    }
+                }
             } finally {
                 overlay.style.display = 'none';
+                downloadAbortController = null;
             }
         }
 
