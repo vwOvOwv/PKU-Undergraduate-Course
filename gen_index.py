@@ -761,11 +761,8 @@ html_template = """
         }
 
         function updateBtnState() {
-            const btn = document.getElementById('download-btn');
             const addCartBtn = document.getElementById('add-cart-btn');
             const count = selectedFiles.size;
-            btn.disabled = count === 0;
-            btn.innerHTML = count > 0 ? `<span>⬇</span> Download (${count})` : `<span>⬇</span> Download`;
             addCartBtn.disabled = count === 0;
             addCartBtn.innerHTML = count > 0 ? `<span>🛒</span> Add to Cart (${count})` : `<span>🛒</span> Add to Cart`;
         }
