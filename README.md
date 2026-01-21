@@ -1,5 +1,8 @@
 # PKU-Undergraduate-Course
+
 Course materials on computer science and life science for undergraduate students at Peking University.
+
+Visit my **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** for the best experience!
 
 ## Table of Content
 
@@ -18,60 +21,67 @@ Course materials on computer science and life science for undergraduate students
     - [Lab](#lab)
     - [Others](#others)
 - [License](#license)
-- [Contact](#contact)
+- [Contact & Contribution](#contact--contribution)
 
 ## Repository Organization
 
-This repository consists of two branches, `ComputerScience` and `LifeScience`, each of which contains course materials for computer science and life science courses, respectively.
+This repository is organized into two main branches:
+- `ComputerScience`: Courses related to computer science
+- `LifeScience`: Courses related to life sciences
 
-Each course has its own folder (e.g., folder `Algorithm Design and Analysis` for course "算法设计与分析").
+Each course has its own folder (e.g., `Algorithm Design and Analysis`). Inside, you'll typically find some of the following folders:
 
-A course folder may typically contain several sub-folders, including
+- `assignment`: Homework, solutions, and answers
+- `exam`: Past exam papers
+- `lab`: Lab codes and reports
+- `notes`: Review notes and cheatsheets
+- `practice`: Extra practice problems
+- `pre`: Presentation materials
+- `project`: Course projects
+- `quiz`: Quiz questions
+- `supplement`: Supplementary resources
 
-- `assignment`: assignments, my solutions, and answers
-- `exam`: past exams
-- `lab`: lab code
-- `notes`: my review notes and cheatsheets
-- `practice`: extra practice problems and answers
-- `pre`: presentation materials
-- `project`: project materials
-- `quiz`: quiz questions and answers
-- `supplement`: supplementary materials
-
-For lab courses in life science, each sub-folder is named as `WeekX`, where `X` is the week number.
-
-Course slides are not included due to copyright issue. 
+> **Note**: Course slides are generally not included due to copyright restrictions. 
 
 ## Quick Start
 
 ### Find Courses You Need
 
-Please refer to [Computer Science Course List](#computer-science-course-list) and [Life Science Course List](#life-science-course-list) to find courses you are interested in. Click the link to check corresponding course folder.
+Please refer to [Computer Science Course List](#computer-science-course-list) and [Life Science Course List](#life-science-course-list) to find courses you are interested in. Click the links to check corresponding course folders.
 
 ### Download Materials (Recommended)
 
+Once you find the course you need, you can download the materials from **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)**.
+
+**[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** is a website developed for convenient downloading of these materials.
+
+**✨ Key Features:**
+
+- **⚡️ Fast Browsing**: Navigate through course folders with a responsive file tree.
+- **🔍 Power Search**: Real-time search with dynamic filters to find exactly what you need (PDFs, PPTs, Code, etc.).
+- **🛒 Batch Download**: Add files or entire folders to your download cart and grab them all in a single ZIP file.
+- **🚀 CDN Accelerated**: Smart download strategy ensures high speed and high availability.
+
+Stop cloning the huge repository! Just pick what you need 🎯.
+
+> **Note**: The website is currently under active development. Mobile access is not yet fully supported. If you encounter any problems or bugs, please [open an issue](https://github.com/vwOvOwv/PKU-Undergraduate-Course/issues) to help me improve!
 
 
 ### Clone Repository (Not Recommended)
 
-If you need all materials on computer science (or life science), open the Terminal and type in the commands below.
+If you really need **ALL** materials, you can clone specific branches.
 
-For branch `ComputerScience`:
+For `ComputerScience`:
 ```bash
 git clone -b ComputerScience --single-branch git@github.com:vwOvOwv/PKU-Undergraduate-Course.git
 ```
 
-For branch `LifeScience`:
+For `LifeScience`:
 ```bash
 git clone -b LifeScience --single-branch git@github.com:vwOvOwv/PKU-Undergraduate-Course.git
 ```
 
-For both branches:
-```bash
-git clone git@github.com:vwOvOwv/PKU-Undergraduate-Course.git
-```
-
-Note that it's not recommended to download whole branch at a time, since each the branches have been quite large. It's time-consuming to download the whole branches and the downloading process may be interrupted by unstable network connection to GitHub. A better way is introduced in [Download Materials](#download-materials-recommended).
+> ⚠️ **Warning**: Branches are very large! Downloading may take a long time and could be interrupted. I strongly recommend using the **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** to download only what you need.
 
 ## Computer Science Course List
 
@@ -149,15 +159,17 @@ Note that it's not recommended to download whole branch at a time, since each th
 
 ## License
 
-This repository is licensed under the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+This repository is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-All course-related slides, handouts, and copyrighted materials belong to their respective instructors and Peking University. This repository only contains original work (notes, solutions, and code) created by the contributor(s). And these materials are provided for reference and self-study purposes ONLY. Users are responsible for ensuring their use of these materials complies with the academic integrity policies of Peking University.
+**Copyright**: Slides and handouts belong to instructors and PKU.
 
-## Contact
+**Usage**: Original work (notes, code) is for reference/self-study only. Please respect academic integrity.
 
-Please contact me via WeChat (18810770225) or Email (lpy512120@stu.pku.edu.cn) if
-- there are copyright or privacy issues.
-- you find some mistakes and want to correct them.
-- you are willing to help me update these materials or add more courses.
+## Contact & Contribution
 
-Thanks for your star and hope this repository will help your life at PKU easier. Good luck!
+Feel free to contact me via WeChat (18810770225) or Email (lpy512120@stu.pku.edu.cn) if you:
+- Find copyright/privacy issues
+- Find mistakes to correct
+- Want to contribute materials or updates
+
+**Star ⭐️ this repo if it helps! Good luck at PKU!**
