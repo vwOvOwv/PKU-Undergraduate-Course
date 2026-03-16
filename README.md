@@ -167,7 +167,7 @@ This repository is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/
 
 ## Contact & Contribution
 
-Feel free to contact me via WeChat (18810770225) or Email (lpy512120@stu.pku.edu.cn) if you:
+Feel free to contact me via WeChat (18810770225) or [mail](mailto:lpy512120@stu.pku.edu.cn) if you:
 - Find copyright/privacy issues
 - Find mistakes to correct
 - Want to contribute materials or updates
