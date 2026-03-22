@@ -6,22 +6,24 @@ Visit my **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** f
 
 ## Table of Content
 
-- [Repository Organization](#repository-organization)
-- [Quick Start](#quick-start)
+- [PKU-Undergraduate-Course](#pku-undergraduate-course)
+  - [Table of Content](#table-of-content)
+  - [Repository Organization](#repository-organization)
+  - [Quick Start](#quick-start)
     - [Find Courses You Need](#find-courses-you-need)
     - [Download Materials (Recommended)](#download-materials-recommended)
     - [Clone Repository (Not Recommended)](#clone-repository-not-recommended)
-- [Computer Science Course List](#computer-science-course-list)
+  - [Computer Science Course List](#computer-science-course-list)
     - [Math](#math)
     - [Algorithm](#algorithm)
-    - [Computer Systems](#computer-systems)
+    - [Computer System](#computer-system)
     - [Artificial Intelligence](#artificial-intelligence)
-- [Life Science Course List](#life-science-course-list)
-    - [Thoery](#theory)
+  - [Life Science Course List](#life-science-course-list)
+    - [Theory](#theory)
     - [Lab](#lab)
     - [Others](#others)
-- [License](#license)
-- [Contact & Contribution](#contact--contribution)
+  - [License](#license)
+  - [Contact \& Contribution](#contact--contribution)
 
 ## Repository Organization
 
@@ -113,6 +115,7 @@ git clone -b LifeScience --single-branch git@github.com:vwOvOwv/PKU-Undergraduat
 |2025 Spring|[数字逻辑设计](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Design%20of%20Digital%20Logic)|Design of Digital Logic|Dong Tong
 |2025 Fall|[编译原理](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Compiler%20Principles)|Compiler Principles|Lu Zhang *et al.*
 |2025 Fall|[信息安全引论](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Introduction%20to%20Information%20Security)|Introduction to Information Security|Zhao Wang
+|2026 Spring|[软件测试导论](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Introduction%20to%20Software%20Testing)|Introduction to Software Testing|Dan Hao
 
 ### Artificial Intelligence
 
