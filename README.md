@@ -57,16 +57,7 @@ Once you find the course you need, you can download the materials from **[Course
 
 **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** is a website developed for convenient downloading of these materials.
 
-**✨ Key Features:**
-
-- **⚡️ Fast Browsing**: Navigate through course folders with a responsive file tree.
-- **🔍 Power Search**: Real-time search with dynamic filters to find exactly what you need (PDFs, PPTs, Code, etc.).
-- **🛒 Batch Download**: Add files or entire folders to your download cart and grab them all in a single ZIP file.
-- **🚀 CDN Accelerated**: Smart download strategy ensures high speed and high availability.
-
-Stop cloning the huge repository! Just pick what you need 🎯.
-
-> **Note**: The website is currently under active development. Mobile access is not yet fully supported. If you encounter any problems or bugs, please [open an issue](https://github.com/vwOvOwv/PKU-Undergraduate-Course/issues) to help me improve!
+> **Note**: The website is currently under active development. Mobile access is not yet fully supported. If you encounter any problems or bugs, please [open an issue](https://github.com/vwOvOwv/PKU-Undergraduate-Course/issues) to help me improve.
 
 
 ### Clone Repository (Not Recommended)
@@ -82,8 +73,6 @@ For `LifeScience`:
 ```bash
 git clone -b LifeScience --single-branch git@github.com:vwOvOwv/PKU-Undergraduate-Course.git
 ```
-
-> ⚠️ **Warning**: Branches are very large! Downloading may take a long time and could be interrupted. I strongly recommend using the **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** to download only what you need.
 
 ## Computer Science Course List
 
