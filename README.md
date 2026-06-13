@@ -6,22 +6,24 @@ Visit my **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** f
 
 ## Table of Content
 
-- [Repository Organization](#repository-organization)
-- [Quick Start](#quick-start)
+- [PKU-Undergraduate-Course](#pku-undergraduate-course)
+  - [Table of Content](#table-of-content)
+  - [Repository Organization](#repository-organization)
+  - [Quick Start](#quick-start)
     - [Find Courses You Need](#find-courses-you-need)
     - [Download Materials (Recommended)](#download-materials-recommended)
     - [Clone Repository (Not Recommended)](#clone-repository-not-recommended)
-- [Computer Science Course List](#computer-science-course-list)
+  - [Computer Science Course List](#computer-science-course-list)
     - [Math](#math)
     - [Algorithm](#algorithm)
-    - [Computer Systems](#computer-systems)
+    - [Computer System](#computer-system)
     - [Artificial Intelligence](#artificial-intelligence)
-- [Life Science Course List](#life-science-course-list)
-    - [Thoery](#theory)
+  - [Life Science Course List](#life-science-course-list)
+    - [Theory](#theory)
     - [Lab](#lab)
     - [Others](#others)
-- [License](#license)
-- [Contact & Contribution](#contact--contribution)
+  - [License](#license)
+  - [Contact \& Contribution](#contact--contribution)
 
 ## Repository Organization
 
@@ -55,16 +57,7 @@ Once you find the course you need, you can download the materials from **[Course
 
 **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** is a website developed for convenient downloading of these materials.
 
-**✨ Key Features:**
-
-- **⚡️ Fast Browsing**: Navigate through course folders with a responsive file tree.
-- **🔍 Power Search**: Real-time search with dynamic filters to find exactly what you need (PDFs, PPTs, Code, etc.).
-- **🛒 Batch Download**: Add files or entire folders to your download cart and grab them all in a single ZIP file.
-- **🚀 CDN Accelerated**: Smart download strategy ensures high speed and high availability.
-
-Stop cloning the huge repository! Just pick what you need 🎯.
-
-> **Note**: The website is currently under active development. Mobile access is not yet fully supported. If you encounter any problems or bugs, please [open an issue](https://github.com/vwOvOwv/PKU-Undergraduate-Course/issues) to help me improve!
+> **Note**: The website is currently under active development. Mobile access is not yet fully supported. If you encounter any problems or bugs, please [open an issue](https://github.com/vwOvOwv/PKU-Undergraduate-Course/issues) to help me improve.
 
 
 ### Clone Repository (Not Recommended)
@@ -80,8 +73,6 @@ For `LifeScience`:
 ```bash
 git clone -b LifeScience --single-branch git@github.com:vwOvOwv/PKU-Undergraduate-Course.git
 ```
-
-> ⚠️ **Warning**: Branches are very large! Downloading may take a long time and could be interrupted. I strongly recommend using the **[Course Zoo](https://vwOvOwv.github.io/PKU-Undergraduate-Course/)** to download only what you need.
 
 ## Computer Science Course List
 
@@ -113,6 +104,7 @@ git clone -b LifeScience --single-branch git@github.com:vwOvOwv/PKU-Undergraduat
 |2025 Spring|[数字逻辑设计](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Design%20of%20Digital%20Logic)|Design of Digital Logic|Dong Tong
 |2025 Fall|[编译原理](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Compiler%20Principles)|Compiler Principles|Lu Zhang *et al.*
 |2025 Fall|[信息安全引论](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Introduction%20to%20Information%20Security)|Introduction to Information Security|Zhao Wang
+|2026 Spring|[软件测试导论](https://github.com/vwOvOwv/PKU-Undergraduate-Course/tree/ComputerScience/Introduction%20to%20Software%20Testing)|Introduction to Software Testing|Dan Hao
 
 ### Artificial Intelligence
 
