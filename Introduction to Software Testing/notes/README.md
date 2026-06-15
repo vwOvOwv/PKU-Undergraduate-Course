@@ -117,7 +117,7 @@
   - 找每个基本块的 def 和 c-use/p-use
   - 对每个变量的每个 def，记录对应的 c-use/p-use
   - 对每个测试，分析覆盖的 c-use/p-use
-  - 分析无效的 c-use/puse
+  - 分析无效的 c-use/p-use
   - 计算覆盖率
 
 
