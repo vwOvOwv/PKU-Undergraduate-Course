@@ -1,0 +1,13 @@
+[project]
+name = "neuromatch-computational-neuroscience"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "datatops>=0.3.1",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "scipy>=1.18.1",
+    "vibecheck>=0.0.5",
+]
