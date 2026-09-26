@@ -1,0 +1,12 @@
+*.DS_Store
+*.aux
+*.log
+*.out
+*.gz
+*tmp
+*__pycache__
+*results
+.vscode
+*runs
+assignment3/coding/model.bin
+assignment3/coding/model.bin.optim

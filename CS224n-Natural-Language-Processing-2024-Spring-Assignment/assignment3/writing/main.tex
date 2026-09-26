@@ -1,0 +1,116 @@
+\documentclass[11pt, a4paper, oneside]{article}
+\usepackage{xeCJK}
+\usepackage{amsmath, amsthm, amssymb, bm, color, framed, graphicx, hyperref, mathrsfs}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{lastpage}
+\usepackage{booktabs}
+\usepackage[raggedright]{titlesec}
+\titleformat{\section}
+  {\normalfont\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+\geometry{a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+\setlength{\parindent}{0pt}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyhead[L]{Assignment 3}
+    \fancyhead[R]{CS224n Natural Language Processing}
+    \fancyfoot[C]{\thepage}
+}
+
+\pagestyle{plain}
+
+\title{\textbf{Assignment 3}}
+\author{}
+\date{\empty}
+
+\begin{document}
+
+\maketitle
+\section{Neural Machine Translation with RNNs (45 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item[(g)] \textit{enc\_mask} marks padding tokens with 1s and other non-padding tokens 
+    with 0s. And the attention scores of tokens where \textit{enc\_mask} is 1 are set 
+    to $-\infty$. Therefore, with \textit{enc\_mask}, model does not attend to padding tokens 
+    since their attention values are 0 after softmax.
+
+    Such masks are necessary for NMT models to attend to meaningful tokens of a sentence, rather
+    than padding tokens that are manually added to support parallel processing.
+    \item[(h)] Corpus BLEU: 19.915406403991692.
+    
+    \item[(i)] 
+    Pros of dot production attention: computationally effective.
+    
+    Cons of dot production attention: assumes the two vectors are in the same space (aligned).
+
+    Pros of additive attention: adds non-linearity and is more expressive.
+
+    Cons of additive attention: more computational overhead.
+\end{enumerate}
+\section{Analyzing NMT Systems (25 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item The convolution layer after embedding combines individual token embeddings, 
+    which gives model better semantic representations of phrases consisting of multiple tokens.
+    \item \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+    \item The NMT model translates the phrase 贼人 into the singular form \textit{the 
+    culprit was} while the gold reference is the plural form \textit{the culprits were}. 
+    The error occurs due to morphological ambiguity in the source language (Chinese), 
+    where the noun 贼人 does not explicitly indicate grammatical number (singular vs. plural). 
+    The model likely defaults to the singular form based on its frequency in the training data, 
+    as it lacks sufficient contextual clues or explicit number markers to infer the plural sense.
+    To fix such errors, nouns in the source corpus could be pre-processed with explicit entity 
+    number tags.
+    \item The model repeats \textit{resources have been exhausted} and omits 
+    \textit{no space to accommodate these people}. This error may originate from 
+    attention mechanisms. The model allocate too much attention on the second part
+    资源已经用尽. A possible fix is to change the attention mechanism during decoding.
+    \item The model translates 今天是国殇日 into \textit{today's day}, seeming to take
+    the source as a clause, and 国殇 is omitted in translation. In training data, 国殇
+    appears only once, thus it's hard for the model to learn a robust representation for
+    this word. To fix, more sentences including 国殇 should be added into the corpus.
+    \item The model ignores the meaning of 唔做 during translation. It seems that the
+    model doesn't understand the causal relationship between 唔做 and 唔错. The main reason for
+    this may be lack of Cantonese showing such causal relationship in the training corpus. A 
+    possible fix for this can be adding more Cantonese texts with more complicated logics into
+    the training data.
+    \end{enumerate}
+    \item 
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+    \item $\mathbf c_1$: $p_1 = \frac{4}{9}, p_2 = \frac{3}{8}, \mathrm{len}(c_1)=9, \mathrm{len}(r = r_1)=11, BP=\exp\left(-\frac{2}{9}\right), BLEU\approx0.327.$
+    
+    $\mathbf c_2$: $p_1 = 1, p_2 = \frac{3}{5}, \mathrm{len}(c_2)=6, \mathrm{len}(r = r_2)=6, BP=1, BLEU\approx0.775.$
+
+    $\mathbf c_2$ is considered to be a better translation according to the BLEU score. But it's obvious that 
+    $\mathbf c_1$ is better indeed.
+    \item $\mathbf c_1$: $p_1 = \frac{4}{9}, p_2 = \frac{3}{8}, \mathrm{len}(c_1)=9, \mathrm{len}(r = r_2)=6, BP=1, BLEU\approx0.408.$
+    
+    $\mathbf c_2$: $p_1 = \frac{1}{2}, p_2 = \frac{1}{5}, \mathrm{len}(c_2)=6, \mathrm{len}(r = r_2)=6, BP=1, BLEU\approx0.316.$
+
+    $\mathbf c_1$ is considered to be a better translation according to the BLEU score.
+
+    \item As we can see above, different numbers of reference sentences lead to different BLEU results.
+    BLEU just matches n-grams between the reference sentence(s) and the translation.
+    When there are multiple sentences, the model can achieve a high score by generating words 
+    that are scattered across different references, thus forming a grammatically
+    incorrect sentence that hacks the evaluation metric.
+
+    \item Advantages: fast and computationally efficient; objective and reproducible.
+    
+    Disadvantages: blind to syntax, grammar, and semantics; correlates poorly with human judgment.
+    \end{enumerate}
+
+    \item 
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+    \item[i,ii.]
+    The translation quality improve over the training iterations. See coding/outputs for examples.
+
+    \end{enumerate}
+
+\end{enumerate}
+\end{document}

@@ -1,0 +1,9 @@
+[project]
+name = "cs224n-natural-language-processing-2024-spring-assignment"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "tensorboard>=2.21.0",
+]

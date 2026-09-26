@@ -1,0 +1,212 @@
+\documentclass[11pt, a4paper, oneside]{article}
+\usepackage{amsmath, amsthm, amssymb, bm, color, framed, graphicx, hyperref, mathrsfs}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{lastpage}
+\usepackage{booktabs}
+\usepackage[raggedright]{titlesec}
+\titleformat{\section}
+  {\normalfont\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+\geometry{a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+\setlength{\parindent}{0pt}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyhead[L]{Assignment 2}
+    \fancyhead[R]{CS224n Natural Language Processing}
+    \fancyfoot[C]{\thepage}
+}
+
+\pagestyle{plain}
+
+\title{\textbf{Assignment 2}}
+\author{}
+\date{\empty}
+
+\begin{document}
+
+\maketitle
+\section{Understanding word2vec (15 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item 
+    According to writeup,
+    $$\mathbf J_{\mathrm{naive-softmax}}(\mathbf v_c,o,\mathbf U)=-\log P(O=o|C=c)
+    = -\log \hat y_o=-\sum_{w\in \mathrm{Vocab}}y_w\log\hat y_w.$$
+    Note that
+
+    1. scalar $\hat y_o = P(O=o|C=c)=\frac{\exp\left(\mathbf u_o^T\mathbf v_c\right)}{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}$, and
+
+    2. ground-truth $\mathbf y$ is an one-hot vector where only $y_o=1$.
+    \qed
+
+    \item 
+    Use the chain rule,
+    \begin{align*}
+        \frac{\partial \mathbf J}{\partial \mathbf v_c}&=-\frac{\partial}{\partial \mathbf v_c}\log P(O=o|C=c)\\
+        &=-\frac{1}{P(O=o|C=c)}\cdot\frac{\partial P(O=o|C=c)}{\partial \mathbf v_c}\\
+        &=-\frac{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}{\exp\left(\mathbf u_o^T\mathbf v_c\right)}\\
+        &\cdot \frac{\exp\left(\mathbf u_o^T\mathbf v_c\right)\left[\mathbf u_o\sum_{w\in{\mathrm{Vocab}}}\exp\left(\mathbf u_w^Tv_c\right)-\sum_{w\in{\mathrm{Vocab}}}\mathbf u_w\exp\left(\mathbf u_w^T\mathbf v_c\right)\right]}
+        {\left[\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)\right]^2}\\
+        &=\frac{\sum_{w\in\mathrm{Vocab}}\mathbf u_w\exp\left(\mathbf u_w^T\mathbf v_c\right)}{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)} - \mathbf u_o.\\
+    \end{align*}
+    Since $\mathbf U = \left[\mathbf u_1, \mathbf u_2, \dots, \mathbf u_{|\mathrm{Vocab}|}\right]$, we have
+    \begin{align*}
+        \frac{\sum_{w\in\mathrm{Vocab}}\mathbf u_w\exp\left(\mathbf u_w^T\mathbf v_c\right)}{\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)} = \mathbf U\hat{\mathbf y},
+    \end{align*}
+    and
+    \begin{align*}
+        \mathbf u_o = \mathbf U \mathbf y
+    \end{align*}
+    Therefore, the derivative is $\mathbf U\left(\hat{\mathbf y} - \mathbf y\right)$, where $\mathbf U \in \mathbb R^{d\times|\mathrm{Vocab}|}$, 
+    and $\hat{\mathbf y}, \mathbf y \in \mathbb R^{|\mathrm{Vocab}|}$.
+
+    The derivative equals to zero when
+
+    1. $\hat{\mathbf y} = \mathbf y$ (impossible due to the nature of softmax), or
+
+    2. $\hat{\mathbf y} - \mathbf y \in \ker\left(\mathbf U\right)$ (possible since $d$ is usually much less than $|\mathrm{Vocab}|$).
+
+    Assume vector $\mathbf v_c$ is randomly initialized and $\mathbf U$ remains fixed, 
+    then gradient descent updates $\mathbf v_c$ by pulling it towards the ground-truth 
+    context vector $\mathbf U\mathbf y$ and repelling it from the (false) predicted distribution $\mathbf U\hat{\mathbf y}$:
+
+    $$\mathbf v_c := \mathbf v_c - \alpha \mathbf U(\hat{\mathbf y} - \mathbf y).$$
+
+    \item L2 normalization takes away information about magnitudes of vector. 
+    If we sum word vectors to get representation of the phrase, the normalization 
+    will change the representation and thus may affect following classification results. 
+    \item Similar to derivation in (b), we have
+    
+    $$\frac{\partial \mathbf J}{\partial \mathbf u_w}=-\frac{1}{P(O=o|C=c)}\cdot
+    \frac{\partial P(O=o|C=c)}{\partial\mathbf u_w}.$$
+
+    \textbf{Case 1:} $\mathbf u_o\neq\mathbf u_w.$ In this case,
+
+    $$\frac{\partial \mathbf J}{\partial \mathbf u_w}=\frac{\exp\left(\mathbf u_w^T\mathbf v_c\right)}
+    {\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}\cdot \mathbf v_c=\hat y_w\mathbf v_c.$$
+
+    \textbf{Case 2:} $\mathbf u_o=\mathbf u_w.$ In this case,
+
+    $$\frac{\partial \mathbf J}{\partial \mathbf u_w}=\left[\frac{\exp\left(\mathbf u_w^T\mathbf v_c\right)}
+    {\sum_{w\in\mathrm{Vocab}}\exp\left(\mathbf u_w^T\mathbf v_c\right)}-1\right]\cdot \mathbf v_c=(\hat y_w-1)\mathbf v_c.$$
+
+    \item $$\frac{\partial \mathbf J}{\partial \mathbf U}=\mathbf v_c\left(\mathbf{\hat y}-\mathbf y\right)^T.$$
+
+\end{enumerate}
+
+\section{Machine Learning \& Neural Networks (8 points)}
+
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+\item \textit{Momentum} makes gradient updates largely depend on previvous updates. 
+In essence it's an exponential moving average. \textit{Adaptive learning rates} adjust learning rate
+according to previous gradient magnitudes. Parameters with smaller gradients tend to 
+have larger learning rates. This mechanism may help keep gradient updates in an appropriate range.
+\item $\gamma = \frac{1}{1-p_{\mathrm{drop}}}$, by noting that
+\begin{align*}
+    \mathbb E\left[\mathbf h_{\mathrm{drop}}\right]_i&=\mathbb E\left[\gamma\mathbf d\odot\mathbf h\right]_i\\
+    &=\gamma\mathbb E\left[d_i\right]\mathbb E\left[h_i\right]\\
+    &=\gamma\left(1-p_{\mathrm{drop}}\right)h_i.
+\end{align*}
+Dropout is applied during training to prevent overfitting. By randomly dropping units, 
+it prevents neurons from co-adapting too much (relying on specific other neurons) 
+and forces the network to learn more robust features. It also acts as an 
+approximate method of training an ensemble of different 
+neural network architectures.
+
+Dropout is not applied during evaluation because we want to use the full capacity 
+of the network to make the best possible predictions. We want a deterministic 
+output, not a stochastic one. Using the full network acts as an approximation of 
+averaging the predictions from the ensemble of all thinned networks formed during training.
+\end{enumerate}
+\section{Neural Transition-Based Dependency Parsing (54 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+\item The parsing process is shown in Figure \ref{dependency parsing simulation}.
+\item A sentence containing $n$ words will be parsed in exactly $2n$ steps. Each word
+will be shifted once and reduced once.
+
+\begin{figure}[h]
+\begin{center}
+    \includegraphics[width=1.0\linewidth]{../assets/Picture1.png}
+    \caption{Dependecy parsing process.}
+    \label{dependency parsing simulation}
+\end{center}
+\end{figure}
+\item Coding problem, no written submission.
+\item Coding problem, no written submission.
+\item Let $h_i = \mathrm{ReLU}(z_i)$, where $z_i = \sum_{j}x_jW_{ji}$.
+Then the derivative is
+\begin{align*}
+    \frac{\partial h_i}{\partial x_j} = 
+    \begin{cases}
+    W_{ji}, &z_i > 0\\
+    0, &z_i < 0
+    \end{cases}.
+\end{align*}
+Since the ground-truth label is $c$, the partial derivative of $J(\theta)$ w.r.t.
+$l_i$ is formulated as
+\begin{align*}
+    \frac{\partial J(\theta)}{\partial l_i} &= \frac{\partial CE(\mathbf y,\mathbf{\hat y})}{\partial \hat y_c}
+    \cdot \frac{\partial \hat y_c}{\partial l_i}\\
+    &=-\frac{1}{\hat y_c}\cdot\frac{\partial \hat y_c}{\partial l_i},
+\end{align*}
+where $\hat y_c=\frac{\exp\left(l_c\right)}{\sum_{j=1}^{3}\exp\left(l_j\right)}$.
+Therefore, 
+\begin{align*}
+    \frac{\partial \hat y_c}{\partial l_i} &= \begin{cases}
+        -\frac{\exp\left(l_c+l_i\right)}{\left[\sum_{j=1}^{3}\exp\left(l_j\right)\right]^2}, &c\neq i\\
+        \frac{\exp\left(l_i\right)\left[\sum_{j=1}^{3}\exp\left(l_j\right)-\exp\left(l_i\right)\right]}{\left[\sum_{j=1}^{3}\exp\left(l_j\right)\right]^2}, &c=i
+    \end{cases}.
+\end{align*}
+Then the derivative is
+\begin{align*}
+    \frac{\partial J(\theta)}{\partial l_i} &= \begin{cases}
+        \frac{\exp\left(l_i\right)}{\sum_{j=1}^3\exp\left(l_j\right)}, &c\neq i\\
+        \frac{\exp\left(l_i\right)}{\sum_{j=1}^3\exp\left(l_j\right)} - 1, &c=i
+    \end{cases}.
+\end{align*}
+
+Best UAS on validation set: 88.57\%.
+
+Best UAS on test set: 89.13\%.
+
+\item \begin{enumerate}[label=\roman*., left=-10pt, labelsep=1em, itemsep=1em]
+\item 
+\textbf{Error type}: Verb Phrase Attachment Error
+
+\textbf{Incorrect dependency}: acquisition $\rightarrow$ citing
+
+\textbf{Correct dependency}: blocked $\rightarrow$ citing
+
+\item 
+\textbf{Error type}: Modifier Attachment Error
+
+\textbf{Incorrect dependency}: elements $\rightarrow$ most
+
+\textbf{Correct dependency}: crucial $\rightarrow$ most
+
+\item
+\textbf{Error type}: Prepositional Phrase Attachment Error
+
+\textbf{Incorrect dependency}: declined $\rightarrow$ decision
+
+\textbf{Correct dependency}: reasons $\rightarrow$ decision
+
+\item
+\textbf{Error type}: Coordination Attachment Error
+
+\textbf{Incorrect dependency}: affects $\rightarrow$ one
+
+\textbf{Correct dependency}: plants $\rightarrow$ one
+\end{enumerate}
+\item POS tags provide explicit syntactic information that 
+helps the parser disambiguate words with multiple meanings. 
+Furthermore, they allow the model to generalize to rare or out-of-vocabulary (OOV) 
+words by relying on the known grammatical behavior of the tag.
+\end{enumerate}
+\end{document}

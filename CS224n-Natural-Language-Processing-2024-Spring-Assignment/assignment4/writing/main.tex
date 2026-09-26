@@ -1,0 +1,431 @@
+\documentclass[11pt, a4paper, oneside]{article}
+\usepackage{xeCJK}
+\usepackage{amsmath, amsthm, amssymb, bm, color, framed, graphicx, hyperref, mathrsfs}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{lastpage}
+\usepackage{booktabs}
+\usepackage[raggedright]{titlesec}
+\titleformat{\section}
+  {\normalfont\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+\geometry{a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\setlength{\headheight}{14pt}
+
+\setlength{\parindent}{0pt}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyhead[L]{Assignment 4}
+    \fancyhead[R]{CS224n Natural Language Processing}
+    \fancyfoot[C]{\thepage}
+}
+
+\pagestyle{plain}
+
+\title{\textbf{Assignment 4}}
+\author{}
+\date{\empty}
+
+\begin{document}
+
+\maketitle
+\section{Attention Exploration (14 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item 
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item The categorical distribution $\alpha$ puts almost all of its
+        weight on $\alpha_j$ when the score $k_j^\top q$ is much larger than
+        every other score $k_i^\top q$; equivalently,
+        $\sum_{i\neq j}\exp(k_i^\top q-k_j^\top q)\ll 1$.
+        \item Under this condition, $\alpha_j\approx 1$ and
+        $\alpha_i\approx 0$ for every $i\neq j$. Therefore,
+        $c=\sum_{i=1}^n\alpha_i v_i\approx v_j$.
+    \end{enumerate}
+    \item Let $\ell>0$ be large and choose
+    \[
+        q=\ell(k_a+k_b).
+    \]
+    Since the keys are orthogonal unit vectors,
+    $k_a^\top q=k_b^\top q=\ell$, whereas $k_i^\top q=0$ for
+    $i\notin\{a,b\}$. Hence
+    \[
+        \alpha_a=\alpha_b
+        =\frac{e^\ell}{2e^\ell+(n-2)}
+        =\frac{1}{2+(n-2)e^{-\ell}}\approx\frac12
+    \]
+    whenever $e^\ell\gg n-2$. The remaining attention weights are negligible,
+    so $c\approx\frac12(v_a+v_b)$.
+    \item \label{1c}
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item To distinguish the covariance scale from the attention weights
+        $\alpha_i$, let $\varepsilon$ denote the scalar called $\alpha$ in the
+        question. Thus, $\Sigma_i=\varepsilon I$ with $\varepsilon\to0$.
+        Choose
+        \[
+            q=\ell(\mu_a+\mu_b),
+            \qquad e^\ell\gg n-2.
+        \]
+        Write $k_i=\mu_i+\delta_i$, where
+        $\delta_i\sim\mathcal N(0,\varepsilon I)$. Since the means are
+        orthogonal unit vectors,
+        \[
+            k_a^\top q\approx k_b^\top q\approx\ell,
+            \qquad
+            k_i^\top q\approx0\quad(i\notin\{a,b\}).
+        \]
+        Therefore, $\alpha_a\approx\alpha_b\approx\frac12$ and
+        $c\approx\frac12(v_a+v_b)$. To make the conditions on $\ell$ precise,
+        first note that the random score perturbation $\delta_i^\top q$ is a
+        linear projection of a Gaussian vector and is therefore Gaussian. Its
+        mean and variance are
+        \[
+            \mathbb E[\delta_i^\top q]=0,
+            \qquad
+            \operatorname{Var}(\delta_i^\top q)
+            =q^\top(\varepsilon I)q
+            =\varepsilon\lVert q\rVert^2
+            =2\varepsilon\ell^2,
+        \]
+        where $\lVert q\rVert^2=\ell^2\lVert\mu_a+\mu_b\rVert^2
+        =2\ell^2$. Hence
+        \[
+            \delta_i^\top q\sim
+            \mathcal N(0,2\varepsilon\ell^2),
+        \]
+        whose standard deviation is $\sqrt{2}\ell\sqrt{\varepsilon}$.
+        We may thus choose
+        \[
+            \log(n-2)\ll\ell\ll\varepsilon^{-1/2}.
+        \]
+        The lower bound implies $e^\ell\gg n-2$, suppressing the total
+        contribution of the irrelevant keys. The upper bound is equivalent to
+        $\ell\sqrt{\varepsilon}\ll1$, ensuring that the random score
+        perturbations are small and that the scores of $k_a$ and $k_b$ remain
+        approximately equal.
+
+        \item Now
+        $\Sigma_a=\varepsilon I+\frac12\mu_a\mu_a^\top$. Ignoring the
+        vanishing orthogonal noise, write $k_a\approx r\mu_a$, where the random
+        magnitude
+        \[
+            r=\mu_a^\top k_a
+            \sim\mathcal N\!\left(1,\varepsilon+\frac12\right).
+        \]
+        Using the query from part (i), the two relevant scores satisfy
+        \[
+            q^\top k_a\approx\ell r,
+            \qquad q^\top k_b\approx\ell,
+            \qquad
+            \frac{\alpha_a}{\alpha_b}\approx e^{\ell(r-1)}.
+        \]
+        Thus, the softmax exponentially amplifies fluctuations in $r$. When
+        $r>1$, $c$ is close to $v_a$; when $r<1$, $c$ is close to $v_b$; only
+        when $r$ is very close to $1$ is $c$ close to
+        $\frac12(v_a+v_b)$. Consequently, individual samples produce outputs
+        that vary substantially between vectors near $v_a$ and $v_b$, so the
+        variance of $c$ is much larger than in part (i), even though its average
+        over the symmetric fluctuations may remain near
+        $\frac12(v_a+v_b)$.
+    \end{enumerate}
+
+    \item
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item Let $\ell>0$ be large and choose two different queries
+        \[
+            q_1=\ell\mu_a,
+            \qquad
+            q_2=\ell\mu_b.
+        \]
+        When $\Sigma_i=\varepsilon I$ and $\varepsilon\to0$, we have
+        $k_i\approx\mu_i$. Thus, for $q_1$, the score of $k_a$ is
+        approximately $\ell$, while all other scores are approximately zero;
+        similarly, $q_2$ selects $k_b$. If $e^\ell\gg n-1$ (and
+        $\ell\sqrt{\varepsilon}\ll1$), then
+        \[
+            c_1\approx v_a,
+            \qquad
+            c_2\approx v_b,
+            \qquad
+            c=\frac12(c_1+c_2)\approx\frac12(v_a+v_b).
+        \]
+
+        \item With
+        $\Sigma_a=\varepsilon I+\frac12\mu_a\mu_a^\top$, write
+        $k_a\approx r\mu_a$, where
+        $r\sim\mathcal N(1,\varepsilon+\frac12)$. The scores relevant to the
+        first head are
+        \[
+            q_1^\top k_a\approx\ell r,
+            \qquad
+            q_1^\top k_i\approx0\quad(i\neq a).
+        \]
+        Ignoring the cases $q_1^\top k_a<0$ as permitted, the first head still
+        selects $v_a$ whenever $\ell r\gg\log(n-1)$. Hence
+        $c_1\approx v_a$, although it has some residual variance when $r$ is
+        positive but close to zero. For the second head,
+        \[
+            q_2^\top k_b\approx\ell,
+            \qquad
+            q_2^\top k_a\approx0,
+        \]
+        because $\mu_a^\top\mu_b=0$. Therefore, $c_2\approx v_b$ and has
+        vanishingly small variance. Consequently,
+        \[
+            c=\frac12(c_1+c_2)\approx\frac12(v_a+v_b)
+        \]
+        across samples. In particular, since $c_2$ is nearly deterministic,
+        \[
+            \operatorname{Var}(c)
+            \approx\frac14\operatorname{Var}(c_1),
+        \]
+        so the output is substantially more stable than the single-headed
+        construction in part (c).
+    \end{enumerate}
+
+    \item Multi-headed attention assigns $v_a$ and $v_b$ to separate heads,
+    so a change in the magnitude of $k_a$ affects mainly the head responsible
+    for $v_a$ rather than changing the competition between $v_a$ and $v_b$
+    within one softmax. Averaging the head outputs therefore preserves both
+    values more reliably and reduces the variance of the final output.
+\end{enumerate}
+\newpage
+\section{Position Embeddings Exploration (6 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item Since
+        $X_{\mathrm{perm}}=PX$, the query, key, and value matrices become
+        \begin{align*}
+            Q_{\mathrm{perm}}
+            &=X_{\mathrm{perm}}W_Q=PXW_Q=PQ,\\
+            K_{\mathrm{perm}}&=PK,\\
+            V_{\mathrm{perm}}&=PV.
+        \end{align*}
+        Define $A=QK^\top/\sqrt d$. Then
+        \begin{align*}
+            H_{\mathrm{perm}}
+            &=\operatorname{softmax}\!\left(
+                \frac{Q_{\mathrm{perm}}K_{\mathrm{perm}}^\top}{\sqrt d}
+              \right)V_{\mathrm{perm}}\\
+            &=\operatorname{softmax}(PAP^\top)PV\\
+            &=P\operatorname{softmax}(A)P^\top PV\\
+            &=P\operatorname{softmax}(A)V
+             =PH,
+        \end{align*}
+        where we used $P^\top P=I_T$. A permutation leaves the all-ones
+        vector unchanged, so $P\mathbf1=\mathbf1$. Consequently,
+        \begin{align*}
+            Z_{\mathrm{perm}}
+            &=\operatorname{ReLU}
+              (H_{\mathrm{perm}}W_1+\mathbf1b_1)W_2+\mathbf1b_2\\
+            &=\operatorname{ReLU}
+              \bigl(PHW_1+P\mathbf1b_1\bigr)W_2+P\mathbf1b_2\\
+            &=\operatorname{ReLU}
+              \bigl(P(HW_1+\mathbf1b_1)\bigr)W_2+P\mathbf1b_2\\
+            &=P\operatorname{ReLU}
+              (HW_1+\mathbf1b_1)W_2+P\mathbf1b_2\\
+            &=P\left[
+                \operatorname{ReLU}(HW_1+\mathbf1b_1)W_2+\mathbf1b_2
+              \right]
+             =PZ.
+        \end{align*}
+        Therefore, permuting the input rows by $P$ permutes the output rows by
+        the same matrix $P$.
+
+        \item Although permutation equivariance is useful for unordered set
+        inputs, it is problematic for text because word order carries
+        syntactic and semantic information. Without positional information,
+        permuting the input tokens merely permutes the output representations
+        in the same way; after matching each output with its corresponding
+        token, the representations are otherwise unchanged. Therefore, the
+        Transformer cannot model order-dependent relationships, such as which
+        noun is the subject and which is the object.
+    \end{enumerate}
+
+    \item
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item Yes. After permuting the tokens, the position-encoded input is
+        \[
+            X_{\mathrm{pos,perm}}=PX+\Phi,
+        \]
+        because $\Phi$ remains attached to the fixed sequence positions. In
+        general,
+        \[
+            PX+\Phi\neq P(X+\Phi)=PX+P\Phi.
+        \]
+        Thus, the permutation-equivariance result from part (a) no longer
+        applies. A token moved to a new position receives a different position
+        embedding, allowing the Transformer to model word order.
+
+        \item No. Suppose two integer positions $t$ and $t'$ had identical
+        position embeddings. Taking $i=0$ gives
+        \[
+            \sin t=\sin t',
+            \qquad
+            \cos t=\cos t'.
+        \]
+        Hence $t-t'=2\pi m$ for some integer $m$. Since $t-t'$ is an integer,
+        this is possible only when $m=0$, so $t=t'$. Therefore, two distinct
+        positions cannot have identical position embeddings.
+    \end{enumerate}
+\end{enumerate}
+\section{Pretrained Transformer models and knowledge access (35 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item[(d)] Finetune w/o pretraining: Correct: 11.0 out of 500.0: 2.1999999999999997\%.
+    
+    London baseline: Correct: 25.0 out of 500.0: 5.0\%.
+    \item[(f)] Finetune w/ pretraining: Correct: 128.0 out of 500.0: 25.6\%.
+    \item[(g)]
+    \begin{enumerate}[label=\roman*., left=0pt, labelsep=1em, itemsep=1em]
+        \item
+        For $k=1,\ldots,d/2$, represent the $k$-th pair of features as the
+        complex number
+        \[
+            z_{t,k}=x_t^{(2k-1)}+\mathrm{i}x_t^{(2k)},
+            \qquad
+            \theta_k=10000^{-2(k-1)/d}.
+        \]
+        The $k$-th element of the element-wise product in Equation 4 is
+        \[
+            u_{t,k}
+            =\bigl(\cos(t\theta_k)+\mathrm{i}\sin(t\theta_k)\bigr)
+             \bigl(x_t^{(2k-1)}+\mathrm{i}x_t^{(2k)}\bigr).
+        \]
+        Expanding this product and using $\mathrm{i}^2=-1$ gives
+        \begin{align*}
+            u_{t,k}
+            &=x_t^{(2k-1)}\cos(t\theta_k)
+              +\mathrm{i}x_t^{(2k-1)}\sin(t\theta_k)\\
+            &\quad+\mathrm{i}x_t^{(2k)}\cos(t\theta_k)
+              -x_t^{(2k)}\sin(t\theta_k)\\
+            &=\bigl[x_t^{(2k-1)}\cos(t\theta_k)
+              -x_t^{(2k)}\sin(t\theta_k)\bigr]\\
+            &\quad+\mathrm{i}\bigl[x_t^{(2k-1)}\sin(t\theta_k)
+              +x_t^{(2k)}\cos(t\theta_k)\bigr].
+        \end{align*}
+        Therefore, the real and imaginary parts of $u_{t,k}$ satisfy
+        \[
+            \begin{bmatrix}
+                \operatorname{Re}(u_{t,k})\\
+                \operatorname{Im}(u_{t,k})
+            \end{bmatrix}
+            =
+            \begin{bmatrix}
+                \cos(t\theta_k)&-\sin(t\theta_k)\\
+                \sin(t\theta_k)&\cos(t\theta_k)
+            \end{bmatrix}
+            \begin{bmatrix}
+                x_t^{(2k-1)}\\
+                x_t^{(2k)}
+            \end{bmatrix}.
+        \]
+        This is exactly the $k$-th $2\times2$ rotation block in Equation 3.
+        Stacking the real and imaginary parts for all $k$ in their original
+        order gives
+        \[
+            \operatorname{RoPE}(x_t,t)
+            =
+            \begin{bmatrix}
+                \operatorname{Re}(u_{t,1})\\
+                \operatorname{Im}(u_{t,1})\\
+                \vdots\\
+                \operatorname{Re}(u_{t,d/2})\\
+                \operatorname{Im}(u_{t,d/2})
+            \end{bmatrix},
+        \]
+        which is the vector produced by the block-diagonal matrix in
+        Equation 3. Thus, Equation 4 computes all two-dimensional rotations
+        simultaneously by element-wise complex multiplication; in code, this
+        requires reshaping the real vector into pairs, converting the pairs to
+        complex numbers, applying the multiplication, converting back to real
+        numbers, and flattening the pairs.
+
+        \item
+        For a two-dimensional vector represented by a complex number, the
+        RoPE operation is
+        \[
+            \operatorname{RoPE}(z,t)=e^{\mathrm{i}t\theta}z,
+        \]
+        and the corresponding real dot product is
+        \[
+            \langle z_1,z_2\rangle
+            =\operatorname{Re}\!\left(z_1\overline{z_2}\right),
+        \]
+        where the bar denotes complex conjugation. Therefore,
+        \begin{align*}
+            \left\langle \operatorname{RoPE}(z_1,t_1),
+            \operatorname{RoPE}(z_2,t_2)\right\rangle
+            &=\operatorname{Re}\!\left[
+                \left(e^{\mathrm{i}t_1\theta}z_1\right)
+                \overline{\left(e^{\mathrm{i}t_2\theta}z_2\right)}
+              \right]\\
+            &=\operatorname{Re}\!\left[
+                e^{\mathrm{i}t_1\theta}z_1
+                e^{-\mathrm{i}t_2\theta}\overline{z_2}
+              \right]\\
+            &=\operatorname{Re}\!\left[
+                e^{\mathrm{i}(t_1-t_2)\theta}z_1\overline{z_2}
+              \right].
+        \end{align*}
+        On the other hand, since
+        $\operatorname{RoPE}(z_2,0)=e^{0}z_2=z_2$, we have
+        \begin{align*}
+            \left\langle \operatorname{RoPE}(z_1,t_1-t_2),
+            \operatorname{RoPE}(z_2,0)\right\rangle
+            &=\operatorname{Re}\!\left[
+                \left(e^{\mathrm{i}(t_1-t_2)\theta}z_1\right)
+                \overline{z_2}
+              \right]\\
+            &=\operatorname{Re}\!\left[
+                e^{\mathrm{i}(t_1-t_2)\theta}z_1\overline{z_2}
+              \right].
+        \end{align*}
+        The two expressions are identical. Hence,
+        \[
+            \left\langle \operatorname{RoPE}(z_1,t_1),
+            \operatorname{RoPE}(z_2,t_2)\right\rangle
+            =
+            \left\langle \operatorname{RoPE}(z_1,t_1-t_2),
+            \operatorname{RoPE}(z_2,0)\right\rangle,
+        \]
+        showing that the dot product depends on the positions only through
+        their relative displacement $t_1-t_2$.
+        \item Correct: 154.0 out of 500.0: 30.8\%.
+    \end{enumerate}
+\end{enumerate}
+\section{Considerations in pretrained knowledge (5 points)}
+\begin{enumerate}[label=(\alph*), left=0pt, labelsep=1em, itemsep=1em]
+    \item Pretraining on Wikipedia exposes the model to associations between
+    people's names and their birthplaces, together with broader world
+    knowledge. Fine-tuning then teaches the model to use these associations in
+    the birthplace-prediction format. Because the fine-tuning dataset is small,
+    a model trained from scratch cannot learn a sufficiently general mapping
+    from names to places and therefore performs poorly on unseen names.
+
+    \item
+    \begin{enumerate}[label=\arabic*., left=0pt, labelsep=1em, itemsep=1em]
+        \item The model may produce a plausible but incorrect answer that a
+        user cannot distinguish from a retrieved fact, causing the user to act
+        on false information. For example, a medical assistant might invent a
+        diagnosis or dosage, leading to an unsafe treatment decision.
+        \item The absence of reliable provenance or uncertainty estimates makes
+        errors difficult to audit, correct, and assign responsibility for. For
+        example, a legal assistant might cite an invented court decision, while
+        giving the user no source that could be checked.
+    \end{enumerate}
+
+    \item For a person absent from both pretraining and fine-tuning, the model
+    may rely on surface cues in the name, such as its spelling, formatting, or
+    resemblance to names associated with particular regions, and generate the
+    most likely birthplace. This is a heuristic guess rather than retrieved
+    knowledge. Such behavior can reinforce stereotypes and lead to
+    discriminatory misclassification; for example, an automated screening
+    system might infer a person's nationality or birthplace from their surname
+    and use that inference in an employment or immigration decision.
+\end{enumerate}
+\end{document}

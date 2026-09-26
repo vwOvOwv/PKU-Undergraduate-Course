@@ -1,0 +1,10 @@
+name: cs224n-gpu
+channels:
+  - defaults
+  - nvidia
+dependencies:
+  - python==3.10
+  - nvidia::cuda-toolkit==12.1.1
+  - pip
+  - pip:
+    - -r requirements.txt
